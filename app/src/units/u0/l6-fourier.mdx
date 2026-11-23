@@ -1,0 +1,160 @@
+import { FourierWinder, PulseBuilder } from './widgets/FourierWinder';
+
+Play a chord on a piano. What reaches your ear is a single wiggling air pressure, one number changing in time. Yet you hear *three notes*. Somewhere in your inner ear, that one wiggle is being taken apart into the pure frequencies it is made of.
+
+The mathematical version of that machine is the **Fourier transform**, and quantum mechanics is full of it. A particle's position and momentum are related by a Fourier transform; the Heisenberg uncertainty principle is, at bottom, a theorem about Fourier transforms; and the **quantum Fourier transform** is the engine inside Shor's factoring algorithm. This lesson builds the intuition you'll need for all three.
+
+<Predict id="u0l6-click">
+  <Q>You want to synthesize a very short, sharp "click" by adding together pure sine-wave tones. What mix of tones do you need?</Q>
+  <Opt>One very high-pitched tone</Opt>
+  <Opt>A few low tones</Opt>
+  <Opt correct>A very wide range of frequencies, all lined up in phase at the moment of the click</Opt>
+  <Opt>It can't be done: a click isn't made of tones</Opt>
+  <Reveal>
+Any single tone goes on forever, so no single tone is "short". To get something that is loud for an instant and silent everywhere else, you need many tones that **reinforce** at one moment and **cancel** everywhere else. The sharper the click, the wider the range of frequencies needed. Hold onto that trade-off: it is the uncertainty principle in disguise, and you'll measure it yourself at the end of this lesson.
+  </Reveal>
+</Predict>
+
+---
+
+## Signals are sums of spinning arrows
+
+In lesson 2, a wave of a single frequency was the shadow of a spinning arrow, $\mathrm{Re}[a\,e^{2\pi i f t}]$. The big claim of Fourier analysis is that **essentially any signal** can be written as a sum of such arrows, one for each frequency:
+
+$$
+g(t) = \sum_{f} \hat g(f)\, e^{2\pi i f t} \qquad\text{or, for a continuum of frequencies,}\qquad g(t) = \int \hat g(f)\,e^{2\pi i f t}\,df .
+$$
+
+Each complex coefficient $\hat g(f)$ is a phasor: its **length** says how much of frequency $f$ is present, and its **phase** says where in its cycle that component starts. The list of all of them, $\hat g$, is the **Fourier transform** of $g$, the signal described "by frequency" instead of "by time". (For a real signal like a sound, the coefficients come in conjugate pairs at $\pm f$ so that the imaginary parts cancel.)
+
+Two questions follow. Given $g$, how do you *find* $\hat g(f)$? And what does the answer tell you?
+
+<History>
+Joseph Fourier made the claim, controversially, in an 1807 memoir on how heat spreads through solid bodies, and developed it in *Théorie analytique de la chaleur* (1822). Lagrange and others objected that a sum of smooth sines couldn't possibly add up to a function with corners or jumps. Making sense of exactly when and how Fourier was right took mathematicians most of the 19th century, and helped force the modern definitions of "function", "convergence" and "integral".
+</History>
+
+<Quiz id="u0l6-phasor">
+  <Q>A component of a signal has Fourier coefficient $\hat g(5\,\text{Hz}) = 0.3\,e^{i\pi/2}$. What does this tell you?</Q>
+  <Opt>The signal has frequency 0.3 Hz and amplitude 5</Opt>
+  <Opt correct>There is a 5 Hz component of size 0.3, starting a quarter-cycle ahead</Opt>
+  <Opt>The signal is purely imaginary</Opt>
+  <Opt>Nothing physical: only the magnitude means anything</Opt>
+  <Explain>The coefficient is a phasor: length 0.3 at frequency 5 Hz, with phase $\pi/2$ (a quarter-turn). The phase is physically meaningful: shift it and the component moves in time, which changes how it adds up with the other components.</Explain>
+</Quiz>
+
+---
+
+## The winding machine
+
+Here's a way to *see* how to extract a frequency from a signal. Take the signal $g(t)$ and wrap it around the origin of the complex plane: at time $t$, plot the point $g(t)$ units away from the origin, in the direction $e^{-2\pi i f t}$. As $t$ runs on, the direction turns around and around at **winding frequency** $f$, and the signal's value sets how far out the point sits. You get a looping curve.
+
+Now ask: **where is the centre of mass** of that curve? Average the points:
+
+$$
+\hat g(f) \approx \frac{1}{T}\int_0^T g(t)\,e^{-2\pi i f t}\,dt .
+$$
+
+That average *is* the Fourier coefficient. Below, the signal starts as a pure 2 Hz cosine. Slowly drag the winding frequency, or switch on auto-sweep, and watch the arrow from the origin to the centre of mass.
+
+<FourierWinder />
+
+<Try>
+- At most winding frequencies the loops spread evenly around the origin and the centre of mass sits near zero. Near $f = 2$ Hz something dramatic happens: the curve **lines up on one side** and the centre of mass shoots out. The right-hand plot records its length.
+- Switch on **wave 2** (3 Hz). The signal looks messy, but the right-hand plot shows two clean peaks, at 2 Hz and 3 Hz. The machine has unmixed the chord.
+- Look at the colour of the traced spectrum and of the arrow. Away from the peaks, the centre of mass is small and its direction (phase) swings around. At a peak, it is big.
+</Try>
+
+Why does this work? It's **interference again**. Winding at frequency $f$ multiplies each component $e^{2\pi i f' t}$ by $e^{-2\pi i f t}$, giving an arrow that spins at the *difference* frequency $f' - f$. Averaged over a long time, a spinning arrow averages to zero; its contributions cancel, like the evenly spread phasors in lesson 2. Only the component with $f' = f$ stops spinning, and only it survives the averaging. The Fourier transform is a machine for making every frequency except one cancel out.
+
+<Quiz id="u0l6-peaks">
+  <Q>A signal is $g(t) = \cos(2\pi\cdot 1\,t) + 0.5\cos(2\pi\cdot 4\,t)$ (times in seconds). Where will $|\hat g(f)|$ have peaks for $f > 0$, and which is taller?</Q>
+  <Opt>At 0.5 Hz and 1 Hz, equal height</Opt>
+  <Opt correct>At 1 Hz and 4 Hz; the 1 Hz peak is twice as tall</Opt>
+  <Opt>At 5 Hz only (the sum of the frequencies)</Opt>
+  <Opt>At 4 Hz and 1 Hz; the 4 Hz peak is twice as tall</Opt>
+  <Explain>Each cosine produces its own peak at its own frequency, with height proportional to its amplitude (with this normalization, $A/2$, since the other half of each cosine sits at the negative frequency $-f$). Frequencies don't mix: the transform is linear.</Explain>
+</Quiz>
+
+---
+
+## Narrow in time, wide in frequency
+
+Now the trade-off from the opening question. The widget below adds up cosines at frequencies $k = 0, 1, 2, \dots, 60$ (in units of one cycle per window), with amplitudes following a bell curve of adjustable **spectral width**. Watch what the sum looks like.
+
+<PulseBuilder />
+
+<Try>
+- Make the spectral width **small** (only a few low frequencies). The signal is a broad, gentle bump.
+- Make it **large**. The signal becomes a sharp spike. A narrow pulse needs a wide spectrum.
+- Watch the product $\Delta t\,\Delta f$. As you change the width, the two spreads move in opposite directions and their product stays pinned near $1/(4\pi)\approx 0.080$. For a bell-curve spectrum, that's the minimum possible.
+- Turn down **terms used** to chop off the high frequencies, and the spike blunts and grows ripples.
+- Now **scramble the phases**. Every bar keeps exactly the same height, but the colours (phases) are randomized, and the pulse dissolves into noise. The *amplitudes* of the frequencies don't determine the signal; the **phases** carry the information about *when* things happen.
+</Try>
+
+<KeyIdea>
+A function and its Fourier transform cannot both be narrow. Measured by standard deviations,
+
+$$
+\Delta t\;\Delta f \;\ge\; \frac{1}{4\pi},
+$$
+
+with equality only for a Gaussian (bell-curve) pulse. This is a theorem about Fourier transforms; there's no physics in it yet.
+</KeyIdea>
+
+Here's where the physics comes in. In World 1 you'll meet de Broglie's discovery that a particle with momentum $p$ behaves like a wave with wavelength $\lambda = h/p$, so momentum is a *spatial frequency*. A particle's position wavefunction and its momentum wavefunction turn out to be Fourier transforms of each other. The theorem above, translated from ($t$, $f$) into ($x$, $p/h$), becomes the **Heisenberg uncertainty principle**:
+
+$$
+\Delta x\;\Delta p \;\ge\; \frac{\hbar}{2}, \qquad \hbar = \frac{h}{2\pi}.
+$$
+
+A particle with a sharply defined position must be built from a wide spread of momenta. That isn't because measurement is clumsy; it's because a narrow wave *is* a wide mixture of wavelengths.
+
+<NumQuiz id="u0l6-gabor" answer={0.5} tol={0.02}>
+  <Q>A pulse has the minimum possible $\Delta t\,\Delta f = \tfrac{1}{4\pi}$. You make it twice as short in time while keeping it minimal. By what factor does $\Delta t$ change? (Then think about $\Delta f$.)</Q>
+  <Hint>"Twice as short" is a factor for $\Delta t$ directly; $\Delta f$ must then compensate.</Hint>
+  <Explain>$\Delta t$ is multiplied by $0.5$. To keep the product fixed, $\Delta f$ must **double**. Shorter pulses need proportionally wider bandwidth, which is why ultrafast laser pulses lasting femtoseconds aren't a single colour but span a broad range of wavelengths.</Explain>
+</NumQuiz>
+
+<Warning>
+"The uncertainty principle says we can't measure position and momentum precisely because measuring one disturbs the other." The disturbance story was Heisenberg's own first heuristic, but it is not the core of the principle. The deeper statement is the one you just saw: a quantum state *with* a sharply defined position simply *is* a broad superposition of momenta, before anyone measures anything, in the same way a short click simply *is* a broad mix of frequencies.
+</Warning>
+
+---
+
+## From Fourier to the quantum Fourier transform
+
+On a computer, signals are lists of $N$ samples, and the Fourier transform becomes the **discrete Fourier transform** (DFT): an $N\times N$ matrix with entries
+
+$$
+F_{jk} = \frac{1}{\sqrt N}\,\omega^{jk}, \qquad \omega = e^{2\pi i/N}.
+$$
+
+Row $j$ of this matrix is a set of clocks running at speed $j$: entry $k$ has been turned $j$ steps of $1/N$ of a turn, $k$ times. Multiplying a vector by $F$ asks, for each speed $j$, "how well does the vector line up with clocks spinning at speed $j$?", which is the winding machine in discrete form.
+
+With the $1/\sqrt N$ normalization, $F$ is **unitary** (its rows are orthonormal; check that row $j$ and row $j'$ have inner product $\frac1N\sum_k\omega^{(j'-j)k}$, a sum of evenly spread arrows that cancels unless $j = j'$). Unitary means it's a legal quantum operation. Applied to the $2^n$ amplitudes of $n$ qubits, it's called the **quantum Fourier transform**, and it is the heart of Shor's algorithm (World 9), which uses it to find the hidden period of a sequence, exactly the kind of thing the winding machine excels at.
+
+<CSCorner>
+The DFT costs $O(N^2)$ operations done naively, and $O(N\log N)$ with the **fast Fourier transform** (Cooley and Tukey, 1965, though Gauss had found the trick around 1805). The quantum Fourier transform on $n$ qubits ($N = 2^n$) needs only $O(n^2) = O(\log^2 N)$ gates, exponentially fewer. But there's a catch, and it's a recurring one: the output is stored in amplitudes you can't read out directly. A measurement gives you one sample. The QFT is only useful inside algorithms (like period finding) designed so that a few samples are enough.
+</CSCorner>
+
+<Quiz id="u0l6-dft">
+  <Q>The DFT matrix $F$ with the $1/\sqrt N$ normalization is unitary. Which property of the sum $\sum_{k=0}^{N-1}\omega^{mk}$ (with $\omega = e^{2\pi i/N}$) makes this work?</Q>
+  <Opt>It equals $N$ for every integer $m$</Opt>
+  <Opt correct>It equals $N$ when $m$ is a multiple of $N$, and $0$ otherwise: evenly spread arrows cancel</Opt>
+  <Opt>It is always real</Opt>
+  <Opt>It equals $1$ for every $m$</Opt>
+  <Explain>For $m$ not a multiple of $N$, the $N$ arrows $\omega^{mk}$ are spread symmetrically around the circle and add to zero (just like the four arrows $1, i, -1, -i$ in lesson 2). For $m \equiv 0$ they all point at 1 and add to $N$. That's exactly the orthonormality of the rows.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Fourier: a signal is a sum of spinning arrows $\hat g(f)\,e^{2\pi i f t}$. The **Fourier transform** $\hat g(f)$ is a complex number per frequency: magnitude = how much, phase = when.
+- **Winding machine:** $\hat g(f) = $ centre of mass of $g(t)e^{-2\pi i f t}$. Components at other frequencies keep spinning and cancel; only the matching frequency survives.
+- **Phases carry timing:** same amplitudes with scrambled phases give a completely different signal.
+- **Narrow ⇔ wide:** $\Delta t\,\Delta f \ge 1/(4\pi)$. With momentum as spatial frequency, this becomes **Heisenberg's** $\Delta x\,\Delta p \ge \hbar/2$.
+- The normalized **DFT** is unitary; on qubit amplitudes it's the **quantum Fourier transform**, the core of Shor's algorithm.
+
+<Watch title="But what is the Fourier Transform? A visual introduction" by="3Blue1Brown" url="https://www.youtube.com/watch?v=spUNpyF58BY" note="the classic animated introduction to winding a signal around a circle" />
+<Watch title="The more general uncertainty principle, regarding Fourier transforms" by="3Blue1Brown" url="https://www.3blue1brown.com/lessons/uncertainty-principle/" note="Doppler radar, sound, and then Heisenberg" />

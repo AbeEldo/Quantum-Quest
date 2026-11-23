@@ -1,0 +1,207 @@
+import { DoubleSlitLab } from './widgets/DoubleSlitLab';
+
+Richard Feynman opened the quantum volume of his famous *Lectures on Physics* (1963–65) by picking a single experiment. He called it
+
+> "a phenomenon which is impossible, *absolutely* impossible, to explain in any classical way, and which has in it the heart of quantum mechanics. In reality, it contains the *only* mystery."
+
+That experiment is the **double slit**. In this lesson you will run it four times: with water, with light, with light so dim that it arrives one photon at a time, and with electrons. Each run looks simple. Put together, they force you to rethink what "a particle" and "a wave" mean.
+
+<Predict id="u2l1-bullets-vs-waves">
+  <Q>Warm-up. A machine gun sprays bullets at a wall with two slits. Behind it is a sand bank that collects the bullets. Close to the gun the spray is wide and random. What pile shape builds up behind the slits?</Q>
+  <Opt correct>Two humps, one behind each slit (overlapping a bit in the middle)</Opt>
+  <Opt>Many narrow stripes, alternating full and empty</Opt>
+  <Opt>One sharp line exactly in the centre</Opt>
+  <Explain>Each bullet goes through one slit or the other. The pile is just (pile from slit 1) + (pile from slit 2). Keep this "probabilities add" picture in mind; it is what nature refuses to do in a moment.</Explain>
+</Predict>
+
+---
+
+## Waves through two slits
+
+Start with something you can picture: water ripples hitting a barrier with two gaps. Each gap acts like a new source of circular ripples (Huygens' principle), and the two sets of ripples overlap.
+
+<DoubleSlitLab modes={['water', 'light']} title="Waves through two slits" />
+
+<Try>
+- In **Water** mode, look for the "spokes" of flat water fanning out from the slits. Along those lines a crest from one slit always meets a trough from the other.
+- Switch to **Bright light**. Colour now shows the phase of the wave (the same phase wheel used everywhere in this course) and brightness shows amplitude. The dark spokes are where the two phasors point in opposite directions.
+- Close one slit. The stripes vanish and you get a single broad blob. **Interference needs two contributions.**
+- Increase the slit spacing. Do the fringes on the screen get closer together or further apart?
+</Try>
+
+This is exactly the phasor addition from World 0. At a point on the screen, the wave from each slit is a rotating arrow. Their lengths are about equal; what differs is how far each wave travelled, and therefore its phase.
+
+<Quiz id="u2l1-dark-fringe">
+  <Q>At a dark spot on the screen, what is true of the two waves arriving there?</Q>
+  <Opt>Neither slit sends any wave to that spot</Opt>
+  <Opt correct>Their path lengths differ by half a wavelength (or 1.5, 2.5, …), so their phasors point in opposite directions and cancel</Opt>
+  <Opt>Their path lengths are equal</Opt>
+  <Opt why="Equal path lengths give constructive interference — that's the bright centre.">They arrive at the same time, so they add</Opt>
+  <Explain>Each slit on its own *does* light up that spot (close one slit and it brightens). Together they cancel because the extra half-wavelength of travel flips one phasor by $\pi$.</Explain>
+</Quiz>
+
+---
+
+## The geometry of the fringes
+
+Two slits a distance $d$ apart send waves to a far-away screen at angle $\theta$. The wave from the lower slit travels an extra distance $d\sin\theta$, which is a phase lag of
+
+$$
+\delta = \frac{2\pi}{\lambda}\, d\sin\theta .
+$$
+
+Add the two phasors, each of length $A$:
+
+$$
+\psi = A + A e^{i\delta}, \qquad |\psi|^2 = 2A^2(1+\cos\delta) = 4A^2\cos^2\frac{\delta}{2}.
+$$
+
+So the intensity swings between $4A^2$ (bright: $d\sin\theta = m\lambda$) and $0$ (dark: $d\sin\theta = (m+\tfrac12)\lambda$). Note that $4A^2$ is *twice* what you would get by adding the two intensities $A^2 + A^2$. The energy hasn't been created; it has been moved from the dark fringes into the bright ones.
+
+For a screen at distance $L \gg d$, small angles give $\sin\theta \approx y/L$, so neighbouring bright fringes are separated by
+
+$$
+\Delta y \approx \frac{\lambda L}{d}.
+$$
+
+Wider slit spacing gives finer fringes; longer wavelength gives wider fringes. (The slow overall fade of the pattern comes from the finite width of each slit: the single-slit "envelope".)
+
+<NumQuiz id="u2l1-fringe-spacing" answer={2.13} tol={0.06}>
+  <Q>A green laser pointer ($\lambda = 532$ nm) shines on two slits $d = 0.25$ mm apart. The screen is $L = 1.0$ m away. What is the fringe spacing $\Delta y$, **in millimetres**?</Q>
+  <Hint>$\Delta y = \lambda L / d$. Convert everything to metres first, then convert the answer back to mm.</Hint>
+  <Explain>$\Delta y = (532\times10^{-9}\,\text{m})(1.0\,\text{m}) / (0.25\times10^{-3}\,\text{m}) = 2.13\times 10^{-3}$ m $\approx 2.1$ mm. That is easy to see by eye, which is why this is a classic classroom demo.</Explain>
+</NumQuiz>
+
+<History>
+**Thomas Young** described his interference experiments with light to the Royal Society in **1803** (the familiar two-slit version appears in his 1807 lectures) and used them to measure the wavelengths of different colours. At the time Newton's particle ("corpuscle") theory of light dominated, and Young was criticised harshly. By the late 1800s, with Fresnel's work and Maxwell's equations, light was firmly a wave: an oscillating electromagnetic field.
+</History>
+
+---
+
+## Turn the light down… way down
+
+In World 1 you learned that light comes in lumps: **photons**, each carrying energy $E = hf$. So what happens if we make the source so dim that only **one photon at a time** passes through the apparatus? There's nothing for a photon to "interfere with" except… what, exactly?
+
+<Predict id="u2l1-single-photons">
+  <Q>Photons are sent through the two slits one at a time, with long gaps between them. A sensitive camera records where each one lands. After many thousands of photons, what does the picture look like?</Q>
+  <Opt>A faint, smooth version of the fringe pattern: each photon smears out across the whole screen</Opt>
+  <Opt>Two bands behind the slits, like the bullets: each photon goes through one slit</Opt>
+  <Opt correct>Individual dots, landing at random, which gradually build up the fringe pattern</Opt>
+  <Opt>Nothing: interference needs many photons at once</Opt>
+  <Reveal>
+Run it. Start slow (one or two photons per second) and watch each arrival. Then crank up the rate.
+
+<DoubleSlitLab modes={['photons']} title="One photon at a time" />
+
+Every photon arrives as **one whole dot** at **one place**. You can never predict where the next dot will land. But the *statistics* of where dots land follow the wave's intensity pattern exactly, dark fringes included. Turn on **overlay prediction** to compare the histogram with $|\psi|^2$.
+  </Reveal>
+</Predict>
+
+This is the **Born rule** (Max Born, 1926), here in its first form:
+
+<KeyIdea>
+Something wave-like, the **amplitude** $\psi$, travels through *both* slits and interferes with itself. When the photon is detected, it shows up at one point, and the probability of finding it near position $y$ is proportional to $|\psi(y)|^2$.
+</KeyIdea>
+
+<Warning>
+"Each photon splits in two, and the halves interfere." No: you never detect half a photon. Put a detector at each slit and every photon is found at exactly one of them (next lesson!). It is the *amplitude* that has contributions from both paths, not the photon's energy.
+
+Nor do different photons interfere with each other. In the dimmest experiments the next photon hasn't even been emitted when the previous one lands. As Dirac put it, "each photon then interferes only with itself."
+</Warning>
+
+<Try>
+With photons running, **close one slit**. The fringes disappear, and some places on the screen that were dark *start receiving photons*. Opening a second route made certain landing spots *less* likely. No classical particle can do that.
+</Try>
+
+<Quiz id="u2l1-open-slit-fewer">
+  <Q>Point $P$ sits at the centre of a dark fringe. With only slit 1 open, 100 photons per minute land near $P$. Same with only slit 2. With **both** open, roughly how many land near $P$?</Q>
+  <Opt>200, since the two rates add</Opt>
+  <Opt>100</Opt>
+  <Opt correct>Close to 0</Opt>
+  <Opt>400</Opt>
+  <Explain>Each slit alone gives amplitude $\psi_1$ or $\psi_2$ at $P$, with $|\psi_1|^2 = |\psi_2|^2$. At a dark fringe $\psi_2 = -\psi_1$, so $|\psi_1+\psi_2|^2 = 0$. (At a bright fringe you'd get about 400: $|2\psi_1|^2 = 4|\psi_1|^2$.)</Explain>
+</Quiz>
+
+<History>
+In 1909 **G. I. Taylor** photographed fringes with light so feeble that exposures took months, and the fringes were still perfectly sharp. Strictly speaking a dim lamp still emits photons at random, occasionally two close together; truly one-at-a-time single-photon interference was demonstrated by **Grangier, Roger and Aspect** in 1986 using a heralded single-photon source. The answer was the same: dots, building fringes.
+</History>
+
+---
+
+## Now with electrons
+
+Electrons have mass and charge. They leave tracks in cloud chambers and are counted one by one by Geiger counters. Surely *they* behave like the bullets?
+
+In World 1 you met de Broglie's bold guess: a particle with momentum $p$ has a wavelength $\lambda = h/p$.
+
+<Predict id="u2l1-electrons">
+  <Q>Electrons are fired one at a time at a double slit (scaled so that their de Broglie wavelength matters). What builds up on the detector screen?</Q>
+  <Opt>Two bands, like bullets: electrons are particles</Opt>
+  <Opt correct>Dots that build up interference fringes, exactly like single photons</Opt>
+  <Opt>A smooth fringe pattern with no individual dots</Opt>
+  <Reveal>
+Compare the electrons with the bullets:
+
+<DoubleSlitLab modes={['electrons', 'bullets']} title="Electrons vs bullets" />
+
+Electrons behave **exactly** like photons: particle-like arrivals, wave-like statistics. The bullets show what genuinely classical particles do: each goes through one slit (you can see the tracers), and the two single-slit piles just add, with no dark fringes.
+  </Reveal>
+</Predict>
+
+<NumQuiz id="u2l1-electron-lambda" answer={0.123} tol={0.004}>
+  <Q>An electron is accelerated from rest through $100$ V, so its kinetic energy is $100$ eV $= 1.60\times10^{-17}$ J. Using $\lambda = h/p$ with $p = \sqrt{2 m_e E}$, $h = 6.63\times 10^{-34}$ J·s and $m_e = 9.11\times10^{-31}$ kg, what is its wavelength **in nanometres**?</Q>
+  <Hint>$p = \sqrt{2 \times 9.11\times10^{-31} \times 1.60\times10^{-17}} \approx 5.40\times10^{-24}$ kg·m/s.</Hint>
+  <Explain>$\lambda = 6.63\times10^{-34} / 5.40\times10^{-24} \approx 1.23\times10^{-10}$ m $= 0.123$ nm, about the size of an atom. To see fringes, slit spacings must be tiny, or the screen far away. Real experiments use electron microscopes and nanofabricated slits or an "electron biprism" (a charged wire that bends the two halves of the beam together).</Explain>
+</NumQuiz>
+
+<History>
+**Claus Jönsson** (Tübingen) did the first true electron double-slit experiment in **1961**. In **1974** **Pier Giorgio Merli, GianFranco Missiroli and Giulio Pozzi** in Bologna recorded the pattern building up electron by electron (published 1976), and in **1989** **Akira Tonomura's** team at Hitachi made a famous film of single electrons building the pattern, at such a low rate that there was essentially never more than one electron inside the microscope at a time. In 2002, readers of *Physics World* voted the single-electron double slit "the most beautiful experiment in physics". Since then it has been done with neutrons, atoms, and molecules of thousands of atoms.
+</History>
+
+---
+
+## What, then, is going on?
+
+Here is the honest summary, the one Feynman wanted you to sit with.
+
+| | Bullets | Water waves | Photons & electrons |
+|---|---|---|---|
+| Arrive in lumps? | yes | no | **yes** |
+| Pattern with two slits | $P_1 + P_2$ | $\lvert h_1 + h_2\rvert^2$ | $\lvert\psi_1+\psi_2\rvert^2$ |
+| Interference? | no | yes | **yes** |
+
+Quantum objects are **neither** classical particles **nor** classical waves. They are detected like particles, but the *probability* of each outcome is computed like a wave: add **amplitudes** for every indistinguishable way the event can happen, *then* square.
+
+$$
+P_{12} = |\psi_1 + \psi_2|^2 = P_1 + P_2 + \underbrace{2\,\mathrm{Re}(\psi_1^*\psi_2)}_{\text{interference term}} .
+$$
+
+That interference term can be negative. That is the whole difference between classical and quantum probability.
+
+<CSCorner>
+In a randomized algorithm, if an outcome can happen via path 1 *or* path 2, you add probabilities: $P = P_1 + P_2 \ge \max(P_1, P_2)$. More paths can only make an outcome *more* likely.
+
+Quantum mechanics adds complex amplitudes instead. Two paths with amplitudes $+\tfrac12$ and $-\tfrac12$ give probability $0$. This is **the** mechanism behind every quantum speed-up you'll meet later: algorithms are designed so the amplitudes for wrong answers cancel and the amplitudes for right answers reinforce. (Where the analogy breaks: you can't read amplitudes out directly. You only ever see one dot per run.)
+</CSCorner>
+
+<Quiz id="u2l1-what-interferes">
+  <Q>Which statement best describes what the double-slit experiment with single electrons shows?</Q>
+  <Opt>Electrons are really waves of charge spread over the screen</Opt>
+  <Opt>Electrons interfere with other electrons in the beam</Opt>
+  <Opt correct>Each electron is detected at one point, but the probability distribution of those points is given by adding the amplitudes for both slits</Opt>
+  <Opt>Electrons secretly go through one slit, but the slit edges deflect them into stripes</Opt>
+  <Explain>Always a single dot; never half an electron. Yet the dots avoid the dark fringes, which only makes sense if something associated with *each* electron involves both slits. That "something" is the amplitude. The last option fails because closing the *other* slit changes where electrons land, even though they supposedly didn't go through it.</Explain>
+</Quiz>
+
+<Watch title="The Original Double Slit Experiment (and more on the double slit)" by="Veritasium" url="https://www.youtube.com/@veritasium" note="Derek Muller recreates Young's experiment with sunlight; search the channel for 'double slit'." />
+
+---
+
+## Summary
+
+- Two slits + a wave ⇒ **fringes**: bright where path difference $= m\lambda$, dark where it is $(m+\tfrac12)\lambda$. Fringe spacing $\Delta y \approx \lambda L / d$.
+- Dim the light to **one photon at a time**: each photon lands as a single dot at a random spot, yet the dots build the same fringes.
+- **Electrons** (and neutrons, atoms, big molecules) do exactly the same thing.
+- **Born rule:** probability density $\propto |\psi|^2$, where $\psi$ is the sum of the amplitudes for all indistinguishable paths.
+- $P_{12} \ne P_1 + P_2$: the interference term $2\,\mathrm{Re}(\psi_1^*\psi_2)$ can make outcomes *less* likely when more paths are open.
+- Next lesson: what happens if we try to *watch* which slit the particle goes through?

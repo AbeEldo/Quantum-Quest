@@ -1,0 +1,110 @@
+import { FourierSqueeze } from './widgets/FourierSqueeze';
+
+In World 0 you built signals out of frequencies. A pure tone is a single frequency that goes on forever. A sharp click contains every frequency at once. Making a sound short in *time* forces it to be wide in *frequency*. Musicians know this intuitively: a very short note has no definite pitch.
+
+Quantum mechanics has exactly the same structure, with position playing the role of time and momentum the role of frequency. That single fact is the Heisenberg uncertainty principle.
+
+<Predict id="u5l6-squeeze">
+  <Q>You squeeze a wave packet to half its width in position. What happens to its spread in momentum?</Q>
+  <Opt>Nothing: position and momentum are independent</Opt>
+  <Opt>It halves too</Opt>
+  <Opt correct>It doubles (at least)</Opt>
+  <Opt>It becomes zero</Opt>
+  <Reveal>
+It **doubles**. For a Gaussian, $\Delta x\,\Delta p = \hbar/2$ exactly, so halving one doubles the other. For any other shape the product is even bigger. You can't beat the trade-off; at best you can saturate it.
+  </Reveal>
+</Predict>
+
+---
+
+## The momentum wavefunction
+
+A wave packet is a superposition of plane waves $e^{ikx}$, each a momentum eigenstate with $p = \hbar k$. The **weights** of that superposition form the **momentum-space wavefunction** $\phi(p)$:
+
+$$
+\psi(x) = \frac{1}{\sqrt{2\pi\hbar}}\int \phi(p)\,e^{ipx/\hbar}\,dp, \qquad
+\phi(p) = \frac{1}{\sqrt{2\pi\hbar}}\int \psi(x)\,e^{-ipx/\hbar}\,dx .
+$$
+
+<KeyIdea>
+**$\phi(p)$ is the Fourier transform of $\psi(x)$.** It's the same state described in a different basis: $\psi(x) = \langle x|\psi\rangle$ and $\phi(p) = \langle p|\psi\rangle$. $|\phi(p)|^2$ is the probability density for momentum. Measure momentum and you get $p$ with density $|\phi(p)|^2$. The Fourier transform is unitary, so $\int|\phi|^2dp = \int|\psi|^2dx = 1$ (Parseval's theorem).
+</KeyIdea>
+
+This is how the simulator's momentum panel works: it takes an FFT of the 1024 samples of $\psi$. It's also exactly what a measurement in a different basis means. Going from $\psi(x)$ to $\phi(p)$ is a change of basis, just like going from $\{|0\rangle,|1\rangle\}$ to $\{|+\rangle,|-\rangle\}$ with a Hadamard. In fact, the Hadamard *is* the Fourier transform on one qubit. In World 9 the **quantum Fourier transform** does this change of basis on $2^n$ amplitudes using only about $n^2$ gates.
+
+<Quiz id="u5l6-shift">
+  <Q>Multiply a wavefunction by $e^{ik_0x}$ (a position-dependent phase). What happens to $|\phi(p)|^2$?</Q>
+  <Opt>Nothing</Opt>
+  <Opt correct>It shifts by $\hbar k_0$ without changing shape</Opt>
+  <Opt>It gets narrower</Opt>
+  <Opt>It gets multiplied by $e^{ik_0 p}$</Opt>
+  <Explain>Multiplying by a plane wave shifts the Fourier transform: $\phi(p) \to \phi(p - \hbar k_0)$. That's why the phase winding in the colour pictures *is* momentum. Try the $k_0$ slider below: the momentum bump slides, while $|\psi(x)|^2$ doesn't change at all.</Explain>
+</Quiz>
+
+---
+
+## Squeeze it
+
+Choose a shape and squeeze it. The left panel shows $|\psi(x)|^2$ (coloured by phase), the middle shows $|\phi(p)|^2$, and the right panel plots the point $(\Delta x, \Delta p)$. Points below the red hyperbola $\Delta x\,\Delta p = \hbar/2$ are forbidden.
+
+<FourierSqueeze />
+
+<Try>
+- **Gaussian:** drag the width. The point slides *along* the red curve and never leaves it. The product stays at $0.500$: Gaussians are **minimum-uncertainty states**.
+- **Chirped Gaussian:** add an $x^2$ phase. $|\psi(x)|^2$ is unchanged, but the momentum spread grows and the point lifts off the bound. A chirp (position-dependent momentum) wastes uncertainty.
+- **sech** comes close to the bound (about 0.52) but doesn't touch it. **Top-hat**: sharper edges need ever higher momenta, so the product climbs. A perfectly sharp edge would have $\Delta p = \infty$.
+- **Two humps:** pull them apart. $\Delta x$ grows, but $\Delta p$ stays roughly fixed. Instead, $|\phi(p)|^2$ develops **interference fringes** spaced $\hbar\pi/d$ apart, the momentum-space signature of a double slit.
+- No matter what you do, you can never get below the red curve.
+</Try>
+
+<KeyIdea>
+**Heisenberg (Kennard) uncertainty relation:**
+
+$$
+\Delta x\,\Delta p \;\ge\; \frac{\hbar}{2},
+$$
+
+with equality **only** for Gaussian wavefunctions (with no chirp). It's Robertson's inequality from World 4 with $[\hat x,\hat p] = i\hbar$, and it's also a theorem about Fourier transforms: a function and its Fourier transform cannot both be narrow.
+</KeyIdea>
+
+<NumQuiz id="u5l6-min-dp" answer={0.5} tol={0.01}>
+  <Q>In units where $\hbar = 1$, a Gaussian wave packet has $\Delta x = 1$. What is $\Delta p$?</Q>
+  <Explain>Gaussians saturate the bound: $\Delta p = \hbar/(2\Delta x) = 0.5$. Check it in the widget with σ = 1.</Explain>
+</NumQuiz>
+
+<NumQuiz id="u5l6-electron-atom" answer={0.58} tol={0.06}>
+  <Q>An electron confined to an atom has $\Delta x \approx 0.1$ nm. What is the minimum spread in its **velocity**, $\Delta v = \Delta p/m$, in units of $10^6$ m/s? ($\hbar = 1.055\times10^{-34}$ J·s, $m_e = 9.11\times10^{-31}$ kg)</Q>
+  <Hint>$\Delta p \ge \hbar/(2\Delta x) = 5.3\times10^{-25}$ kg·m/s. Divide by $m_e$.</Hint>
+  <Explain>$\Delta v \gtrsim 5.8\times10^5$ m/s $\approx 0.58\times10^6$ m/s. Confinement alone forces atomic electrons to move fast, a few hundred km/s at least, which is the same order as the Bohr-model orbital speed of about $2.2\times10^6$ m/s. The uncertainty principle sets the size and energy scale of atoms.</Explain>
+</NumQuiz>
+
+---
+
+## Two ways to see the same theorem
+
+**As linear algebra.** The Robertson inequality $\Delta A\,\Delta B \ge \frac12|\langle[A,B]\rangle|$ is just Cauchy–Schwarz. With $[\hat x,\hat p] = i\hbar$, the right side is $\hbar/2$ for *every* state. That's why, unlike the spin case in World 4, the bound never becomes trivially zero.
+
+**As signal processing.** To make a narrow bump you need to add many plane waves that are in phase at one point and out of phase everywhere else. The narrower the bump, the wider the range of wavelengths you need. Engineers know this as the **time–bandwidth product**: a 1-nanosecond radio pulse occupies at least about a gigahertz of bandwidth, and that's why fast communication needs wide channels. It's the same mathematics, applied to time and frequency instead of position and momentum.
+
+<CSCorner>
+You use Fourier duality every day without noticing. JPEG and MP3 compression transform blocks of an image or sound into frequency space (with a discrete cosine transform) and drop the frequencies you won't miss. The FFT, Cooley and Tukey's 1965 $O(N\log N)$ algorithm, is what makes that practical. It's also what powers our Schrödinger simulator. The quantum Fourier transform (World 9) is exponentially faster still, acting on $2^n$ amplitudes with about $n^2$ gates, but with a catch: you can't read out all the transformed amplitudes, only sample from them. That catch is why it speeds up only special problems like period-finding (Shor's algorithm).
+</CSCorner>
+
+<Warning>
+**"Uncertainty" doesn't mean the particle has a precise position and momentum that we just can't learn.** A Gaussian packet doesn't *have* a sharp momentum hidden somewhere. Its momentum distribution $|\phi(p)|^2$ *is* the complete truth about momentum, and it has a spread. Bell's theorem (World 6) rules out the "hidden sharp values" picture for good.
+</Warning>
+
+<History>
+**Heisenberg**'s 1927 paper gave the relation as a rough order-of-magnitude statement, $\Delta x\,\Delta p \sim h$, argued from his gamma-ray microscope. **Earle Kennard** proved the sharp inequality $\Delta x\,\Delta p \ge \hbar/2$ the same year, and **Hermann Weyl** (crediting Pauli) gave the Fourier-analysis proof in 1928. The mathematical core, that a function and its Fourier transform can't both be concentrated, is now a family of theorems in harmonic analysis. Mathematicians call it "the uncertainty principle" even when no physics is involved.
+</History>
+
+---
+
+## Summary
+
+- The momentum wavefunction $\phi(p)$ is the **Fourier transform** of $\psi(x)$: the same state in the momentum basis. $|\phi(p)|^2$ is the momentum density.
+- A phase winding $e^{ik_0x}$ shifts momentum by $\hbar k_0$. Phase gradients *are* momentum.
+- **$\Delta x\,\Delta p \ge \hbar/2$**, with equality only for unchirped Gaussians (minimum-uncertainty states).
+- It follows both from $[\hat x,\hat p] = i\hbar$ (Robertson) and from Fourier analysis (time–bandwidth).
+- Confinement forces momentum spread, which sets the scale of atoms and the zero-point energies of the previous lessons.
+- The quantum Fourier transform (World 9) is this same change of basis on qubits.

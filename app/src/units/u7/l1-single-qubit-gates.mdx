@@ -1,0 +1,204 @@
+import { EulerDecomposer } from './widgets/EulerDecomposer';
+import { unitaryGoal } from './lib/goals';
+
+Here is an engineering puzzle. You are building a quantum computer, and a user can ask for **any** single-qubit gate — any $2\times2$ unitary matrix. There are infinitely many of them, a continuum. Your hardware team, meanwhile, can build only a few kinds of physical pulse.
+
+How few? Before reading on, make a guess.
+
+<Predict id="u7l1-how-many">
+  <Q>What is the smallest "menu" of rotations from which every single-qubit gate (up to global phase) can be built exactly?</Q>
+  <Opt>You need rotations about every possible axis</Opt>
+  <Opt>Exactly six named gates: X, Y, Z, H, S, T</Opt>
+  <Opt correct>Rotations by adjustable angles about just two fixed axes, e.g. $z$ and $y$</Opt>
+  <Opt>A single rotation about the $z$-axis, by adjustable angles</Opt>
+  <Explain>Two axes are enough. Any rotation of a sphere can be written as a turn about $z$, then a turn about $y$, then another turn about $z$. These are the **Euler angles**, and this lesson builds up to them.</Explain>
+  <Reveal>
+Rotations about $z$ alone can never move the north pole, so one axis is not enough. Two axes are, and that fact runs real hardware. On IBM's superconducting chips, $z$-rotations are done "virtually" in software: the controller just shifts the phase of every later microwave pulse. They take zero time and add essentially no error. So almost every single-qubit gate costs two physical $\sqrt X$ pulses plus some free $z$-rotations.
+
+To see why this works, we first need to understand single-qubit gates properly, as matrices *and* as rotations.
+  </Reveal>
+</Predict>
+
+---
+
+## The named gates, as matrices
+
+You met these gates as rotations of the Bloch sphere in World 3. Here are their matrices, written in the computational basis $\{|0\rangle, |1\rangle\}$. Column $j$ of a gate's matrix is where it sends $|j\rangle$.
+
+| Gate | Matrix | Bloch-sphere action | Sends |
+|---|---|---|---|
+| $X$ | $\begin{pmatrix}0&1\\1&0\end{pmatrix}$ | $180°$ about $x$ | $\lvert 0\rangle\leftrightarrow\lvert 1\rangle$ |
+| $Y$ | $\begin{pmatrix}0&-i\\i&0\end{pmatrix}$ | $180°$ about $y$ | $\lvert 0\rangle\to i\lvert 1\rangle$ |
+| $Z$ | $\begin{pmatrix}1&0\\0&-1\end{pmatrix}$ | $180°$ about $z$ | $\lvert 1\rangle\to-\lvert 1\rangle$ |
+| $H$ | $\tfrac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}$ | $180°$ about $\tfrac{x+z}{\sqrt2}$ | $\lvert 0\rangle\to\lvert +\rangle$ |
+| $S$ | $\begin{pmatrix}1&0\\0&i\end{pmatrix}$ | $90°$ about $z$ | $\lvert 1\rangle\to i\lvert 1\rangle$ |
+| $T$ | $\begin{pmatrix}1&0\\0&e^{i\pi/4}\end{pmatrix}$ | $45°$ about $z$ | $\lvert 1\rangle\to e^{i\pi/4}\lvert 1\rangle$ |
+
+A few relations are worth memorising, because circuit designers use them constantly:
+
+- **The Paulis square to the identity:** $X^2 = Y^2 = Z^2 = I$. Two half-turns about the same axis make a full turn.
+- **The phase gates form a ladder:** $T^2 = S$ and $S^2 = Z$. An eighth-turn twice is a quarter-turn, and a quarter-turn twice is a half-turn.
+- **Paulis multiply like the axes of 3D space:** $XY = iZ$, $YZ = iX$, $ZX = iY$, and swapping the order flips the sign ($YX = -iZ$). So the Paulis **anticommute**.
+- **Hadamard is "halfway" between $X$ and $Z$:** $H = \tfrac{1}{\sqrt2}(X + Z)$, and $H^2 = I$.
+
+<BlochPlayground title="Gate gallery: press a gate, watch the rotation" gates={['X', 'Y', 'Z', 'H', 'S', 'Sdg', 'T', 'Tdg', 'SX']} />
+
+<Try>
+- Press $T$ eight times starting from $|+\rangle$ (press $H$ first). You walk once around the equator and come back where you started: $T^8 = I$.
+- Press $\sqrt X$ twice from $|0\rangle$. Two quarter-turns about $x$ make one $X$.
+- Press $X$, then $Y$. Compare with a single $Z$. On the sphere you land in the same place, because $YX = -iZ$ and the factor $-i$ is invisible.
+</Try>
+
+<Quiz id="u7l1-ladder">
+  <Q>Which of these equalities is **false**?</Q>
+  <Opt>$T^4 = Z$</Opt>
+  <Opt>$S^2 = Z$</Opt>
+  <Opt correct>$H = X Z$</Opt>
+  <Opt>$X^2 = I$</Opt>
+  <Explain>$T^4 = (T^2)^2 = S^2 = Z$, so the first two are true, and $X^2 = I$ is true. But $XZ = \begin{pmatrix}0&-1\\1&0\end{pmatrix}$, which is $-iY$, not $H$. The Hadamard is the **sum** $(X+Z)/\sqrt2$, not the product. On the sphere, $XZ$ is a half-turn about $y$, and $H$ is a half-turn about the diagonal between $x$ and $z$.</Explain>
+</Quiz>
+
+---
+
+## Rotations by any angle: $R_{\hat n}(\theta) = e^{-i\theta\,\hat n\cdot\vec\sigma/2}$
+
+The named gates are fixed rotations: half-turns, quarter-turns, eighth-turns. Physical hardware gives you a dial instead. Drive a qubit with a resonant pulse for a time $t$ and you rotate it by an angle proportional to $t$. That is the **Rabi oscillation** from World 4. The matching family of gates is
+
+$$
+R_x(\theta) = e^{-i\theta X/2},\qquad R_y(\theta) = e^{-i\theta Y/2},\qquad R_z(\theta) = e^{-i\theta Z/2}.
+$$
+
+The exponential of a matrix is defined by its Taylor series. For a Pauli matrix it collapses to something simple, because $P^2 = I$. The even powers of $P$ are $I$ and the odd powers are $P$, so
+
+$$
+e^{-i\theta P/2} = \cos\frac{\theta}{2}\,I - i\sin\frac{\theta}{2}\,P .
+$$
+
+Written out:
+
+$$
+R_x(\theta) = \begin{pmatrix}\cos\frac\theta2 & -i\sin\frac\theta2\\ -i\sin\frac\theta2 & \cos\frac\theta2\end{pmatrix},\quad
+R_y(\theta) = \begin{pmatrix}\cos\frac\theta2 & -\sin\frac\theta2\\ \sin\frac\theta2 & \cos\frac\theta2\end{pmatrix},\quad
+R_z(\theta) = \begin{pmatrix}e^{-i\theta/2} & 0\\ 0 & e^{i\theta/2}\end{pmatrix}.
+$$
+
+More generally, for any unit vector $\hat n = (n_x, n_y, n_z)$, let $\hat n\cdot\vec\sigma = n_xX + n_yY + n_zZ$. Then $R_{\hat n}(\theta) = \cos\frac\theta2\,I - i\sin\frac\theta2\,(\hat n\cdot\vec\sigma)$ rotates the Bloch sphere by $\theta$ about $\hat n$, right-handed. (Point your right thumb along $\hat n$ and your fingers curl in the direction of rotation.)
+
+<DeepDive title="Why does (n·σ)² = I? And why is it a rotation?">
+Square it out: $(\hat n\cdot\vec\sigma)^2 = \sum_{jk} n_jn_k\,\sigma_j\sigma_k$. The cross terms cancel in pairs because the Paulis anticommute ($\sigma_j\sigma_k = -\sigma_k\sigma_j$ for $j\ne k$). The diagonal terms each give $n_j^2 I$. So the total is $(n_x^2 + n_y^2 + n_z^2)I = I$. The same Taylor-series argument as for a single Pauli then gives the cos/sin formula.
+
+Why is it a rotation? Take a state with Bloch vector $\vec r$. Its density matrix is $\rho = \tfrac12(I + \vec r\cdot\vec\sigma)$, and a gate acts on it as $U\rho U^\dagger$. Grinding through $U(\vec r\cdot\vec\sigma)U^\dagger$ for $U = R_{\hat n}(\theta)$ gives $(R\vec r)\cdot\vec\sigma$, where $R$ is the ordinary $3\times3$ rotation matrix by $\theta$ about $\hat n$. (Nielsen & Chuang, Exercise 4.6.)
+</DeepDive>
+
+The half-angle $\theta/2$ shows up again, just as it did in the Bloch-sphere parametrisation. It has a startling consequence: a full $360°$ turn does **not** give back the identity matrix.
+
+<NumQuiz id="u7l1-two-pi" answer={-1} tol={0.001}>
+  <Q>Plug $\theta = 2\pi$ into $R_z(\theta)$. The result is $R_z(2\pi) = c\cdot I$ for some number $c$. What is $c$?</Q>
+  <Hint>$R_z(2\pi) = \mathrm{diag}(e^{-i\pi}, e^{i\pi})$.</Hint>
+  <Explain>$e^{\pm i\pi} = -1$, so $R_z(2\pi) = -I$. A full turn multiplies every state by $-1$. That is a **global phase**, so you can never see it by measuring the qubit on its own. Spin-½ particles really do this: they need $720°$ to return to $+1$. The sign becomes measurable in interference experiments where only *part* of a beam is rotated. Hold that thought until Lesson 7.4.</Explain>
+</NumQuiz>
+
+Now try steering with continuous rotations. Choose an axis, set an angle and apply it. The target is at latitude $\theta = \pi/3$ on the $+y$ side of the sphere.
+
+<BlochPlayground title="Challenge: reach the target with rotations (can you do it in one?)" gates={[]} rotations target={[Math.PI / 3, Math.PI / 2]} challengeId="u7l1-rot-target" par={1} />
+
+<Note title="One-move solution">
+$R_y(\pi/3)$ followed by $R_z(\pi/2)$ works in two moves. In one move: $R_x(-\pi/3)$ tips the north pole *toward* $+y$, because a right-handed rotation about $+x$ carries $+z$ toward $-y$, and a negative angle reverses that.
+</Note>
+
+---
+
+## Same gate, different matrix: global phase
+
+Compare $S$ with $R_z(\pi/2)$:
+
+$$
+R_z(\tfrac\pi2) = \begin{pmatrix}e^{-i\pi/4}&0\\0&e^{i\pi/4}\end{pmatrix} = e^{-i\pi/4}\begin{pmatrix}1&0\\0&i\end{pmatrix} = e^{-i\pi/4}\,S .
+$$
+
+They differ only by the overall factor $e^{-i\pi/4}$. Applied to any state, the two produce outputs that differ by that same global phase, and no measurement can tell them apart. As stand-alone gates **they are the same physical operation**. The same goes for
+
+$$
+T = e^{i\pi/8}\,R_z(\tfrac\pi4), \qquad H = i\,R_{(\hat x+\hat z)/\sqrt2}(\pi), \qquad X = i\,R_x(\pi).
+$$
+
+The first identity explains a confusing piece of jargon. $T$ is often called the **"$\pi/8$ gate"** even though it rotates by $\pi/4$: pull out the global phase and the diagonal entries are $e^{\mp i\pi/8}$.
+
+<Warning title="Global phase is invisible… until you add a control">
+"Global phase never matters" is true for a gate acting **on its own**. It stops being true once the gate is *controlled* by another qubit. Controlled-$S$ and controlled-$R_z(\pi/2)$ are **different** two-qubit gates, because the "global" factor $e^{-i\pi/4}$ now applies only when the control is $|1\rangle$. That makes it a *relative* phase between the control's branches. Lesson 7.4 turns exactly this effect, called phase kickback, into the engine of quantum algorithms.
+</Warning>
+
+<Quiz id="u7l1-global-phase">
+  <Q>Which pair of single-qubit gates are physically **different** operations?</Q>
+  <Opt why="Rz(π/2) = e^{−iπ/4} S: they differ only by a global phase.">$S$ and $R_z(\pi/2)$</Opt>
+  <Opt why="X = i·Rx(π): only a global phase separates them.">$X$ and $R_x(\pi)$</Opt>
+  <Opt correct>$S$ and $S^\dagger$</Opt>
+  <Opt why="YX = −iZ, so YX and Z differ by the global phase −i.">$Z$ and $YX$</Opt>
+  <Explain>$S^\dagger = \mathrm{diag}(1, -i)$ rotates by $-90°$ about $z$ and $S$ rotates by $+90°$. Applied to $|+\rangle$, one gives $|{+i}\rangle$ and the other $|{-i}\rangle$, two orthogonal states. Each of the other pairs differs only by an overall complex factor.</Explain>
+</Quiz>
+
+---
+
+## Every gate is three turns: the Z-Y-Z decomposition
+
+Now the payoff. A $2\times2$ unitary has 4 real parameters. Remove the global phase and 3 are left, which is exactly the number needed to specify a rotation in 3D: two for the direction of the axis, one for the angle. So, **up to global phase, single-qubit gates are rotations of the Bloch sphere, and every rotation is a single-qubit gate.**
+
+Any rotation can also be broken into turns about two fixed axes:
+
+<KeyIdea title="Z-Y-Z Euler decomposition (Nielsen & Chuang, Theorem 4.1)">
+For every single-qubit unitary $U$ there are real numbers $\alpha, \beta, \gamma, \delta$ with
+
+$$
+U = e^{i\alpha}\,R_z(\beta)\,R_y(\gamma)\,R_z(\delta).
+$$
+
+Matrices act right-to-left, so in a circuit (time flowing left to right) this is: **first** $R_z(\delta)$, **then** $R_y(\gamma)$, **then** $R_z(\beta)$.
+</KeyIdea>
+
+Here is the geometric idea. Wherever $U$ sends the north pole, it lands at some latitude $\gamma$ and longitude $\beta$. The middle $R_y(\gamma)$ tips the north pole down to latitude $\gamma$. The last $R_z(\beta)$ swings it round to longitude $\beta$. That leaves one more freedom, a twist about the state's own axis, and the first $R_z(\delta)$ takes care of it.
+
+Pick a gate below, or build one from an axis and an angle, and watch both versions run. The two dots show where $U$ must send $|0\rangle$ (yellow) and $|+\rangle$ (blue). The three Euler turns get there by a detour, and the single turn about $\hat n$ goes directly, but they finish in the same place. Two probe states agreeing is enough to pin down the whole rotation.
+
+<EulerDecomposer />
+
+<Try>
+- Choose **H**. Its Euler angles are $\delta = \pi$, $\gamma = \pi/2$, $\beta = 0$: a half-turn about $z$, then a quarter-turn about $y$. Check the global phase: $\alpha = \pi/2$, so $H = i\,R_y(\pi/2)\,R_z(\pi)$.
+- Choose **S** or any gate with a vertical axis. Then $\gamma = 0$ and the whole gate is one $z$-rotation.
+- Hit **random** a few times. The decomposition works for every gate.
+</Try>
+
+<DeepDive title="Deriving the angles">
+Divide $U$ by $\sqrt{\det U}$ to get a matrix with determinant 1. Every such matrix has the form $V = \begin{pmatrix}a & -b^*\\ b & a^*\end{pmatrix}$ with $|a|^2 + |b|^2 = 1$. Multiplying out the product gives
+
+$$
+R_z(\beta)R_y(\gamma)R_z(\delta) = \begin{pmatrix} e^{-i(\beta+\delta)/2}\cos\frac\gamma2 & -e^{-i(\beta-\delta)/2}\sin\frac\gamma2\\ e^{i(\beta-\delta)/2}\sin\frac\gamma2 & e^{i(\beta+\delta)/2}\cos\frac\gamma2\end{pmatrix}.
+$$
+
+Match the entries: $\cos\frac\gamma2 = |a|$, $\beta + \delta = -2\arg a$, and $\beta - \delta = 2\arg b$. Three equations, three unknowns. When $b = 0$ (a pure $z$-rotation), only $\beta + \delta$ is determined, which is why there is a whole family of decompositions in that case.
+</DeepDive>
+
+Your turn. Build a Hadamard from $z$- and $y$-rotations only. (The angle buttons appear when a rotation gate is selected.)
+
+<CircuitLab title="Challenge: H from Rz and Ry" n={1} gates={['Rz', 'Ry']} goal={unitaryGoal('H 0', 1, 'implement H (up to global phase)')} challengeId="u7l1-euler-h" maxGates={3} showBloch={false} columns={4} />
+
+<Note title="Real-world gate sets">
+Other axis pairs work too: X-Y-X, Z-X-Z, and so on (Nielsen & Chuang, Exercise 4.10). Qiskit's general single-qubit gate is $U(\theta,\phi,\lambda) = e^{i(\phi+\lambda)/2}R_z(\phi)R_y(\theta)R_z(\lambda)$, which is ZYZ with a convenient global phase. IBM hardware compiles each one as $R_z\,\sqrt X\,R_z\,\sqrt X\,R_z$, with the $R_z$'s implemented virtually.
+</Note>
+
+<CSCorner title="A quantum instruction set">
+Think of $\{R_z(\cdot), \sqrt X\}$ as a tiny **RISC instruction set**. Users write high-level gates, and the compiler (the "transpiler") lowers them to native instructions, merging and cancelling as it goes. Two adjacent $R_z$'s fuse into one, and $\sqrt X\sqrt X$ becomes $X$. It is peephole optimisation, but over a continuous instruction set. Where the analogy breaks: a classical ISA has finitely many opcodes, while here the rotation angle is a real number. Fault-tolerant machines can't afford continuous angles at all, which leads to the "universality" story of Lesson 7.5.
+</CSCorner>
+
+<History>
+In the 1760s and 1770s Leonhard Euler, working on the motion of rigid bodies, described any orientation by three successive rotations about coordinate axes. He also proved that every rotation of a sphere has a fixed axis. His angles went on to describe spinning tops, planets, gyroscopes and aircraft. The neutron interferometry experiments of 1975 later saw the $-1$ from a $360°$ turn directly. The quantum version adds a twist: $2\times2$ unitaries cover each 3D rotation **twice** ($U$ and $-U$ give the same rotation). Mathematicians say $SU(2)$ is a "double cover" of $SO(3)$, and it is the reason for the $\theta/2$ and the $-I$ after a full turn.
+</History>
+
+---
+
+## Summary
+
+- Know the matrices of $X, Y, Z, H, S, T$. Key relations: $X^2 = Y^2 = Z^2 = H^2 = I$, $T^2 = S$, $S^2 = Z$, $XY = iZ$ (cyclic), and $H = (X+Z)/\sqrt2$.
+- Continuous rotations: $R_{\hat n}(\theta) = e^{-i\theta\,\hat n\cdot\vec\sigma/2} = \cos\frac\theta2 I - i\sin\frac\theta2\,\hat n\cdot\vec\sigma$. Note the half-angle. A full turn gives $-I$.
+- **Global phase** is unobservable for a lone gate: $S \simeq R_z(\pi/2)$ and $T \simeq R_z(\pi/4)$, hence the name "$\pi/8$ gate". It becomes observable once the gate is controlled.
+- Up to global phase, single-qubit gates **are** 3D rotations, and every one decomposes as $U = e^{i\alpha}R_z(\beta)R_y(\gamma)R_z(\delta)$, applied in time order $R_z(\delta)$, then $R_y(\gamma)$, then $R_z(\beta)$.
+- Hardware exploits this: free virtual $R_z$ plus a fixed $\sqrt X$ pulse covers every gate.

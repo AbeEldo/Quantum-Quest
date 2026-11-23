@@ -1,0 +1,158 @@
+import { BitFlipCodeLab } from './widgets/BitFlipCodeLab';
+import { c } from '../../engine/complex';
+
+Last lesson ended with a bold claim: if you measure the right *parities*, a continuous error like "rotated by 0.3 radians" turns into a discrete one, either "nothing happened" or "a full flip happened," and both are easy to fix.
+
+That sounds too good to be true. Let's build the code and check every step on a simulator.
+
+<Predict id="u11l2-discrete">
+  <Q>An encoded state $\alpha|000\rangle + \beta|111\rangle$ suffers a small rotation $R_x(0.3)$ on qubit 1. You then measure the parity checks. What state can you end up in?</Q>
+  <Opt>A state slightly rotated on qubit 1, which the code can't fix since it's not a full flip</Opt>
+  <Opt correct>Either exactly the original encoded state, or the encoded state with qubit 1 fully flipped</Opt>
+  <Opt>A random mixture of all eight basis states</Opt>
+  <Opt>The original state, always: small errors are ignored</Opt>
+  <Explain>Measuring the syndrome **projects** the error onto "no error" (probability $\cos^2 0.15 \approx 97.8\%$) or "$X$ on qubit 1" (probability $\sin^2 0.15 \approx 2.2\%$). Both branches are fully correctable. You'll verify this below.</Explain>
+</Predict>
+
+---
+
+## The code space and its four shadows
+
+Encoding with two CNOTs maps one qubit into a **2-dimensional subspace** of the 8-dimensional three-qubit space:
+
+$$
+|\psi\rangle = \alpha|0\rangle + \beta|1\rangle \;\longmapsto\; |\psi_L\rangle = \alpha|000\rangle + \beta|111\rangle, \qquad \mathcal C = \operatorname{span}\{|000\rangle, |111\rangle\}.
+$$
+
+We call $|0_L\rangle = |000\rangle$ and $|1_L\rangle = |111\rangle$ the **logical** basis states. Now look at what single bit flips do:
+
+| Error | Encoded state becomes | lives in span of | Syndrome $(Z_0Z_1, Z_1Z_2)$ |
+|---|---|---|---|
+| none | $\alpha\lvert 000\rangle + \beta\lvert 111\rangle$ | $\lvert 000\rangle, \lvert 111\rangle$ | $(+1,+1)$ → bits **00** |
+| $X_0$ | $\alpha\lvert 100\rangle + \beta\lvert 011\rangle$ | $\lvert 100\rangle, \lvert 011\rangle$ | $(-1,+1)$ → bits **10** |
+| $X_1$ | $\alpha\lvert 010\rangle + \beta\lvert 101\rangle$ | $\lvert 010\rangle, \lvert 101\rangle$ | $(-1,-1)$ → bits **11** |
+| $X_2$ | $\alpha\lvert 001\rangle + \beta\lvert 110\rangle$ | $\lvert 001\rangle, \lvert 110\rangle$ | $(+1,-1)$ → bits **01** |
+
+The eight-dimensional space splits neatly into **four orthogonal 2D subspaces**: the code space and its three "shadows." Each single-qubit error moves the code space onto a different shadow, and *within* each shadow $\alpha$ and $\beta$ sit untouched. Measuring "which subspace are we in?" therefore reveals the error and nothing else.
+
+The questions that ask "which subspace?" are the **parity checks** $Z_0Z_1$ and $Z_1Z_2$. Each has eigenvalue $+1$ if the two qubits agree and $-1$ if they disagree, and **every** state in a given subspace has the same answers.
+
+---
+
+## Measuring parities without measuring qubits
+
+How do you measure $Z_0Z_1$ without measuring $Z_0$ and $Z_1$ separately, which would collapse the superposition? Use an **ancilla** qubit:
+
+1. Start the ancilla in $|0\rangle$.
+2. CNOT from data qubit 0 to the ancilla, then CNOT from data qubit 1 to the ancilla.
+3. The ancilla now holds $q_0 \oplus q_1$, the parity, **in every branch of the superposition at once**. Since $|000\rangle$ and $|111\rangle$ have the same parity, the ancilla ends up in a definite state and is *not* entangled with $\alpha, \beta$.
+4. Measure the ancilla.
+
+A second ancilla does the same for $q_1 \oplus q_2$. Then a classical lookup decides the correction: **10** → flip $q_0$, **11** → flip $q_1$, **01** → flip $q_2$, **00** → do nothing.
+
+<BitFlipCodeLab />
+
+<Try>
+- Choose **full X error** and move it between qubits. The syndrome follows the error, and the corrected fidelity is always 1.0000.
+- Change the input angles. The syndromes never depend on $\theta$ or $\phi$: the measurement learns *where the error is* but *nothing about the data*.
+- Choose **no error**. The syndrome is always 00, and the ancillas never disturb the encoded state.
+</Try>
+
+<Quiz id="u11l2-syndrome">
+  <Q>The ancillas report syndrome **11** (both parities odd). What does the decoder do?</Q>
+  <Opt>Flip qubit 0</Opt>
+  <Opt correct>Flip qubit 1</Opt>
+  <Opt>Flip qubit 2</Opt>
+  <Opt>Flip qubits 0 and 2</Opt>
+  <Explain>Qubit 1 is the only single qubit that takes part in **both** checks ($Z_0Z_1$ and $Z_1Z_2$), so it's the most likely culprit. (Flipping 0 and 2 also matches the syndrome, but a two-error explanation is much less likely when $p$ is small.)</Explain>
+</Quiz>
+
+---
+
+## Continuous errors become discrete
+
+Now the magic. Switch the widget to **small Rx(ε) error**. A small rotation of qubit 1 is
+
+$$
+R_x(\epsilon) = \cos\tfrac{\epsilon}{2}\, I - i \sin\tfrac{\epsilon}{2}\, X
+\quad\Longrightarrow\quad
+R_x^{(1)}(\epsilon)\,|\psi_L\rangle = \cos\tfrac{\epsilon}{2}\,\underbrace{|\psi_L\rangle}_{\text{syndrome }00} \;-\; i\sin\tfrac{\epsilon}{2}\,\underbrace{X_1|\psi_L\rangle}_{\text{syndrome }11}.
+$$
+
+The two pieces live in **orthogonal subspaces** with different syndromes. Measuring the syndrome picks one of them:
+
+- with probability $\cos^2(\epsilon/2)$: syndrome 00, and the state is *exactly* $|\psi_L\rangle$ again,
+- with probability $\sin^2(\epsilon/2)$: syndrome 11, and the state is *exactly* $X_1|\psi_L\rangle$, which the decoder flips back.
+
+Either way, **you end with the perfect encoded state.** The measurement didn't just *detect* the error, it *chose* a discrete version of it.
+
+<Try>
+Set ε to about 0.6 and press "run 1,000 rounds." Compare the counts with $\cos^2(\epsilon/2)$ and $\sin^2(\epsilon/2)$, and check that the average fidelity after correction is 1.000000. Then try ε = π: a rotation by π *is* a full flip.
+</Try>
+
+<NumQuiz id="u11l2-sin2" answer={0.00997} tol={0.0005}>
+  <Q>A rotation error $R_x(0.2)$ hits one qubit of the encoded state. What is the probability that the syndrome measurement reports a flip (instead of "no error")?</Q>
+  <Hint>$\sin^2(\epsilon/2)$ with $\epsilon = 0.2$.</Hint>
+  <Explain>$\sin^2(0.1) \approx 0.00997$. A coherent rotation of 0.2 rad becomes a "flip" only about 1% of the time, and the rest of the time it simply vanishes. This is why we only ever need to correct the **Pauli** errors $X$, $Y$, $Z$: they form a basis for all errors, and syndrome measurement projects onto them.</Explain>
+</NumQuiz>
+
+<KeyIdea>
+**Digitization of errors.** Any single-qubit error operator can be written as $E = e_0 I + e_1 X + e_2 Y + e_3 Z$. If a code can correct $X$, $Y$ and $Z$ on a qubit, syndrome measurement collapses $E$ onto one of them, so the code corrects **every** error on that qubit, including continuous rotations and even non-unitary noise like amplitude damping.
+</KeyIdea>
+
+---
+
+## The phase-flip code
+
+The bit-flip code is blind to $Z$ errors: $Z_0(\alpha|000\rangle + \beta|111\rangle) = \alpha|000\rangle - \beta|111\rangle$, which has the same syndrome as no error. But we know $Z$ is just $X$ in disguise: $HZH = X$. So encode in the **Hadamard basis**:
+
+$$
+|0_L\rangle = |{+}{+}{+}\rangle, \qquad |1_L\rangle = |{-}{-}{-}\rangle .
+$$
+
+A phase flip turns one $|+\rangle$ into $|-\rangle$, which is a "bit flip" in the $\pm$ basis. The parity checks become $X_0X_1$ and $X_1X_2$: do qubits 0 and 1 agree *in the $x$ direction*? Toggle the widget above to **phase-flip code** and repeat the experiments with $Z$ and $R_z(\epsilon)$ errors.
+
+Build the phase-flip encoder yourself. Start from the bit-flip encoder and add one layer:
+
+<CircuitLab title="Encode into the phase-flip code" n={3} gates={['H', 'X', 'Z', 'CNOT']} initialState={[[0.9238795, 0], [0, 0], [0, 0], [0, 0], [0.3826834, 0], [0, 0], [0, 0], [0, 0]]} goal={{ kind: 'state', amps: [c(0.4619398), c(0.1913417), c(0.1913417), c(0.4619398), c(0.1913417), c(0.4619398), c(0.4619398), c(0.1913417)], label: 'prepare α|+++⟩ + β|−−−⟩' }} challengeId="u11l2-phase-encode" maxGates={6} />
+
+<CSCorner>
+This is **syndrome decoding of a linear code**, straight from a classical coding course. The bit-flip code's checks form a **parity-check matrix**
+$H = \begin{pmatrix}1&1&0\\0&1&1\end{pmatrix}$. For an error pattern $e \in \{0,1\}^3$, the syndrome is $s = He \bmod 2$, and the decoder is a lookup table from $s$ to the most likely $e$. The quantum twist is that the syndrome is extracted *coherently*, through ancillas, so that it reveals $e$ without revealing the message. The phase-flip code uses the same $H$ in the Hadamard basis.
+</CSCorner>
+
+---
+
+## What these codes can't do
+
+Each 3-qubit code protects against **one** kind of error on **one** qubit.
+
+- **Two errors** fool it: $X_0X_1$ gives syndrome 01, the decoder "fixes" qubit 2, and the result is $X_0X_1X_2|\psi_L\rangle$, a **logical** bit flip $\alpha|111\rangle+\beta|000\rangle$. With independent flips at rate $p$, the logical error rate is $3p^2 - 2p^3$, the same curve as the classical repetition code.
+- **The other error type** passes straight through: in the bit-flip code a single $Z$ on any qubit acts as a logical $Z_L$ and is never detected.
+
+<Warning>
+**"The 3-qubit code is a quantum error-correcting code, so it protects a qubit."** Only against bit flips (or only against phase flips). Since real qubits suffer both, the bit-flip code alone actually makes a qubit *more* vulnerable to dephasing: three physical qubits can each suffer a $Z$, and any one of them corrupts the logical state. Protecting against *arbitrary* errors needs a genuinely quantum code. That's Shor's 9-qubit code, next lesson.
+</Warning>
+
+<Quiz id="u11l2-zerror">
+  <Q>In the **bit-flip** code, a $Z$ error hits qubit 2. What happens?</Q>
+  <Opt>Syndrome 01, and the decoder fixes it</Opt>
+  <Opt correct>Syndrome 00, and the error silently becomes a logical phase flip $\alpha|000\rangle - \beta|111\rangle$</Opt>
+  <Opt>The ancillas detect it as a two-qubit error</Opt>
+  <Opt>Nothing: $Z$ errors don't affect $|000\rangle$ or $|111\rangle$</Opt>
+  <Explain>$Z_2|000\rangle = |000\rangle$ and $Z_2|111\rangle = -|111\rangle$, so the relative sign flips. Both terms still have even parities, so the syndrome is 00 and the error is invisible: an undetected **logical** error.</Explain>
+</Quiz>
+
+<History>
+The first experimental quantum error correction came in **1998**, when Cory and colleagues ran a 3-qubit code on molecules in an NMR spectrometer. Trapped ions followed in 2004 (Chiaverini et al., NIST) and superconducting circuits in 2012 (Reed et al., Yale). These demonstrations corrected one error type on a handful of qubits. Getting from there to codes that beat their own physical qubits took another decade (Lesson 4).
+</History>
+
+---
+
+## Summary
+
+- **Encoding:** $\alpha|0\rangle+\beta|1\rangle \mapsto \alpha|000\rangle+\beta|111\rangle$ with two CNOTs. The code space is a 2D subspace, and single flips move it to orthogonal "shadow" subspaces.
+- **Syndrome extraction:** ancillas + CNOTs measure the **parities** $Z_0Z_1$, $Z_1Z_2$, which reveal *where* the error is and *nothing* about $\alpha,\beta$. Lookup: 10 → $q_0$, 11 → $q_1$, 01 → $q_2$.
+- **Digitization:** a small rotation becomes "no error" with probability $\cos^2(\epsilon/2)$ or "full flip" with $\sin^2(\epsilon/2)$. Correcting Paulis corrects everything.
+- **Phase-flip code:** the same thing in the $\pm$ basis ($|{+}{+}{+}\rangle, |{-}{-}{-}\rangle$; checks $X_0X_1$, $X_1X_2$).
+- Each code fixes only one error type and fails on two errors ($p_L \approx 3p^2$).

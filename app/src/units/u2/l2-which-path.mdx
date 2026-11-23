@@ -1,0 +1,154 @@
+import { WhichPathLab } from './widgets/WhichPathLab';
+
+Last lesson ended with a puzzle. Each photon or electron arrives as a single dot, yet the pattern of dots behaves as if *something* went through both slits. The obvious next move is to **look**: put a detector at the slits and catch each particle in the act.
+
+Feynman imagined doing exactly this with electrons: shine a lamp just behind the slits, so that each electron scatters a little flash of light near whichever slit it passes. Now you know which slit every electron used.
+
+<Predict id="u2l2-watch">
+  <Q>With the lamp on, you see a flash at slit 1 or slit 2 for every electron, never both, never neither. What pattern do the electrons now build on the screen?</Q>
+  <Opt>The same fringes as before; looking doesn't change anything</Opt>
+  <Opt correct>No fringes: just the sum of the two single-slit patterns, like bullets</Opt>
+  <Opt>Fringes, but twice as sharp</Opt>
+  <Opt>Nothing reaches the screen</Opt>
+  <Reveal>
+Try it yourself. Start with the detector off, let a few thousand photons arrive, then press **Perfect detector**.
+
+<WhichPathLab />
+
+With full which-path information the fringes vanish completely. The pattern becomes the pink dashed curve: $P_1 + P_2$, exactly what bullets give. Each particle is still detected at one slit *and* at one spot on the screen, but the interference term is gone.
+  </Reveal>
+</Predict>
+
+---
+
+## Feynman's rule, sharpened
+
+Here is the rule that captures everything so far:
+
+<KeyIdea>
+If an outcome can happen in several ways that are **indistinguishable** (even in principle), **add the amplitudes**, then square.
+If the ways are **distinguishable** (some record anywhere in the universe tells them apart), **add the probabilities** of each way.
+</KeyIdea>
+
+The phrase *even in principle* is doing a lot of work. It doesn't matter whether anyone reads the detector, or whether the record gets thrown away unread. If the information *exists*, the paths are distinguishable and interference is gone.
+
+<Quiz id="u2l2-unread">
+  <Q>A which-path detector records each electron's slit on a hard drive. Nobody ever looks at the data; the drive is later destroyed unread. What does the screen show?</Q>
+  <Opt>Fringes, because no conscious observer learned anything</Opt>
+  <Opt correct>No fringes, because the record existed when the electron hit the screen</Opt>
+  <Opt>Fringes that appear only after the drive is destroyed</Opt>
+  <Explain>Interference depends on whether the two paths lead to *the same* final state of the whole world, detector included. A detector in state "slit 1" vs "slit 2" makes the final states different, so their amplitudes can't add. Consciousness plays no role. (Destroying the drive *in a way that leaves no trace* is essentially impossible for a macroscopic record; that's decoherence, coming in World 10.)</Explain>
+</Quiz>
+
+---
+
+## Why: the detector becomes part of the state
+
+Let's do it properly with kets. Before the screen, the particle is in a combination of "came through slit 1" and "came through slit 2". A detector starts in some ready state $|d_0\rangle$. When the particle passes slit 1 the detector ends up in $|d_1\rangle$; via slit 2 it ends up in $|d_2\rangle$. So at the screen, the amplitude for "particle at $y$ *and* detector in some state" is
+
+$$
+\psi_1(y)\,|d_1\rangle \;+\; \psi_2(y)\,|d_2\rangle .
+$$
+
+The probability of a hit at $y$ is the squared length of that vector (World 0: $\lVert v\rVert^2 = \langle v|v\rangle$):
+
+$$
+P(y) = |\psi_1|^2 + |\psi_2|^2 + 2\,\mathrm{Re}\!\left[\psi_1^*\psi_2\,\langle d_1|d_2\rangle\right].
+$$
+
+Everything hangs on the **overlap** $\langle d_1 | d_2\rangle$ of the two detector states:
+
+- **No detector** (or one that doesn't change): $|d_1\rangle = |d_2\rangle$, the overlap is $1$, and you get full interference.
+- **Perfect detector**: $|d_1\rangle \perp |d_2\rangle$, the overlap is $0$, and the interference term vanishes. You get $P_1 + P_2$.
+- **In between**: the fringes are only partly washed out.
+
+<Quiz id="u2l2-overlap">
+  <Q>Suppose the "detector" is a single atom near the slits whose state is barely nudged: $\langle d_1|d_2\rangle = 0.99$. What do you expect on the screen?</Q>
+  <Opt>No fringes at all, since the atom was disturbed</Opt>
+  <Opt correct>Almost perfect fringes, with dark fringes very slightly filled in</Opt>
+  <Opt>Fringes twice as bright</Opt>
+  <Explain>The interference term is multiplied by $0.99$, so the fringes are 99% as deep. The two detector states are nearly identical, so they carry almost no information about the path.</Explain>
+</Quiz>
+
+<Warning>
+"Measurement destroys interference because the measuring photon gives the electron a clumsy kick." That's the story Heisenberg originally told, and in Feynman's lamp version the kicks are indeed there. But it's not the fundamental reason. In 1998 Dürr, Nonn and Rempe built an atom interferometer where the which-path marker was stored in the atom's *internal* state (its electron energy levels), and they showed the momentum kicks were far too small to blur the fringes. The fringes vanished anyway. **What destroys interference is the existence of which-path information,** that is, correlation between the path and something else, not a random push.
+</Warning>
+
+---
+
+## Partial information: $V^2 + D^2 \le 1$
+
+Two numbers quantify the trade-off.
+
+- The **fringe visibility** $V = \dfrac{I_{\max} - I_{\min}}{I_{\max} + I_{\min}}$ is $1$ for perfect fringes and $0$ for none.
+- The **distinguishability** $D$ measures how well you could guess the path by reading the detector. $D = 0$ means a coin-flip guess; $D = 1$ means you're always right. (Precisely: the best possible probability of guessing correctly is $\tfrac12(1+D)$.)
+
+For the setup above with equal slit amplitudes, $V = |\langle d_1|d_2\rangle|$ and $D = \sqrt{1-|\langle d_1|d_2\rangle|^2}$, so
+
+$$
+V^2 + D^2 = 1 .
+$$
+
+If the detector is noisy or partly random, the best you can do is worse, and in general **Englert's duality relation** (1996) holds:
+
+$$
+V^2 + D^2 \le 1 .
+$$
+
+You can have perfect fringes or perfect path knowledge, or a bit of each, but never more than this "quarter circle" budget allows. This is a precise, quantitative version of what Niels Bohr called **complementarity**.
+
+<WhichPathLab />
+
+<Try>
+- Slide **D** slowly from 0 to 1. Watch the yellow dot move around the quarter circle and the two detector-state arrows open up from parallel to perpendicular.
+- Click on a dark fringe of the pattern and look at the clocks. "Amplitudes add" gives almost 0 there; "probabilities add" doesn't. The actual value sits in between, weighted by the overlap.
+</Try>
+
+<NumQuiz id="u2l2-visibility" answer={0.8} tol={0.01}>
+  <Q>A which-path marker with pure states gives distinguishability $D = 0.6$. What is the best fringe visibility $V$ you can see?</Q>
+  <Hint>For pure detector states, $V^2 + D^2 = 1$.</Hint>
+  <Explain>$V = \sqrt{1 - 0.36} = 0.8$. Path knowledge of $0.6$ costs only 20% of the visibility, because the quarter circle is flat near the top. Small amounts of information are cheap; the last bit of certainty is expensive.</Explain>
+</NumQuiz>
+
+<History>
+**Bohr and Einstein** argued for years (the famous debates at the Solvay conferences of 1927 and 1930) about whether a clever apparatus could reveal the path *and* show fringes. Einstein proposed a recoiling slit that would record which slit the particle used; Bohr replied that the uncertainty in the slit's own position would then wash out the fringes. The modern understanding, made precise by **Wootters and Zurek** (1979) and **Englert** (1996), is that the trade-off holds whatever the mechanism.
+</History>
+
+---
+
+## Erasing the information (optional)
+
+<DeepDive title="The quantum eraser, without the mysticism">
+Suppose the detector states are orthogonal, but instead of reading the detector in the $\{|d_1\rangle, |d_2\rangle\}$ basis you measure it in the basis $|d_\pm\rangle = (|d_1\rangle \pm |d_2\rangle)/\sqrt2$, which reveals *nothing* about the path. Rewrite the joint state:
+
+$$
+\psi_1|d_1\rangle + \psi_2|d_2\rangle = \tfrac{1}{\sqrt2}\big[(\psi_1+\psi_2)|d_+\rangle + (\psi_1-\psi_2)|d_-\rangle\big].
+$$
+
+Sort the screen hits by the detector result. The "+" subset shows fringes $|\psi_1+\psi_2|^2$; the "−" subset shows anti-fringes $|\psi_1-\psi_2|^2$, bright exactly where the others are dark. Added together they give the featureless $P_1 + P_2$ again. **The screen never shows fringes by itself**, so nothing travels back in time and no signal is sent. The fringes only appear when you use the detector data to pick out subsets. This is the "quantum eraser" (Scully & Drühl 1982; many experiments since).
+</DeepDive>
+
+<CSCorner>
+Think of the detector as an **ancilla qubit** that gets flipped depending on the path, like a CNOT from "path" to "detector". After that, the path qubit is **entangled** with the ancilla, and looked at on its own it behaves like a classical coin, not a superposition. Its phase information has leaked away.
+
+This is the single biggest enemy of quantum computers. Any stray interaction that leaves even a partial record of a qubit's value in the environment (a phonon, a photon, a nuclear spin) shrinks the interference terms. That's **decoherence**, the topic of World 10.
+</CSCorner>
+
+<Quiz id="u2l2-which-statements">
+  <Q>Select all statements that are correct.</Q>
+  <Opt correct>Fringes vanish whenever the two paths leave orthogonal records, even if no one reads them</Opt>
+  <Opt correct>With partial which-path information, the visibility satisfies $V \le \sqrt{1-D^2}$</Opt>
+  <Opt>Watching the slits makes the particle go through both slits at once</Opt>
+  <Opt why="The 1998 atom-interferometer experiment ruled this out as the fundamental mechanism.">Loss of fringes is always caused by momentum kicks from the measuring light</Opt>
+  <Explain>The first two are exactly the duality relation. The third has it backwards: the detector always finds the particle at *one* slit. The fourth was ruled out by experiments where the kicks are negligible but the fringes still vanish.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Detect which slit each particle uses, and the fringes **disappear**: the pattern becomes $P_1 + P_2$.
+- **Rule:** indistinguishable paths → add amplitudes; distinguishable paths → add probabilities.
+- Mathematically the interference term is multiplied by the overlap $\langle d_1|d_2\rangle$ of the detector states the two paths leave behind.
+- Partial information gives partial fringes: $V^2 + D^2 \le 1$ (Englert 1996), with equality for pure detector states.
+- It's the **existence** of a record, not a clumsy kick and not a conscious observer, that kills interference. Leaking information to the environment is *decoherence*.

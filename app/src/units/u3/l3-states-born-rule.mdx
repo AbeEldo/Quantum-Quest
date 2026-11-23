@@ -1,0 +1,174 @@
+import { BornRuleExplorer } from './widgets/BornRuleExplorer';
+
+The Stern–Gerlach experiments gave us a list of hard facts:
+
+1. Along any axis, exactly **two** outcomes.
+2. Repeat the same measurement and you get the **same** answer.
+3. Prepare $z+$, measure $x$: **50/50**. Prepare $x+$, measure $z$: also **50/50**.
+4. Prepare $z+$, measure along an axis tilted by $\theta$: "+" with probability $\cos^2(\theta/2)$.
+
+Now we build the mathematical model that reproduces *all* of them. It's the same model, line for line, that runs every quantum computer, so this lesson is where "spin" officially becomes "**qubit**".
+
+---
+
+## States are unit vectors
+
+<Definition term="Qubit state">
+The state of a spin-½ particle (or any two-level system) is a **unit vector** in $\mathbb{C}^2$. Name the "up along $z$" and "down along $z$" states
+$$
+|\!\uparrow\rangle \equiv |0\rangle = \begin{pmatrix}1\\0\end{pmatrix}, \qquad |\!\downarrow\rangle \equiv |1\rangle = \begin{pmatrix}0\\1\end{pmatrix}.
+$$
+They form an **orthonormal basis**, so every state can be written as a **superposition**
+$$
+|\psi\rangle = \alpha|0\rangle + \beta|1\rangle, \qquad |\alpha|^2 + |\beta|^2 = 1 .
+$$
+</Definition>
+
+$|0\rangle$ and $|1\rangle$ are **orthogonal**, $\langle 0|1\rangle = 0$, because they are the two mutually exclusive answers to the same question: an atom that is definitely $z+$ is *never* found $z-$.
+
+And here is the rule connecting vectors to experiments:
+
+<KeyIdea title="The Born rule">
+A measurement has an orthonormal basis of possible outcomes $\{|b_0\rangle, |b_1\rangle\}$. For a system in state $|\psi\rangle$:
+$$
+P(b_k) = |\langle b_k|\psi\rangle|^2 ,
+$$
+and immediately afterwards the system is in the state $|b_k\rangle$ (**collapse**).
+</KeyIdea>
+
+For the $z$ measurement this just says $P(0) = |\alpha|^2$ and $P(1) = |\beta|^2$. Collapse explains fact 2: once you're in $|0\rangle$, measuring $z$ again gives $|\langle 0|0\rangle|^2 = 1$.
+
+<NumQuiz id="u3l3-p1" answer={0.25} tol={0.005}>
+  <Q>A spin is in the state $|\psi\rangle = \tfrac{\sqrt3}{2}|0\rangle + \tfrac12|1\rangle$. What's the probability of finding it **spin-down** along $z$?</Q>
+  <Explain>$P(1) = |\langle 1|\psi\rangle|^2 = (1/2)^2 = 1/4$. And $P(0) = 3/4$; they sum to 1 because the vector is normalized.</Explain>
+</NumQuiz>
+
+---
+
+## Finding the $x$ states
+
+Which vector is $|{+x}\rangle$, "up along $x$"? Fact 3 says $|\langle 0|{+x}\rangle|^2 = |\langle 1|{+x}\rangle|^2 = \tfrac12$, so both components have magnitude $1/\sqrt2$. The simplest choice is
+
+$$
+|+\rangle \equiv |{+x}\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle + |1\rangle\big), \qquad |-\rangle \equiv |{-x}\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle - |1\rangle\big).
+$$
+
+Check: they're orthogonal ($\langle +|-\rangle = \tfrac12(1 - 1) = 0$), each is 50/50 in the $z$ basis, and $|0\rangle$ is 50/50 in the $x$ basis: $|\langle\pm|0\rangle|^2 = \tfrac12$. ✓ That's the whole of Experiment 3: $z+ \xrightarrow{\text{SG-}x} |+\rangle \xrightarrow{\text{SG-}z}$ 50/50.
+
+For real amplitudes you can **see** this. Draw states as arrows in a plane: $|0\rangle$ points right, $|1\rangle$ points up, and $|\pm\rangle$ point along the diagonals. A measurement basis is a pair of perpendicular axes, and each probability is the **squared length of the projection** onto an axis.
+
+<BornRuleExplorer />
+
+<Try>
+- Drag the state onto the $|0\rangle$ axis and switch between the **Z** and **X** bases. Certain in one, 50/50 in the other.
+- Press **Measure once** a few times. The arrow snaps onto a basis axis, and further measurements in the same basis repeat the answer. Then switch basis and measure: the old answer is gone.
+- Use **100 fresh copies** to watch the counts approach the predicted bars.
+</Try>
+
+<Quiz id="u3l3-minus-z">
+  <Q>An atom is in state $|-\rangle$. It is measured along $z$, giving "up". Then it is measured along $x$. What is the probability of "$x-$"?</Q>
+  <Opt>1, since it started in $|-\rangle$</Opt>
+  <Opt correct>$1/2$</Opt>
+  <Opt>0</Opt>
+  <Explain>After the $z$ measurement it is in $|0\rangle$; the $|-\rangle$ history is erased. $|\langle -|0\rangle|^2 = 1/2$.</Explain>
+</Quiz>
+
+---
+
+## Tilted analyzers and the half-angle
+
+For an analyzer tilted by $\theta$ from $z$ toward $x$, the "up" state is
+
+$$
+|{+\hat n}\rangle = \cos\frac{\theta}{2}\,|0\rangle + \sin\frac{\theta}{2}\,|1\rangle, \qquad |{-\hat n}\rangle = -\sin\frac{\theta}{2}\,|0\rangle + \cos\frac{\theta}{2}\,|1\rangle .
+$$
+
+The Born rule then gives $P(+\hat n \mid 0) = |\langle{+\hat n}|0\rangle|^2 = \cos^2(\theta/2)$, exactly the measured fact 4. Notice what happened. A **physical** rotation of the magnet by $\theta$ corresponds to rotating the **state vector** by only $\theta/2$ in the plane. Spin-up and spin-down point in *opposite* directions in space ($180°$), but their state vectors are perpendicular ($90°$). The little dial in the widget shows the physical spin direction, at twice the vector's angle.
+
+<BornRuleExplorer initialAlpha={30} challengeId="u3l3-certain-basis" showBloch />
+
+The challenge above: the state is $\cos 30°|0\rangle + \sin 30°|1\rangle$. Find the tilted basis in which the outcome is **certain**. Then work out where a Stern–Gerlach magnet would have to point (from the dial, or with the half-angle rule).
+
+<Quiz id="u3l3-which-magnet">
+  <Q>The state $\cos 30°\,|0\rangle + \sin 30°\,|1\rangle$ is "spin up" along which physical direction?</Q>
+  <Opt>$30°$ from $z$ toward $x$</Opt>
+  <Opt correct>$60°$ from $z$ toward $x$</Opt>
+  <Opt>$15°$ from $z$ toward $x$</Opt>
+  <Opt>Along $x$</Opt>
+  <Explain>Match $\cos(\theta/2) = \cos 30°$, so $\theta = 60°$. State-vector angles are half of physical angles.</Explain>
+</Quiz>
+
+---
+
+## Why complex numbers are unavoidable
+
+There's a third axis, $y$. By symmetry, $|{\pm y}\rangle$ must be 50/50 when measured along $z$ **and** along $x$. Try to find such a vector with *real* amplitudes. In the plane picture you need an arrow at $45°$ to both the $z$ axes and the $x$ axes, and there isn't room: the diagonals are already taken by $|\pm\rangle$.
+
+With complex amplitudes there is room:
+
+$$
+|{+i}\rangle \equiv |{+y}\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle + i|1\rangle\big), \qquad |{-i}\rangle \equiv |{-y}\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle - i|1\rangle\big).
+$$
+
+Check against $x$ (remember the bra conjugates): $\langle +|{+i}\rangle = \tfrac12(1 + i)$, and $|1+i|^2/4 = 2/4 = \tfrac12$. ✓
+
+<NumQuiz id="u3l3-plus-y" answer={0.5} tol={0.005}>
+  <Q>A spin is prepared in $|{+i}\rangle$. It's measured along $x$. What is $P(x-)$?</Q>
+  <Hint>$|-\rangle = \tfrac{1}{\sqrt2}(|0\rangle - |1\rangle)$, so $\langle -|{+i}\rangle = \tfrac12(1 - i)$.</Hint>
+  <Explain>$|1 - i|^2/4 = 2/4 = 1/2$. Spin up along $y$ is 50/50 along both $x$ and $z$: three mutually "unbiased" bases.</Explain>
+</NumQuiz>
+
+So three perpendicular directions in space require **complex** two-dimensional vectors. The Stern–Gerlach facts alone force amplitudes to be complex. Here's the full dictionary:
+
+| Spin "up along…" | Ket | Amplitudes | Photon polarization |
+|---|---|---|---|
+| $+z$ | $\lvert 0\rangle$ | $(1, 0)$ | $H$ (horizontal) |
+| $-z$ | $\lvert 1\rangle$ | $(0, 1)$ | $V$ (vertical) |
+| $+x$ | $\lvert +\rangle$ | $\tfrac{1}{\sqrt2}(1, 1)$ | $D$ (diagonal, $45°$) |
+| $-x$ | $\lvert -\rangle$ | $\tfrac{1}{\sqrt2}(1, -1)$ | $A$ (anti-diagonal, $135°$) |
+| $+y$ | $\lvert {+i}\rangle$ | $\tfrac{1}{\sqrt2}(1, i)$ | circular |
+| $-y$ | $\lvert {-i}\rangle$ | $\tfrac{1}{\sqrt2}(1, -i)$ | the other circular |
+
+---
+
+## One qubit, many costumes
+
+The last column shows that a photon's polarization is **the same mathematical object** as an electron's spin. Both are unit vectors in $\mathbb{C}^2$ obeying the Born rule. The physical *angles* differ by a factor of 2: a polarizer at angle $\alpha$ corresponds to a spin analyzer at angle $2\alpha$. That's why orthogonal polarizations ($H$, $V$) are $90°$ apart while orthogonal spins ($z+$, $z-$) are $180°$ apart. Flip the **show as photon polarization** toggle in either widget above to see the same vector relabelled.
+
+This is the deep reason quantum computing doesn't care what a qubit is made of. Trapped-ion qubits use two energy levels of an ion, superconducting "transmon" qubits use the two lowest energy levels of a nonlinear circuit, photonic qubits use polarization or paths, and spin qubits use electron or nuclear spins. **Any two-level quantum system is a qubit**, with the same math every time.
+
+<Predict id="u3l3-plus-vs-coin">
+  <Q>Alice hands you a spin. Either it's in $|+\rangle$, or she flipped a fair coin and prepared $|0\rangle$ or $|1\rangle$ accordingly (without telling you which). Is there any single measurement that tells these two situations apart better than guessing?</Q>
+  <Opt>No: both give 50/50 when you measure along $z$, so they're the same thing</Opt>
+  <Opt correct>Yes: measure along $x$. $|+\rangle$ always gives $x+$; the coin-flip spin gives $x+$ only half the time</Opt>
+  <Opt>Only by measuring infinitely many times</Opt>
+  <Explain>Not with certainty from one copy, but a single $x$ measurement is already informative. If you see $x-$, it was definitely the coin-flip spin. Over a handful of copies the difference becomes overwhelming. A superposition is **not** "secretly 0 or 1, we just don't know which". It's a definite state, pointing along $+x$.</Explain>
+</Predict>
+
+<Warning>
+"A qubit in $|+\rangle$ is half 0 and half 1" or "it's really 0 or 1 and we don't know which". Both are wrong. $|+\rangle$ is a perfectly definite state: spin up along $x$, which gives a **certain** answer to the $x$ question. It only looks random if you insist on asking the $z$ question. "Superposition" is always relative to a chosen basis.
+</Warning>
+
+<CSCorner>
+Compare a **probabilistic bit** with a **qubit**:
+
+| | probabilistic bit | qubit |
+|---|---|---|
+| state | $(p_0, p_1)$, $p_i \ge 0$ | $(\alpha, \beta) \in \mathbb{C}^2$ |
+| normalization | $p_0 + p_1 = 1$ ($L^1$ norm) | $\lvert\alpha\rvert^2 + \lvert\beta\rvert^2 = 1$ ($L^2$ norm) |
+| readout | see $i$ with prob. $p_i$ | see $i$ with prob. $\lvert\text{amp}_i\rvert^2$ |
+| other bases? | no | yes, infinitely many |
+
+The switch from the 1-norm to the 2-norm, with complex entries, is the entire difference, and it's what allows cancellation (World 2). Scott Aaronson likes to describe quantum mechanics as "probability theory with the 2-norm instead of the 1-norm".
+</CSCorner>
+
+---
+
+## Summary
+
+- A qubit (spin-½) state is a unit vector $\alpha|0\rangle + \beta|1\rangle$ in $\mathbb{C}^2$; $|0\rangle = |\!\uparrow\rangle$, $|1\rangle = |\!\downarrow\rangle$.
+- **Born rule:** measuring in an orthonormal basis $\{|b_k\rangle\}$ gives outcome $k$ with probability $|\langle b_k|\psi\rangle|^2$ and leaves the state in $|b_k\rangle$.
+- Measurement bases: $z$: $|0\rangle, |1\rangle$; $x$: $|\pm\rangle = \tfrac{1}{\sqrt2}(|0\rangle \pm |1\rangle)$; $y$: $|{\pm i}\rangle = \tfrac{1}{\sqrt2}(|0\rangle \pm i|1\rangle)$.
+- A tilted analyzer at physical angle $\theta$ has up state $\cos\tfrac\theta2|0\rangle + \sin\tfrac\theta2|1\rangle$: **state angles are half of physical angles.**
+- The $y$ axis forces amplitudes to be **complex**.
+- Photon polarization, spin, ion levels, transmons: all the same qubit, with polarization angles doubled to match spin angles.

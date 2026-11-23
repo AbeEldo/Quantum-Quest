@@ -1,0 +1,164 @@
+import { PartialMeasure } from './widgets/PartialMeasure';
+import { CorrelationLab } from './widgets/CorrelationLab';
+import { NoSignalling } from './widgets/NoSignalling';
+
+Alice and Bob make a Bell pair $|\Phi^+\rangle = \tfrac{1}{\sqrt2}(|00\rangle+|11\rangle)$ in the lab. Alice keeps $q_0$, Bob keeps $q_1$, and Bob boards a starship. A year later he is a light-year away, with his qubit carefully isolated the whole time.
+
+Alice measures her qubit in the $Z$ basis and gets **0**.
+
+<Predict id="u6l3-bob-state">
+  <Q>At the instant Alice reads "0", what is the state of Bob's qubit, a light-year away?</Q>
+  <Opt>Still 50/50. Nothing Alice does here can affect Bob there</Opt>
+  <Opt correct>$|0\rangle$. If Bob now measures in $Z$, he gets 0 with certainty</Opt>
+  <Opt>$|+\rangle$, the superposition is passed along to Bob</Opt>
+  <Opt>Undefined until a light signal has had a year to reach him</Opt>
+  <Explain>In the joint state, the only term with Alice = 0 is $|00\rangle$. Once Alice has seen 0, the only possibility left is $|00\rangle$, so Bob's qubit is $|0\rangle$, and his $Z$ measurement will agree with hers with certainty.</Explain>
+  <Reveal>
+That's the mathematics of **partial measurement**, and it sounds like instant action at a distance. Einstein called it *spukhafte Fernwirkung*, "spooky action at a distance". In this lesson you'll learn the rule that makes it precise. You'll see the correlations hold in *every* basis, not just $Z$. And you'll see the surprising fact that keeps relativity safe: **Bob can't notice anything has happened**, so nothing usable travels faster than light.
+  </Reveal>
+</Predict>
+
+---
+
+## The rule: keep the matching terms, then renormalise
+
+Write a general two-qubit state grouped by Alice's bit:
+
+$$
+|\psi\rangle = \underbrace{a|00\rangle + b|01\rangle}_{\text{Alice} = 0} + \underbrace{c|10\rangle + d|11\rangle}_{\text{Alice} = 1}.
+$$
+
+When Alice measures $q_0$ in the $Z$ basis:
+
+1. She gets 0 with probability $p_0 = |a|^2 + |b|^2$, the total weight of the terms where her bit is 0.
+2. If she gets 0, every term with her bit equal to 1 disappears, and what's left is **rescaled** so its probabilities sum to 1:
+
+$$
+|\psi\rangle \;\longrightarrow\; \frac{a|00\rangle + b|01\rangle}{\sqrt{p_0}} = |0\rangle \otimes \frac{a|0\rangle + b|1\rangle}{\sqrt{|a|^2+|b|^2}} .
+$$
+
+Afterwards the pair is a **product state**, and Bob holds a definite qubit state. In the amplitude grid, Alice's measurement picks a **row**. The other row vanishes, and the surviving row, rescaled, *is* Bob's new state.
+
+<PartialMeasure />
+
+<Try>
+- With $|\Phi^+\rangle$, measure a few times (use "re-share" between rounds). Alice's results are random, but each time Bob's qubit jumps to the *same* pole she saw. His Bloch arrow grows from a dot to full length.
+- Switch Alice to the **X basis**. Now the rows are $|+\rangle$ and $|-\rangle$, and Bob's qubit lands on the equator: $|+\rangle$ or $|-\rangle$, matching Alice's outcome.
+- Try the product state $|+\rangle|0\rangle$. Both rows hold the same Bob state, so Alice's result changes nothing for Bob. No entanglement, no "spooky" update.
+</Try>
+
+<NumQuiz id="u6l3-renorm" answer={0.5} tol={0.01}>
+  <Q>The pair is in $\tfrac{1}{\sqrt3}\big(|00\rangle + |01\rangle + |10\rangle\big)$. Alice measures $q_0$ and gets 0. What is the probability that Bob now measures $q_1 = 1$?</Q>
+  <Hint>Keep the Alice = 0 row, $\tfrac{1}{\sqrt3}(|00\rangle + |01\rangle)$, and renormalise it.</Hint>
+  <Explain>The Alice = 0 row has weight $p_0 = \tfrac13 + \tfrac13 = \tfrac23$. Renormalising gives $\tfrac{1}{\sqrt2}(|00\rangle+|01\rangle) = |0\rangle\otimes|+\rangle$, so Bob's qubit is $|+\rangle$ and $P(1) = \tfrac12$. Before Alice measured, $P(q_1 = 1)$ was $\tfrac13$, so her result **did** change the odds for Bob's qubit. The catch is that Bob doesn't know what she got. Hold that thought.</Explain>
+</NumQuiz>
+
+---
+
+## Perfect correlation in every direction
+
+So far this looks like the sealed-envelope story: maybe the pair was "really" $|00\rangle$ or $|11\rangle$ all along, and measuring just reveals which. Here's where that story starts to crack. Rewrite $|\Phi^+\rangle$ in the $X$ basis using $|0\rangle = \tfrac{1}{\sqrt2}(|+\rangle + |-\rangle)$ and $|1\rangle = \tfrac{1}{\sqrt2}(|+\rangle - |-\rangle)$:
+
+$$
+|\Phi^+\rangle = \tfrac{1}{\sqrt2}\big(|00\rangle + |11\rangle\big) = \tfrac{1}{\sqrt2}\big(|{+}{+}\rangle + |{-}{-}\rangle\big).
+$$
+
+**Same form, different basis.** It works for any real rotation angle $\theta$. With $|\theta\rangle = \cos\theta|0\rangle + \sin\theta|1\rangle$ and $|\theta^\perp\rangle$ orthogonal to it, $|\Phi^+\rangle = \tfrac{1}{\sqrt2}(|\theta\theta\rangle + |\theta^\perp\theta^\perp\rangle)$. Whatever (real) axis the two measure along, *as long as it's the same axis*, they agree 100% of the time.
+
+Think of the qubits as photons and $\theta$ as the angle of a polariser. If Alice and Bob set their polarisers at angles that differ by $\Delta$, the agreement probability is
+
+$$
+P(\text{agree}) = |\langle\theta_A|\theta_B\rangle|^2 = \cos^2(\theta_A - \theta_B) = \cos^2\Delta .
+$$
+
+Now the classical alternative. John Bell liked to tell the story of his colleague **Reinhold Bertlmann**, who always wore odd socks. See one pink sock and you instantly know the other isn't pink, and nothing spooky happened. Below, the "socks" source gives each pair a shared hidden polarisation $\lambda$, printed on both photons at birth. Each analyser outputs 0 if $\lambda$ lies within 45° of its axis. It's a perfectly reasonable local model, and it also gives 100% agreement at equal angles. Compare the two sources:
+
+<CorrelationLab />
+
+<Try>
+- Set both dials to the same angle (any angle) and fire 2000 pairs with each source. Both sources agree 100%.
+- Set $\Delta = 45°$. Both give 50%.
+- Now set $\Delta = 22.5°$ and fire 2000 pairs with each source. Quantum mechanics says $\cos^2 22.5° \approx 85.4\%$. The socks give only 75%. **The curves differ in between.** Real experiments follow the pink curve.
+</Try>
+
+<NumQuiz id="u6l3-angle" answer={0.25} tol={0.01}>
+  <Q>Alice's analyser is at 0°, Bob's at 60°, and they share $|\Phi^+\rangle$. What is the probability their results agree?</Q>
+  <Explain>$\cos^2 60° = \tfrac14$. Rotating Bob's analyser smoothly turns perfect agreement (0°) into perfect disagreement (90°), following $\cos^2$ rather than a straight line.</Explain>
+</NumQuiz>
+
+The socks model got the easy cases right and the in-between angles wrong. Could a *cleverer* hidden-variable model fix the middle of the curve? Lesson 5 shows the answer is no, for **every** local model, and it's Bell's theorem.
+
+---
+
+## The catch: Bob can't tell
+
+Alice's measurement changes the state of Bob's qubit instantly. So can she use that to send a message? She could agree with Bob in advance that "measure in $Z$" means **yes** and "measure in $X$" means **no**, or that measuring means yes and not measuring means no.
+
+Try it. Pick a strategy for Alice, run thousands of rounds, and look only at what Bob can see in his own lab.
+
+<NoSignalling />
+
+<Try>
+- Run 5000 rounds with each of Alice's three choices. Bob's fraction of zeros is 50% every time, up to statistical noise.
+- Turn on the phone call. When Alice measured $Z$, every one of Bob's results matches hers. The correlation is real, but Bob can only see it by **comparing lists**, and the list has to travel at light speed or slower.
+</Try>
+
+<Warning>
+**Entanglement does not let you send signals faster than light.** Alice's choices, whether to measure, which basis to use, or anything else she does locally, leave Bob's statistics **exactly** unchanged. Each of his results is a fair coin no matter what. The correlations only show up when the two lists are brought together, and that takes an ordinary classical channel. This **no-signalling theorem** is how quantum mechanics and special relativity coexist.
+</Warning>
+
+<Quiz id="u6l3-signal">
+  <Q>Alice and Bob share 1000 $|\Phi^+\rangle$ pairs. To send "yes", Alice measures all her qubits in $Z$. To send "no", she measures them all in $X$. Bob measures his in $Z$. What does Bob see in each case?</Q>
+  <Opt>"yes": all 0s. "no": a 50/50 mix</Opt>
+  <Opt>"yes": perfectly correlated bits. "no": random bits</Opt>
+  <Opt correct>About 500 zeros and 500 ones in both cases, statistically indistinguishable</Opt>
+  <Opt>"yes": random bits. "no": nothing, because his qubits have been destroyed</Opt>
+  <Explain>For "yes", each of Bob's qubits becomes $|0\rangle$ or $|1\rangle$ at random (50/50), matching Alice's random result. For "no", each becomes $|+\rangle$ or $|-\rangle$, and a $Z$ measurement of those is again 50/50. Bob's record is a sequence of fair coin flips either way. "Perfectly correlated" only means something once you compare with Alice's list.</Explain>
+</Quiz>
+
+---
+
+## Why Bob can't tell: the mixture is the same
+
+Look at it from Bob's side. If Alice measures in $Z$, Bob's qubit is $|0\rangle$ or $|1\rangle$ with probability $\tfrac12$ each, and he doesn't know which. If she measures in $X$, it's $|+\rangle$ or $|-\rangle$ with probability $\tfrac12$ each. On the Bloch sphere, the average of two antipodal points is the **centre**, $\vec 0$, in both cases:
+
+$$
+\tfrac12\,\vec r_{0} + \tfrac12\,\vec r_{1} \;=\; \vec 0 \;=\; \tfrac12\,\vec r_{+} + \tfrac12\,\vec r_{-}.
+$$
+
+Two preparations with the same average Bloch vector give identical statistics for **every** measurement Bob could make. (In World 10 language, both are the density matrix $\tfrac12 I$.) That's also exactly Bob's reduced state *before* Alice did anything, from Lesson 2. Alice's measurement updates the description *conditional on her result*. It doesn't change what Bob's qubit looks like to Bob.
+
+<DeepDive title="The general no-signalling theorem">
+Let Alice apply any operation to her qubit: a unitary $U_A$, a measurement with outcomes $\{P_k\}$, anything at all. Bob's reduced state is $\rho_B = \mathrm{Tr}_A\,\rho_{AB}$. For a measurement where Bob doesn't learn the outcome,
+
+$$
+\rho_B' = \sum_k \mathrm{Tr}_A\big[(P_k\otimes I)\rho_{AB}(P_k\otimes I)\big] = \mathrm{Tr}_A\Big[\big(\textstyle\sum_k P_k\big)\otimes I\;\rho_{AB}\Big] = \rho_B ,
+$$
+
+using cyclicity of the partial trace over $A$ and $\sum_k P_k = I$. A unitary works the same way: $\mathrm{Tr}_A[(U\otimes I)\rho(U^\dagger\otimes I)] = \mathrm{Tr}_A\rho$. **Nothing Alice does locally changes $\rho_B$**, so no measurement by Bob can detect it. Who measures first doesn't matter either. For spacelike-separated events, different observers even disagree about which happened first, and the predictions are the same in every order.
+</DeepDive>
+
+<Quiz id="u6l3-order">
+  <Q>Bob measures his half of $|\Phi^+\rangle$ in $Z$ *before* Alice measures hers in $Z$. Which statement is right?</Q>
+  <Opt>Now Bob's outcome determines Alice's, so the "spooky action" flows from Bob to Alice</Opt>
+  <Opt correct>The joint statistics are identical either way: random individual results, perfectly matching pairs</Opt>
+  <Opt>The correlation disappears because the measurements happened in the wrong order</Opt>
+  <Explain>The predictions of quantum mechanics for the pair don't depend on the order. That's why "Alice's measurement caused Bob's result" is a misleading way to put it. The pair behaves as a single system with correlated outcomes, and neither side can steer the other's statistics.</Explain>
+</Quiz>
+
+<CSCorner>
+A shared Bell pair behaves a little like a **shared random seed**: two parties get matching random bits without talking. That alone can't carry a message, because a seed is independent of anything you'd want to say. But the analogy breaks in an important way. A seed is one fixed bit string, while a Bell pair gives correlated answers to whichever question each side chooses to ask, with the strength of the correlation depending on the angle between the questions. Lesson 6 turns that difference into a game you can win more often with Bell pairs than with any shared seed.
+</CSCorner>
+
+<History>
+The phrase *spukhafte Fernwirkung* comes from a 1947 letter from Einstein to Max Born. Einstein objected that quantum mechanics seemed to imply that measuring one system instantly affects a distant one. His proposed fix was that the theory is *incomplete*, and that each particle carries hidden instructions, like Bertlmann's socks. Bell's 1981 essay "Bertlmann's socks and the nature of reality" explains, with the socks as the running joke, why that fix can't reproduce the $\cos^2$ curve.
+</History>
+
+---
+
+## Summary
+
+- **Partial measurement:** Alice's outcome picks the matching terms (a row of the amplitude grid), which are then renormalised by $1/\sqrt{p}$. Afterwards Bob's qubit has a definite state, conditional on Alice's result.
+- $|\Phi^+\rangle$ looks the same in every real basis: $\tfrac{1}{\sqrt2}(|\theta\theta\rangle + |\theta^\perp\theta^\perp\rangle)$. Measuring at angles $\theta_A,\theta_B$ gives $P(\text{agree}) = \cos^2(\theta_A-\theta_B)$.
+- A "socks" hidden-variable model matches at 0°, 45° and 90°, but gives a straight line in between instead of $\cos^2$. Experiments follow $\cos^2$.
+- **No signalling:** nothing Alice does changes Bob's reduced state, so his results are always fair coins. The correlations only appear after a classical comparison, so they carry no faster-than-light message.

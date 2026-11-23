@@ -1,0 +1,224 @@
+import { MatrixTransform } from './widgets/MatrixTransform';
+
+In quantum mechanics, **everything that happens is a matrix.** A quantum gate is a matrix. The passage of time is a matrix. Every measurable quantity (energy, spin, position) is represented by a matrix. Measurement itself is described with matrices.
+
+But not just any matrices. Quantum mechanics uses three special families: **unitary** matrices (for things that *happen*), **Hermitian** matrices (for things you can *measure*) and **projectors** (for *outcomes*). This lesson builds geometric intuition for each, starting from the picture you may know from 3Blue1Brown's *Essence of Linear Algebra*: a matrix is a way of moving every point of space at once.
+
+<Predict id="u0l4-columns">
+  <Q>A $2\times 2$ matrix $M$ sends the basis vector $\hat\imath = (1,0)$ to $(1,1)$ and $\hat\jmath = (0,1)$ to $(-1,1)$. Geometrically, what does $M$ do to the plane?</Q>
+  <Opt>A shear that slides the top of the plane sideways</Opt>
+  <Opt correct>A rotation by 45° combined with stretching everything by $\sqrt2$</Opt>
+  <Opt>A reflection across the line $y = x$</Opt>
+  <Opt>It collapses the plane onto a line</Opt>
+  <Reveal>
+Both images have length $\sqrt2$, they are still perpendicular, and both are turned 45° anticlockwise from where they started. Since a linear map is completely determined by where it sends the basis vectors, the whole plane is rotated 45° and scaled by $\sqrt2$:
+$$
+M = \begin{pmatrix} 1 & -1\\ 1 & 1\end{pmatrix} = \sqrt2\begin{pmatrix}\cos 45° & -\sin 45°\\ \sin 45° & \cos 45°\end{pmatrix}.
+$$
+The **columns of a matrix are the images of the basis vectors.** (Compare multiplying by the complex number $1+i$ in lesson 1: the very same transformation.)
+  </Reveal>
+</Predict>
+
+---
+
+## Matrices move space
+
+A **linear** transformation keeps the origin fixed and keeps grid lines straight, parallel and evenly spaced. It is pinned down entirely by where it sends the basis vectors, and the matrix records exactly that: the first column is where $\hat\imath$ lands, the second is where $\hat\jmath$ lands.
+
+$$
+M = \begin{pmatrix} | & | \\ M\hat\imath & M\hat\jmath \\ | & | \end{pmatrix}, \qquad M\begin{pmatrix}x\\y\end{pmatrix} = x\,(M\hat\imath) + y\,(M\hat\jmath).
+$$
+
+Click through the presets below and watch the whole grid move. The green and red arrows are $\hat\imath$ and $\hat\jmath$; the pink "F" and the yellow unit circle show what happens to shapes, lengths and areas.
+
+<MatrixTransform />
+
+<Try>
+- **Rotate 45°**: the unit circle stays a circle (lengths preserved) and the F is merely turned.
+- **Shear** and **Symmetric**: the unit circle becomes an ellipse, so lengths change. The determinant (shown below the badges) is the factor by which areas scale.
+- **Project on x**: the entire plane is flattened onto a line. The determinant is 0: information is destroyed and cannot be undone.
+- **Swap (X)**, **Z** and **Hadamard** are real $2\times2$ matrices that are also, unchanged, three of the most important quantum gates.
+</Try>
+
+In quantum mechanics the vectors are in $\mathbb{C}^n$ and the matrices have complex entries. We can't draw $\mathbb{C}^2$ (it has four real dimensions), but the algebra is identical, and the real pictures carry most of the intuition. Where the complex case differs, we'll say so.
+
+<Quiz id="u0l4-rot90">
+  <Q>Which matrix rotates the plane by 90° anticlockwise?</Q>
+  <Opt>$\begin{pmatrix}0 & 1\\ 1 & 0\end{pmatrix}$</Opt>
+  <Opt correct>$\begin{pmatrix}0 & -1\\ 1 & 0\end{pmatrix}$</Opt>
+  <Opt>$\begin{pmatrix}0 & 1\\ -1 & 0\end{pmatrix}$</Opt>
+  <Opt>$\begin{pmatrix}-1 & 0\\ 0 & -1\end{pmatrix}$</Opt>
+  <Explain>A 90° anticlockwise turn sends $\hat\imath \to (0,1)$ and $\hat\jmath\to(-1,0)$. Those are the columns. The first option is the swap (a reflection), the third rotates clockwise, and the last is a 180° rotation.</Explain>
+</Quiz>
+
+---
+
+## Eigenvectors: the directions that don't turn
+
+Watch the grid carefully during a transformation and you'll notice that most vectors get knocked off their original line. But some special directions only get **stretched or flipped**, staying on their own line. These are **eigenvectors**, and the stretch factors are **eigenvalues**:
+
+$$
+M|v\rangle = \lambda|v\rangle .
+$$
+
+Find them yourself. The matrix below is fixed. Drag the white vector $v$ until $Mv$ (dashed) lies along the same line.
+
+<MatrixTransform hunt={{ M: [[1, 2], [2, -2]], id: 'u0l4-hunt' }} />
+
+The algebraic route: $M v = \lambda v$ means $(M - \lambda I)v = 0$ has a non-zero solution, so $M - \lambda I$ must squash some direction to zero, so $\det(M - \lambda I) = 0$. For this matrix,
+
+$$
+\det\begin{pmatrix}1-\lambda & 2\\ 2 & -2-\lambda\end{pmatrix} = \lambda^2 + \lambda - 6 = (\lambda - 2)(\lambda+3) = 0,
+$$
+
+so $\lambda = 2$ (direction $(2,1)$) and $\lambda = -3$ (direction $(1,-2)$). Notice that those two directions are **perpendicular**. That is not a coincidence, as we'll see shortly.
+
+What about **Rotate 45°** in the first widget? Every direction turns, so there are no real eigenvectors. Over $\mathbb{C}$, though, the characteristic polynomial always has roots, and the rotation's eigenvalues are the complex numbers $e^{\pm i\pi/4}$. Rotations "are" phases in disguise.
+
+<NumQuiz id="u0l4-eig" answer={3} tol={0.001}>
+  <Q>What is the largest eigenvalue of $\begin{pmatrix}2 & 1\\ 1 & 2\end{pmatrix}$?</Q>
+  <Hint>Try the vector $(1,1)$. Or solve $(2-\lambda)^2 - 1 = 0$.</Hint>
+  <Explain>$(2-\lambda)^2 = 1$ gives $\lambda = 3$ or $\lambda = 1$, with eigenvectors $(1,1)$ and $(1,-1)$. Check: $M(1,1)^T = (3,3)^T$.</Explain>
+</NumQuiz>
+
+---
+
+## The adjoint and Hermitian matrices
+
+Over $\mathbb{C}$ the transpose isn't the natural operation; its partner is the **conjugate transpose**, or **adjoint**, $A^\dagger = \bar A^{T}$ (the same dagger that turns kets into bras). Its defining property is that it lets a matrix hop across an inner product:
+
+$$
+\langle\phi|A\psi\rangle = \langle A^\dagger\phi|\psi\rangle .
+$$
+
+<Definition term="Hermitian">
+A matrix is **Hermitian** (self-adjoint) if $A^\dagger = A$: it equals its own conjugate transpose. Diagonal entries must then be real, and the entry across the diagonal is the conjugate: $A_{jk} = \overline{A_{kj}}$. A real matrix is Hermitian exactly when it is **symmetric**.
+</Definition>
+
+For example $\sigma_y = \begin{pmatrix}0 & -i\\ i & 0\end{pmatrix}$ is Hermitian even though its entries are imaginary: transposing moves $-i$ down to where $i$ is, and conjugating turns it back into $-i$.
+
+<KeyIdea>
+**The spectral theorem.** A Hermitian matrix has
+
+1. **real eigenvalues**, and
+2. **orthogonal eigenvectors** (for distinct eigenvalues); in fact you can always choose an orthonormal basis of eigenvectors.
+</KeyIdea>
+
+In the first widget, compare **Symmetric** (eigen-lines at right angles) with **Not symmetric** (real eigenvalues, but the eigen-lines are skewed). In World 4 you'll see why this theorem is essential: measurable quantities are Hermitian, their eigenvalues are the possible **measurement results** (which had better be real numbers), and their orthonormal eigenvectors are the states those results correspond to.
+
+<DeepDive title="Why the spectral theorem is true (the easy half)">
+Suppose $A = A^\dagger$ and $A|v\rangle = \lambda|v\rangle$ with $|v\rangle\neq0$. Then
+$$
+\lambda\langle v|v\rangle = \langle v|Av\rangle = \langle A^\dagger v|v\rangle = \langle Av|v\rangle = \bar\lambda\langle v|v\rangle ,
+$$
+(the conjugate appears because $\lambda$ comes out of the *left* slot), so $\lambda = \bar\lambda$ is real.
+
+If also $A|w\rangle = \mu|w\rangle$ with $\mu\neq\lambda$, then $\mu\langle v|w\rangle = \langle v|Aw\rangle = \langle Av|w\rangle = \lambda\langle v|w\rangle$ (using $\lambda$ real), so $(\mu - \lambda)\langle v|w\rangle = 0$ and $\langle v|w\rangle = 0$. Orthogonal.
+</DeepDive>
+
+<Quiz id="u0l4-hermitian">
+  <Q>Which of these matrices is Hermitian?</Q>
+  <Opt why="Its diagonal entries are not real, and for a Hermitian matrix A₁₁ must equal its own conjugate.">$\begin{pmatrix} i & 0\\ 0 & 1\end{pmatrix}$</Opt>
+  <Opt correct>$\begin{pmatrix} 2 & 1-i\\ 1+i & -1\end{pmatrix}$</Opt>
+  <Opt why="The off-diagonal entries should be conjugates of each other (1+i and 1−i), not equal.">$\begin{pmatrix} 2 & 1+i\\ 1+i & -1\end{pmatrix}$</Opt>
+  <Opt why="A rotation by 90°: its transpose is its inverse, not itself.">$\begin{pmatrix} 0 & -1\\ 1 & 0\end{pmatrix}$</Opt>
+  <Explain>Hermitian means real diagonal and $A_{21} = \overline{A_{12}}$. In option 2, $\overline{1-i} = 1+i$. ✓ Its eigenvalues are guaranteed real (they are $\tfrac12 \pm \tfrac{\sqrt{17}}{2}$).</Explain>
+</Quiz>
+
+---
+
+## Unitary matrices: rigid motions of $\mathbb{C}^n$
+
+<Definition term="Unitary">
+A matrix $U$ is **unitary** if $U^\dagger U = I$, i.e. $U^{-1} = U^\dagger$. Equivalently, its columns form an orthonormal basis. A real unitary matrix is called **orthogonal** (rotations and reflections).
+</Definition>
+
+The point of the definition is what unitaries *preserve*:
+
+$$
+\langle U\phi|U\psi\rangle = \langle\phi|U^\dagger U\psi\rangle = \langle\phi|\psi\rangle .
+$$
+
+All inner products, and therefore all lengths and all "angles" between states, are unchanged. A unitary is a **rigid motion** of $\mathbb{C}^n$: it can rotate and reflect but never stretch, squash or collapse. In the widget, the unitary presets are exactly those that keep the yellow unit circle a circle.
+
+Why quantum mechanics cares: a normalized state must stay normalized (probabilities must keep summing to 1), and the evolution must be reversible. Unitaries are precisely the linear maps that do both. **Every quantum gate, and the time evolution of every closed system, is unitary.**
+
+Eigenvalues of a unitary have modulus 1: from $U|v\rangle = \lambda|v\rangle$, $\langle v|v\rangle = \langle Uv|Uv\rangle = |\lambda|^2\langle v|v\rangle$. So they are **phases** $e^{i\theta}$ on the unit circle, which is why the 45° rotation had eigenvalues $e^{\pm i\pi/4}$.
+
+<Warning>
+"Hermitian and unitary are opposites." They are different conditions, but a matrix can be both. **Swap (X)**, **Z** and **Hadamard** are each Hermitian *and* unitary (their eigenvalues are real *and* on the unit circle: $\pm1$). Meanwhile a projector is Hermitian but never unitary (unless it is the identity), because it destroys information. And a rotation by 45° is unitary but not Hermitian.
+</Warning>
+
+<Quiz id="u0l4-unitary" >
+  <Q>Which of these is **not** unitary?</Q>
+  <Opt>$\begin{pmatrix}0 & 1\\1 & 0\end{pmatrix}$</Opt>
+  <Opt>$\begin{pmatrix}1 & 0\\0 & i\end{pmatrix}$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}\begin{pmatrix}1 & 1\\1 & -1\end{pmatrix}$</Opt>
+  <Opt correct>$\begin{pmatrix}1 & 1\\0 & 1\end{pmatrix}$</Opt>
+  <Explain>The shear's columns $(1,0)$ and $(1,1)$ are neither orthogonal nor both of length 1, and it stretches the unit circle into an ellipse. The others have orthonormal columns. (The second one is the **S gate**: it multiplies the $|1\rangle$ component by the phase $i$.)</Explain>
+</Quiz>
+
+---
+
+## Outer products, projectors and the spectral decomposition
+
+Dirac notation has one more trick. A ket times a bra, $|a\rangle\langle b|$, is a column times a row: a **matrix**, called an **outer product**.
+
+$$
+|a\rangle\langle b| = \begin{pmatrix}a_1\\a_2\end{pmatrix}\begin{pmatrix}\bar b_1 & \bar b_2\end{pmatrix} = \begin{pmatrix}a_1\bar b_1 & a_1\bar b_2\\ a_2\bar b_1 & a_2\bar b_2\end{pmatrix}.
+$$
+
+What it *does* is clear from the notation, just by sliding brackets together: $\big(|a\rangle\langle b|\big)|\psi\rangle = |a\rangle\,\langle b|\psi\rangle$. It measures how much of $|\psi\rangle$ lies along $|b\rangle$, and outputs that much of $|a\rangle$. For instance, $|0\rangle\langle 1|$ sends $|1\rangle\mapsto|0\rangle$ and $|0\rangle\mapsto 0$.
+
+When $|u\rangle$ is a unit vector, $P = |u\rangle\langle u|$ is the **projector** onto the line through $|u\rangle$: it keeps the component along $|u\rangle$ and discards the rest. Projectors satisfy $P^2 = P$ (projecting twice changes nothing) and $P^\dagger = P$, with eigenvalues 1 (along $|u\rangle$) and 0 (perpendicular). For an orthonormal basis the projectors add up to the identity, the **completeness relation**:
+
+$$
+\sum_k |b_k\rangle\langle b_k| = I .
+$$
+
+(That's the formula $|\psi\rangle = \sum_k|b_k\rangle\langle b_k|\psi\rangle$ from last lesson, with the $|\psi\rangle$ removed.)
+
+Now put the pieces together. A Hermitian matrix has an orthonormal eigenbasis $\{|a_k\rangle\}$ with real eigenvalues $\lambda_k$, so
+
+$$
+\boxed{\;A = \sum_k \lambda_k\,|a_k\rangle\langle a_k|\;}
+$$
+
+the **spectral decomposition**: *project onto each eigen-direction, scale by its eigenvalue, add up.* Build matrices this way below: pick two eigenvalues and the angle of the (orthogonal) eigen-axes.
+
+<MatrixTransform spectral initial={[[1, 0], [0, 1]]} title="Spectral decomposition builder" />
+
+<Try>
+- In **Build from eigenvalues**, set $\lambda_1 = 1$, $\lambda_2 = 0$: you've built a projector. Rotate the axis angle to project onto any line you like.
+- Set $\lambda_1 = 1$, $\lambda_2 = -1$: a reflection (Hermitian *and* unitary). At axis angle $\pi/8$, you get the Hadamard matrix.
+- Set $\lambda_1 = \lambda_2$: the matrix is a multiple of $I$, and *every* vector is an eigenvector.
+</Try>
+
+<CSCorner>
+You have met the spectral decomposition before under another name. A covariance matrix is real symmetric (Hermitian), and **PCA** is exactly its spectral decomposition: orthogonal principal axes, real non-negative variances as eigenvalues.
+
+And here is a useful parallel. A Markov chain evolves a probability vector with a **stochastic matrix**, which preserves the 1-norm $\sum_k p_k = 1$. Quantum mechanics evolves an amplitude vector with a **unitary matrix**, which preserves the 2-norm $\sum_k |\psi_k|^2 = 1$. Same game, different norm, and the 2-norm is what allows negative and complex entries, and therefore cancellation.
+</CSCorner>
+
+<Quiz id="u0l4-outer">
+  <Q>What is the matrix of the projector $|+\rangle\langle+|$, where $|+\rangle = \tfrac{1}{\sqrt2}(1, 1)$?</Q>
+  <Opt>$\begin{pmatrix}1 & 0\\0 & 0\end{pmatrix}$</Opt>
+  <Opt correct>$\tfrac12\begin{pmatrix}1 & 1\\1 & 1\end{pmatrix}$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}\begin{pmatrix}1 & 1\\1 & 1\end{pmatrix}$</Opt>
+  <Opt>$\tfrac12\begin{pmatrix}1 & -1\\-1 & 1\end{pmatrix}$</Opt>
+  <Explain>Column times row: $\tfrac{1}{\sqrt2}\cdot\tfrac{1}{\sqrt2} = \tfrac12$ in every entry. Check $P^2 = P$: $\tfrac14\begin{pmatrix}2&2\\2&2\end{pmatrix} = \tfrac12\begin{pmatrix}1&1\\1&1\end{pmatrix}$ ✓. (The last option is $|-\rangle\langle-|$; the two add to $I$.)</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- A matrix is a transformation; its **columns** are the images of the basis vectors.
+- **Eigenvectors** stay on their own line: $M|v\rangle = \lambda|v\rangle$. Over $\mathbb{C}$, eigenvalues always exist (rotations have eigenvalues $e^{\pm i\theta}$).
+- The **adjoint** $A^\dagger = \bar A^T$ satisfies $\langle\phi|A\psi\rangle = \langle A^\dagger\phi|\psi\rangle$.
+- **Hermitian** ($A = A^\dagger$): real eigenvalues, orthonormal eigenvectors. These will be **observables**.
+- **Unitary** ($U^\dagger U = I$): preserves inner products and lengths; eigenvalues are phases. These will be **gates and time evolution**.
+- **Outer product** $|a\rangle\langle b|$ is a matrix; $|u\rangle\langle u|$ is a **projector** ($P^2 = P$); $\sum_k|b_k\rangle\langle b_k| = I$.
+- **Spectral decomposition:** $A = \sum_k\lambda_k|a_k\rangle\langle a_k|$.
+
+<Watch title="Essence of Linear Algebra, Ch. 3: Linear transformations and matrices" by="3Blue1Brown" url="https://www.3blue1brown.com/lessons/linear-transformations/" note="the 'columns are where the basis vectors land' picture" />

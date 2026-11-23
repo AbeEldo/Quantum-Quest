@@ -1,0 +1,174 @@
+import { MeasurementRunner } from './widgets/MeasurementRunner';
+
+You can never *look at* a quantum state. Every measurement gives one eigenvalue, which is a single coin flip's worth of information, and then the state is gone, replaced by whatever the measurement left behind.
+
+And yet quantum mechanics makes some of the most precise predictions in all of science. The electron's magnetic moment has been measured and calculated to more than ten significant figures, and the two agree. How does a theory whose individual outcomes are random make predictions that sharp?
+
+The answer is **averages**. One shot is random, but the mean of many shots converges to a number the theory pins down exactly.
+
+<Predict id="u4l2-average">
+  <Q>A spin is prepared with Bloch angle $\theta = 60°$ and measured along $z$ (outcomes $+1$ or $-1$). You repeat this a million times, preparing a fresh spin each time. What is the average outcome?</Q>
+  <Opt>$+1$, because the state points mostly up</Opt>
+  <Opt>$0.75$, because that's $P(+1)$</Opt>
+  <Opt correct>$0.5$</Opt>
+  <Opt>$0$, because the outcomes are random</Opt>
+  <Reveal>
+$P(+1) = \cos^2 30° = 0.75$ and $P(-1) = 0.25$, so the average is $(+1)(0.75) + (-1)(0.25) = 0.5$. That's $\cos 60°$, the $z$-component of the Bloch vector. Hold onto that coincidence; it's not a coincidence at all.
+  </Reveal>
+</Predict>
+
+---
+
+## The measurement postulate
+
+Here is the full rule. It builds on the observable postulate from the last lesson.
+
+<KeyIdea>
+**Postulate (measurement).** Measure observable $\hat A = \sum_a a\, P_a$ on a system in state $|\psi\rangle$, where $P_a$ is the projector onto the eigenspace with eigenvalue $a$. Then:
+
+1. **Outcome:** the result is one of the eigenvalues $a$.
+2. **Probability:** $\Pr(a) = \langle\psi|P_a|\psi\rangle = \|P_a|\psi\rangle\|^2$. For a non-degenerate eigenvalue this is $|\langle a|\psi\rangle|^2$.
+3. **Update ("collapse"):** right afterwards the state is
+$$
+|\psi\rangle \;\longrightarrow\; \frac{P_a|\psi\rangle}{\|P_a|\psi\rangle\|}.
+$$
+</KeyIdea>
+
+Part 3 has a striking consequence. Measure $\hat A$ again immediately and you get **the same answer with certainty**, because the state is now an eigenvector. Measurement doesn't just *read* a value: it *produces* a state where that value is definite.
+
+Try both behaviours in the measurement machine. With **re-prepare** on, every shot uses a fresh copy of ψ. Turn it **off** and each shot measures whatever the previous shot left behind.
+
+<MeasurementRunner />
+
+<Try>
+- Start at the default state and press **×100** a few times. The blue running mean wanders at first, then settles inside the yellow funnel around $\langle A\rangle$.
+- Turn **re-prepare off**, reset, and measure a few times. After the first shot, every outcome is identical: the arrow has jumped to the green or red eigenstate and stays there.
+- With re-prepare off, switch the observable from $\sigma_z$ to $\sigma_x$. Now outcomes are random again: a $\sigma_z$ eigenstate is a 50/50 superposition of $\sigma_x$ eigenstates.
+</Try>
+
+<Quiz id="u4l2-repeat">
+  <Q>You measure $\sigma_z$ on $|+\rangle$ and get $-1$. You immediately measure $\sigma_z$ again. Then you measure $\sigma_x$. What are the probabilities?</Q>
+  <Opt>Second $\sigma_z$: 50% $-1$. Then $\sigma_x$: 100% $+1$, since the state was $|+\rangle$</Opt>
+  <Opt correct>Second $\sigma_z$: 100% $-1$. Then $\sigma_x$: 50/50</Opt>
+  <Opt>Second $\sigma_z$: 100% $-1$. Then $\sigma_x$: 100% $+1$</Opt>
+  <Opt>Both 50/50</Opt>
+  <Explain>After the first measurement the state *is* $|1\rangle$. The original $|+\rangle$ is gone. Re-measuring $\sigma_z$ gives $-1$ again for sure. But $|1\rangle = (|+\rangle - |-\rangle)/\sqrt2$, so $\sigma_x$ is 50/50. That's exactly the sequential Stern–Gerlach result from World 3.</Explain>
+</Quiz>
+
+---
+
+## Expectation values: the sandwich formula
+
+The **expectation value** $\langle A\rangle$ is the long-run average of the outcomes. By definition it's $\sum_a a \Pr(a)$. Substitute the Born rule and use the spectral form of $\hat A$:
+
+$$
+\langle A\rangle = \sum_a a\,\langle\psi|P_a|\psi\rangle = \langle\psi|\Big(\sum_a a P_a\Big)|\psi\rangle = \langle\psi|\hat A|\psi\rangle .
+$$
+
+<KeyIdea>
+$$
+\langle A\rangle_\psi = \langle\psi|\hat A|\psi\rangle
+$$
+"Sandwich the operator between the bra and the ket." You never need to diagonalise $\hat A$ to get the average. This is where the product $\hat A|\psi\rangle$ earns its keep.
+</KeyIdea>
+
+Try it for $|\psi\rangle = \cos\frac\theta2|0\rangle + e^{i\phi}\sin\frac\theta2|1\rangle$:
+
+$$
+\langle\sigma_z\rangle = \cos^2\tfrac\theta2 - \sin^2\tfrac\theta2 = \cos\theta, \qquad
+\langle\sigma_x\rangle = 2\cos\tfrac\theta2\sin\tfrac\theta2\cos\phi = \sin\theta\cos\phi .
+$$
+
+Those are the $z$ and $x$ components of the Bloch vector, and $\langle\sigma_y\rangle = \sin\theta\sin\phi$ completes the set. So the coincidence from the opening prediction has an explanation:
+
+$$
+\vec r = \big(\langle\sigma_x\rangle,\ \langle\sigma_y\rangle,\ \langle\sigma_z\rangle\big).
+$$
+
+**The Bloch vector is the list of the three spin averages.** That's also how experimentalists *measure* a Bloch vector. They run thousands of shots in each of the three bases and average, which is called **state tomography**. (You did a version of this in World 3's Hidden State Detective.)
+
+<Warning>
+**An expectation value need not be a possible outcome.** $\langle\sigma_z\rangle = 0.5$ even though every single measurement gives $\pm1$. It's like the average roll of a die being 3.5. Don't read $\langle A\rangle$ as "the value the system really has".
+</Warning>
+
+<NumQuiz id="u4l2-sandwich" answer={0.866} tol={0.005}>
+  <Q>Compute $\langle\sigma_x\rangle$ for $|\psi\rangle = \frac{\sqrt3}{2}|0\rangle + \frac12|1\rangle$.</Q>
+  <Hint>$\sigma_x$ swaps the two amplitudes: $\sigma_x|\psi\rangle = \frac12|0\rangle + \frac{\sqrt3}{2}|1\rangle$. Then take the inner product with $|\psi\rangle$.</Hint>
+  <Explain>$\langle\psi|\sigma_x|\psi\rangle = \frac{\sqrt3}{2}\cdot\frac12 + \frac12\cdot\frac{\sqrt3}{2} = \frac{\sqrt3}{2} \approx 0.866$. This is a state at $\theta = 60°$, $\phi = 0$, and indeed $\sin 60° \approx 0.866$.</Explain>
+</NumQuiz>
+
+---
+
+## Spread: variance and shot noise
+
+Averages aren't the whole story. We also want to know how much the outcomes **scatter**. Quantum mechanics borrows the definition from statistics:
+
+$$
+(\Delta A)^2 = \big\langle (A - \langle A\rangle)^2 \big\rangle = \langle A^2\rangle - \langle A\rangle^2,
+$$
+
+where $\langle A^2\rangle = \langle\psi|\hat A^2|\psi\rangle$. For a Pauli observable $\hat A^2 = I$, so $\langle A^2\rangle = 1$ and
+
+$$
+\Delta\sigma_{n} = \sqrt{1 - \langle\sigma_n\rangle^2}.
+$$
+
+The spread is zero **exactly** when $|\psi\rangle$ is an eigenvector of $\hat A$, and it's largest (equal to 1) when the state is perpendicular to the measurement axis.
+
+The spread also controls how fast your experiment converges. The average of $N$ independent shots has standard error $\Delta A/\sqrt N$. That's the yellow funnel in the widget, and the same $1/\sqrt N$ you know from Monte Carlo. Here's a general observable with eigenvalues you can pick:
+
+<MeasurementRunner general />
+
+<Try>
+- Set $a_+ = 3$, $a_- = 1$ (a made-up "energy" observable). The mean converges to a value strictly between 1 and 3.
+- Point the state straight along the measurement axis. The funnel collapses to a line: $\Delta A = 0$, and every shot agrees.
+</Try>
+
+<CSCorner>
+On real quantum hardware this is called **shot noise**, and it's a big deal. Estimating $\langle Z\rangle$ to precision $\varepsilon$ takes about $(\Delta Z/\varepsilon)^2$ shots. That's why variational algorithms like VQE (World 9) need so many circuit repetitions: each energy estimate is a sum of many expectation values, each paying the $1/\varepsilon^2$ cost.
+</CSCorner>
+
+<NumQuiz id="u4l2-shots" answer={10000} tol={1}>
+  <Q>You want to estimate $\langle\sigma_z\rangle$ for $|+\rangle$ with a standard error of $0.01$. How many shots do you need? (Type the number without commas.)</Q>
+  <Hint>For $|+\rangle$, $\langle\sigma_z\rangle = 0$, so $\Delta\sigma_z = 1$. Solve $1/\sqrt N = 0.01$.</Hint>
+  <Explain>$N = (1/0.01)^2 = 10\,000$. Each extra decimal digit of precision costs a factor of 100 in shots.</Explain>
+</NumQuiz>
+
+---
+
+## What "collapse" is, and what it isn't
+
+The update rule is the strangest postulate, and the most argued about. Here's what's solid:
+
+- It's **operationally correct**. Use it to predict the statistics of any later measurement and you get the right answer, every time.
+- It's **not** the same kind of process as ordinary time evolution, which (next lessons) is smooth, deterministic and unitary. Collapse is abrupt, probabilistic and not unitary. How the two fit together is the famous **measurement problem**.
+
+<Warning>
+**Collapse is not "the clumsy probe knocked the particle".** It's tempting to think measurement disturbs a value that was already there, like shining light on a dust grain to see it. But in World 3 you saw that no pre-existing $x$ and $z$ values can explain sequential Stern–Gerlach statistics, and World 6 (Bell's theorem) will close that loophole for good. Also: collapse can't be used to send signals. You'll prove that in World 6 too.
+</Warning>
+
+Physicists disagree about *what collapse is*. Copenhagen-style views treat the state as our knowledge, which naturally updates when we learn something. Many-worlds says collapse never happens and all outcomes occur in branching worlds. Objective-collapse models add new physics. These interpretations make the same predictions for every experiment done so far. In World 10 you'll see how **decoherence** explains why collapse *looks* abrupt and irreversible for big systems, even though it leaves the deeper question open.
+
+<Quiz id="u4l2-collapse-facts">
+  <Q>Which statements are correct? (Select all that apply.)</Q>
+  <Opt correct>Immediately repeating the same measurement gives the same outcome</Opt>
+  <Opt correct>After measuring $\sigma_z$, the state is an eigenvector of $\sigma_z$</Opt>
+  <Opt why="Unitary evolution is reversible and deterministic. Collapse is neither.">Collapse is just another unitary evolution, like a gate</Opt>
+  <Opt why="Outcomes are random, and no-signalling theorems forbid it (World 6).">Collapse lets you send a message faster than light by choosing when to measure</Opt>
+  <Explain>Repeatability and the eigenvector post-measurement state come straight from the postulate. Collapse is *not* unitary: two different states such as $|0\rangle$ and $|+\rangle$ can both collapse to $|0\rangle$, so you can't undo it.</Explain>
+</Quiz>
+
+<History>
+**Max Born** proposed the probability interpretation in 1926, in a paper on scattering. Famously, the square appears only in a footnote added in proof: the probability is $|\psi|^2$, not $\psi$. He received the Nobel Prize for it in 1954. **John von Neumann**'s 1932 book *Mathematical Foundations of Quantum Mechanics* formalised the projection rule, and **Gerhart Lüders** refined it in 1951 for degenerate eigenvalues, giving the version with projectors used above.
+</History>
+
+---
+
+## Summary
+
+- **Measurement postulate:** outcome $a$ with probability $\langle\psi|P_a|\psi\rangle$, then the state becomes $P_a|\psi\rangle/\|P_a|\psi\rangle\|$.
+- Collapse makes measurements **repeatable**: the same question asked again gives the same answer.
+- **Expectation value:** $\langle A\rangle = \langle\psi|\hat A|\psi\rangle$. The Bloch vector is $(\langle\sigma_x\rangle, \langle\sigma_y\rangle, \langle\sigma_z\rangle)$.
+- **Variance:** $(\Delta A)^2 = \langle A^2\rangle - \langle A\rangle^2$. It is zero iff the state is an eigenstate. For Paulis, $\Delta\sigma_n = \sqrt{1 - \langle\sigma_n\rangle^2}$.
+- Averages from $N$ shots have error $\Delta A/\sqrt N$ (**shot noise**).
+- Collapse is abrupt, random and non-unitary, but not a "clumsy probe" and not a signalling channel.

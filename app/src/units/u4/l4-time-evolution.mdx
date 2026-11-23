@@ -1,0 +1,168 @@
+import { PhaseClocks } from './widgets/PhaseClocks';
+import { IntegratorRace } from './widgets/IntegratorRace';
+
+So far our states have been frozen photographs. Prepare, maybe apply a gate, measure. But real quantum systems **move**. A spin in a magnetic field swings around. An electron in an atom sloshes back and forth. The qubits in a quantum processor drift whenever you're not actively controlling them.
+
+What law moves a quantum state forward in time? Physicists wrote it down in 1926, but you can almost **derive** it yourself from a few reasonable demands. Here are the demands:
+
+1. **Determinism between measurements.** The state now fixes the state later: $|\psi(t)\rangle = U(t)|\psi(0)\rangle$.
+2. **Linearity.** Superpositions evolve into superpositions. That's how interference survives, as you saw in the Mach–Zehnder interferometer. So $U(t)$ is a matrix.
+3. **Probabilities always add up to 1.**
+4. **Smoothness.** $U(0) = I$, and $U$ changes continuously with $t$.
+
+<Predict id="u4l4-which-matrix">
+  <Q>Given those demands, what kind of matrix must the evolution $U(t)$ be?</Q>
+  <Opt>A stochastic matrix (non-negative columns summing to 1), like a Markov chain</Opt>
+  <Opt>A Hermitian matrix, like an observable</Opt>
+  <Opt correct>A unitary matrix, $U^\dagger U = I$</Opt>
+  <Opt>Any invertible matrix</Opt>
+  <Reveal>
+**Unitary.** Demand 3 means *every* state has to keep length 1. For quantum states, length is the 2-norm of complex amplitudes, not the 1-norm of probabilities, and the matrices that preserve 2-norms are exactly the unitaries. Stochastic matrices preserve 1-norms, which is the classical Markov world. They can't produce interference.
+  </Reveal>
+</Predict>
+
+---
+
+## Why unitary, and where the Hamiltonian comes from
+
+Write the demand out. For every $|\psi\rangle$,
+
+$$
+\langle\psi(t)|\psi(t)\rangle = \langle\psi|U^\dagger U|\psi\rangle = 1 .
+$$
+
+A Hermitian matrix $M = U^\dagger U$ with $\langle\psi|M|\psi\rangle = 1$ for *all* unit vectors must be the identity (try eigenvectors), so $U^\dagger U = I$.
+
+Now use smoothness. Over a tiny time step, $U$ is close to the identity:
+
+$$
+U(dt) = I - \frac{i}{\hbar}\,\hat H\,dt + O(dt^2)
+$$
+
+for some matrix $\hat H$. (The $-i/\hbar$ is a convention that pays off in a moment.) Impose unitarity:
+
+$$
+U^\dagger U = I + \frac{i}{\hbar}\big(\hat H^\dagger - \hat H\big)dt + O(dt^2) = I \quad\Longrightarrow\quad \hat H^\dagger = \hat H .
+$$
+
+So the **generator** of time evolution is Hermitian, which means it's an observable. It is the **energy** observable, called the **Hamiltonian**. Putting $|\psi(t+dt)\rangle = U(dt)|\psi(t)\rangle$ in differential form gives the most important equation in quantum mechanics:
+
+<KeyIdea>
+**The Schrödinger equation**
+
+$$
+i\hbar\,\frac{d}{dt}|\psi(t)\rangle = \hat H\,|\psi(t)\rangle
+$$
+
+For a time-independent $\hat H$, the solution is $|\psi(t)\rangle = U(t)|\psi(0)\rangle$ with $U(t) = e^{-i\hat H t/\hbar}$. The exponential of $-i$ times a Hermitian matrix is always unitary.
+</KeyIdea>
+
+Here $\hbar = h/2\pi \approx 1.055\times10^{-34}$ J·s converts energy into angular frequency. Theorists often choose units with $\hbar = 1$, and so will most of our widgets.
+
+<Warning>
+**The Schrödinger equation is completely deterministic.** Given $|\psi(0)\rangle$, the state at any later time is fixed, with no randomness at all. Randomness enters *only* at measurement. Quantum mechanics has two rules for change: smooth unitary evolution, and the abrupt measurement update from last lesson. How they coexist is the measurement problem.
+</Warning>
+
+<Quiz id="u4l4-generator">
+  <Q>Why must the Hamiltonian be Hermitian?</Q>
+  <Opt>Because all matrices in quantum mechanics are Hermitian</Opt>
+  <Opt correct>Because $e^{-iHt/\hbar}$ must be unitary to conserve total probability, which requires $H = H^\dagger$</Opt>
+  <Opt>Because energy can be negative</Opt>
+  <Opt>Because $H$ must commute with every observable</Opt>
+  <Explain>Unitarity of $U(dt) \approx I - iH\,dt/\hbar$ to first order forces $H^\dagger = H$. As a bonus, Hermitian means $H$ is an observable with real eigenvalues, the allowed energies.</Explain>
+</Quiz>
+
+---
+
+## A cautionary race
+
+That first-order formula looks like a perfectly good numerical method: just step $|\psi\rangle \leftarrow (I - i\hat H\,dt/\hbar)|\psi\rangle$ repeatedly. This is **forward Euler**, the first ODE solver anyone learns. Let's race it against a method that respects unitarity. The test system is a spin with $\hat H = \frac{\hbar\omega}{2}\sigma_x$, starting in $|0\rangle$.
+
+<IntegratorRace />
+
+<Try>
+- At $\Delta t = 0.25$, Euler's "total probability" grows past 6. By the end, the probabilities add up to more than 600%!
+- Shrink $\Delta t$. Euler gets better but never stops drifting. Its matrix $I - iH\Delta t$ has $\|\,\cdot\,\| = \sqrt{1 + (\omega\Delta t/2)^2} > 1$.
+- Crank–Nicolson uses $(I + iH\Delta t/2)^{-1}(I - iH\Delta t/2)$, which is exactly unitary, so its norm is 1 forever.
+</Try>
+
+<CSCorner>
+This is a real engineering lesson. Simulators of quantum dynamics use **structure-preserving** integrators: Crank–Nicolson, exact exponentials of small matrices, or the **split-step Fourier** method that powers the Schrödinger simulator in World 5. Each step is exactly unitary, so the norm can't drift no matter how long you run. The same idea in classical mechanics, conserving energy, gives the symplectic integrators used in orbital and molecular-dynamics codes.
+</CSCorner>
+
+---
+
+## Stationary states: energy eigenstates just spin
+
+The easiest way to solve the Schrödinger equation is to work in the **energy eigenbasis**. Suppose $\hat H|E\rangle = E|E\rangle$. Then the solution is
+
+$$
+|\psi(t)\rangle = e^{-iEt/\hbar}\,|E\rangle .
+$$
+
+The state doesn't go anywhere. It just picks up a phase that rotates like a clock hand at angular frequency $E/\hbar$. But a **global** phase is invisible (World 3), so *every* measurement probability is frozen in time. That's why energy eigenstates are called **stationary states**.
+
+This finally explains a puzzle from World 1. Bohr postulated that electrons in atoms sit in "stationary orbits" without radiating, and nobody knew why. Now we do: an energy eigenstate has no time dependence in any observable.
+
+<NumQuiz id="u4l4-bohr-freq" answer={2.47e15} tol={0.03e15}>
+  <Q>Superpositions of two energy levels oscillate at the **Bohr frequency** $f = (E_2 - E_1)/h$. Hydrogen's $n=2$ and $n=1$ levels differ by $10.2$ eV, and $h = 4.136\times10^{-15}$ eV·s. What is $f$, in Hz?</Q>
+  <Hint>$f = 10.2 / (4.136\times 10^{-15})$. You can type `2.47e15`.</Hint>
+  <Explain>$f \approx 2.47\times10^{15}$ Hz. That is exactly the frequency of the Lyman-α photon ($\lambda = c/f \approx 121.6$ nm) emitted when the atom drops from $n=2$ to $n=1$. The charge distribution of the superposition oscillates at the frequency of the light it radiates.</Explain>
+</NumQuiz>
+
+---
+
+## Superpositions beat
+
+The general recipe follows directly:
+
+1. Expand the initial state in energy eigenstates: $|\psi(0)\rangle = \sum_n c_n|E_n\rangle$.
+2. Give each component its own clock: $|\psi(t)\rangle = \sum_n c_n\, e^{-iE_nt/\hbar}|E_n\rangle$.
+
+The magnitudes $|c_n|$ never change, so energy probabilities are conserved. But the clocks spin at **different rates**, so their *relative* phases drift. Anything that depends on relative phase, such as interference in another basis, oscillates:
+
+<PhaseClocks />
+
+<Try>
+- Watch the two clocks on the energy ladder. The higher level spins faster. The pink line, $P(E_2)$, never moves.
+- The middle panel adds the two arrows, the amplitude for finding $|+\rangle = (|E_1\rangle + |E_2\rangle)/\sqrt2$. As the arrows go in and out of step, $P(+)$ swings between 0 and 1. That swing is called a **beat**.
+- Toggle **add +3 to every energy**. Both clocks spin faster, but the yellow trace is unchanged. **Only energy differences are observable**: shifting every energy adds a global phase.
+- Set $E_1 = E_2$. With no beat, every superposition is stationary.
+</Try>
+
+For an equal superposition,
+
+$$
+P(+, t) = \tfrac12\big[1 + \cos\big((E_2 - E_1)\,t/\hbar\big)\big],
+$$
+
+which beats with angular frequency $\omega_{21} = (E_2 - E_1)/\hbar$.
+
+<NumQuiz id="u4l4-beat-period" answer={3.1416} tol={0.02}>
+  <Q>With $\hbar = 1$, $E_1 = 1$ and $E_2 = 3$, what is the period of the beat in $P(+)$?</Q>
+  <Hint>Period $= 2\pi/\omega_{21}$ with $\omega_{21} = E_2 - E_1$.</Hint>
+  <Explain>$2\pi/2 = \pi \approx 3.14$. Check it in the widget: the readout under the trace shows the beat period.</Explain>
+</NumQuiz>
+
+On the Bloch sphere this is something you already know. Call $|E_1\rangle = |0\rangle$ and $|E_2\rangle = |1\rangle$. Up to a constant, the Hamiltonian is
+
+$$
+\hat H = -\frac{\hbar\omega_{21}}{2}\sigma_z ,
+$$
+
+and the relative phase $\phi$ winds steadily (it changes at rate $-\omega_{21}$): the state **precesses around the $z$ axis** at angular rate $\omega_{21}$. Every qubit does this constantly, at its own frequency. Next lesson we'll use it, and fight it, to control qubits.
+
+<History>
+**Erwin Schrödinger** wrote down his wave equation over the 1925–26 winter holidays, during a stay at the Alpine resort of Arosa, and published it in a series of four papers in 1926 titled *Quantisierung als Eigenwertproblem* ("Quantisation as an eigenvalue problem"). The title says it all: the allowed energies are eigenvalues. He then proved his "wave mechanics" was mathematically equivalent to Heisenberg's matrix mechanics. Dirac's 1930 book merged both into the bra-ket formalism you're using.
+</History>
+
+---
+
+## Summary
+
+- Probability conservation forces evolution to be **unitary**. Smoothness then gives $U = e^{-i\hat H t/\hbar}$ with Hermitian $\hat H$, the **Hamiltonian** (energy observable).
+- **Schrödinger equation:** $i\hbar\,\frac{d}{dt}|\psi\rangle = \hat H|\psi\rangle$. It is deterministic. Randomness enters only at measurement.
+- Non-unitary numerical schemes like forward Euler break probability conservation. Use structure-preserving integrators.
+- **Energy eigenstates are stationary:** they only pick up a global phase $e^{-iEt/\hbar}$.
+- Superpositions **beat** at Bohr frequencies $(E_m - E_n)/\hbar$. Only energy differences are observable.
+- A two-level system precesses around the $z$ axis of the Bloch sphere at $\omega_{21}$.

@@ -1,0 +1,177 @@
+import { T1T2Explorer } from './widgets/T1T2Explorer';
+import { SpinEchoLab } from './widgets/SpinEchoLab';
+
+A superconducting qubit sits on a chip inside a dilution refrigerator at about 10 millikelvin, colder than deep space. It's shielded from magnetic fields, light and vibration. You prepare it in $|+\rangle$, do **nothing at all**, and measure along $x$ a fraction of a millisecond later.
+
+Do this a few thousand times and the outcome $|+\rangle$, which should be certain, drifts toward a coin toss. Leave the qubit in $|1\rangle$ instead and, after long enough, it is found in $|0\rangle$. The qubit is **forgetting**. Last lesson's language lets us say precisely how: its state slides off the surface of the Bloch sphere and into the ball.
+
+<Predict id="u10l2-relax">
+  <Q>A transmon qubit is prepared in the excited state $|1\rangle$ and left alone for a long time. Where does its Bloch vector end up?</Q>
+  <Opt>It stays at $|1\rangle$. Nothing acts on it.</Opt>
+  <Opt>It goes to the centre of the ball, $I/2$.</Opt>
+  <Opt correct>It ends up at the north pole, $|0\rangle$, the ground state.</Opt>
+  <Opt>It goes round and round the equator forever.</Opt>
+  <Explain>At 10 mK the qubit's environment is so cold that it can absorb energy but almost never gives any back. The excited state decays to the ground state, the way an excited atom emits a photon. At higher temperature it would settle at a thermal mixture slightly below the north pole.</Explain>
+</Predict>
+
+---
+
+## Two ways to forget
+
+Experimenters summarise a qubit's forgetfulness with two numbers.
+
+**$T_1$, energy relaxation.** The excited state leaks its energy into the environment: a microwave photon escapes into the wiring, or a defect in the chip absorbs a quantum of vibration. The population of $|1\rangle$ decays exponentially,
+
+$$
+P_1(t) = P_1(0)\, e^{-t/T_1} .
+$$
+
+On the Bloch ball the vector is dragged up toward the north pole. In the language of the next lesson, this is the **amplitude-damping channel**.
+
+**$T_2$, dephasing.** Even if no energy is exchanged, the *phase* between $|0\rangle$ and $|1\rangle$ gets scrambled. The coherences decay,
+
+$$
+|\rho_{01}(t)| = |\rho_{01}(0)|\, e^{-t/T_2},
+$$
+
+so the horizontal part of the Bloch vector shrinks toward the $z$ axis. The populations don't change, but the ability to interfere does.
+
+Energy relaxation also kills coherence: once $|1\rangle$ has decayed, there's no superposition left. Careful accounting gives
+
+$$
+\frac{1}{T_2} = \frac{1}{2T_1} + \frac{1}{T_\phi},
+$$
+
+where $T_\phi$ is the time scale of *pure* dephasing. So **$T_2 \le 2T_1$** always, with equality when nothing but relaxation is going on.
+
+<T1T2Explorer />
+
+<Try>
+- Start in $|+\rangle$ with $T_2$ much shorter than $T_1$. The arrow collapses onto the $z$ axis first, and only later creeps up to $|0\rangle$.
+- Start in $|1\rangle$. It never leaves the $z$ axis. There's no coherence to lose, only energy.
+- Turn on a detuning. In the rotating frame the vector spirals inward. The spiral's envelope is $e^{-t/T_2}$.
+- Watch the purity readout. Decoherence is the qubit going from pure to mixed.
+</Try>
+
+<Quiz id="u10l2-t2bound">
+  <Q>A lab reports a qubit with $T_1 = 100\ \mu s$ and $T_2 = 250\ \mu s$. What should you conclude?</Q>
+  <Opt>That's an excellent qubit with very little dephasing.</Opt>
+  <Opt correct>Something is off. $T_2$ can't exceed $2T_1 = 200\ \mu s$.</Opt>
+  <Opt>$T_\phi$ must be negative, so the qubit gains coherence over time.</Opt>
+  <Opt>Nothing; $T_1$ and $T_2$ are unrelated.</Opt>
+  <Explain>$1/T_2 = 1/(2T_1) + 1/T_\phi \ge 1/(2T_1)$, so $T_2 \le 2T_1$. A claimed $T_2 \gt 2T_1$ indicates a measurement or reporting error (or two different qubits).</Explain>
+</Quiz>
+
+---
+
+## The density-matrix picture
+
+Combine both effects for a qubit at rest (no driving, in the rotating frame):
+
+$$
+\rho(t) = \begin{pmatrix} 1 - \rho_{11}(0)\,e^{-t/T_1} & \rho_{01}(0)\, e^{-t/T_2}\,e^{-i\Delta t} \\ \rho_{10}(0)\,e^{-t/T_2}\,e^{+i\Delta t} & \rho_{11}(0)\, e^{-t/T_1} \end{pmatrix} .
+$$
+
+**$T_1$ lives on the diagonal and $T_2$ lives off it.** These are the **Bloch equations** that Felix Bloch wrote down in 1946 for nuclear spins in NMR. The same two numbers now appear on the datasheet of every quantum processor.
+
+But *why* would the phase scramble without any energy changing hands? Here is the key picture for the rest of this lesson. The qubit's frequency is never perfectly fixed. A stray magnetic field, a two-level defect flipping in the chip, or a little charge noise shifts the frequency by an amount $\delta$ that you don't know and that varies from run to run. During a wait of length $t$ the qubit picks up an extra phase $\delta t$. Average over runs (or over many spins in a sample) and the arrows **fan out** around the equator. Their average, the signal you measure, shrinks.
+
+<Warning>
+**"Dephasing means the qubit is being kicked around randomly at every instant."** Not necessarily. Much of the observed dephasing comes from frequency offsets that are **constant during a single run** but differ between runs, or between spins in a sample. That kind of dephasing is *reversible*. The next two sections show how to undo it. Only noise that fluctuates *during* the evolution is truly irreversible.
+</Warning>
+
+<NumQuiz id="u10l2-coh" answer={0.368} tol={0.01}>
+  <Q>A qubit starts in $|+\rangle$ with $T_2 = 80\ \mu s$ (and much longer $T_1$). What fraction of its initial coherence $|\rho_{01}|$ remains after $80\ \mu s$?</Q>
+  <Explain>$e^{-80/80} = e^{-1} \approx 0.368$. Then $P(+) = \tfrac12(1 + 0.368) \approx 0.68$ instead of 1.</Explain>
+</NumQuiz>
+
+---
+
+## Ramsey: measuring how fast phase is lost
+
+How do you even *see* a phase? You can't measure it directly, but you can turn it into a population. That's the trick of **Ramsey interferometry**:
+
+1. A $\pi/2$ pulse tips the qubit from $|0\rangle$ onto the equator.
+2. **Wait** a time $t$. The qubit precesses by an angle $(\Delta_0 + \delta)\,t$, where $\Delta_0$ is the deliberate detuning between the qubit and your reference clock.
+3. A second $\pi/2$ pulse rotates the equator back onto the poles, so the accumulated phase becomes a probability: $P(0) = \tfrac12\left[1 + \cos(\Delta_0 t)\right]$ for a perfect qubit.
+
+Sweep the wait time and you get **Ramsey fringes**. With an unknown spread of frequencies, the fringes die off within an envelope whose decay time is called $T_2^*$ ("T-two-star"). That's the dephasing time *including* the reversible part.
+
+<SpinEchoLab />
+
+<Try>
+Choose **Ramsey**. Run a single sequence for a few wait times, then press "sweep the Ramsey fringe." Increase the spread $\sigma$ and watch the envelope shrink. Fringes that oscillate faster when you raise $\Delta_0$ are the reason Ramsey's method makes such good clocks: you're comparing the qubit's frequency to your reference.
+</Try>
+
+<History>
+**Norman Ramsey** invented the separated-oscillatory-fields method in 1949 to measure molecular beams more precisely. The same idea runs every caesium atomic clock, which defines the second, and Ramsey shared the 1989 Nobel Prize in Physics for it. Every superconducting or trapped-ion lab runs "Ramsey" sequences daily to calibrate qubit frequencies and measure $T_2^*$.
+</History>
+
+---
+
+## The spin echo: un-scrambling an egg
+
+In 1950 **Erwin Hahn**, a young physicist at the University of Illinois, was doing pulsed NMR on protons. He applied two pulses separated by a time $\tau$ and saw something that seemed impossible: long after the signal had decayed to nothing, it **came back** on its own, a sharp "echo" at time $2\tau$.
+
+Here's the picture. Think of the spins as runners on a track. At the gun ($\pi/2$ pulse) they all start together, but each runs at its own speed, so the pack spreads out. At time $\tau$ everyone is told to **turn around** and run back at the same speed. The fast runners got furthest, so they have the furthest to go back, and they cover it at the same rate. Everyone reaches the start line at the same instant, $2\tau$.
+
+On the Bloch sphere, "turn around" is a **$\pi$ pulse about the $x$ axis**. It reflects each spin's phase $\phi \to -\phi$. A spin with offset $\delta$ has phase $+\delta\tau$ before the pulse, $-\delta\tau$ right after, and $-\delta\tau + \delta\tau = 0$ at $2\tau$, **whatever $\delta$ was**.
+
+<Predict id="u10l2-echo">
+  <Q>In the lab above, switch to **Spin echo**, set τ = 5 µs, and imagine running it. When does the signal (yellow arrow) come back to full strength?</Q>
+  <Opt>Immediately after the π pulse at 5 µs</Opt>
+  <Opt correct>At 10 µs, twice the pulse time</Opt>
+  <Opt>At 15 µs</Opt>
+  <Opt>Never. Once the spins fan out the information is gone.</Opt>
+  <Explain>Each spin has to undo the phase it gained during the first τ, which takes another τ.</Explain>
+  <Reveal>
+Now run it and see. Try the ⚡ button too: fire the π pulse by hand at any moment and predict where the echo will land.
+
+Two things to notice:
+
+1. The echo peak is **not quite** back to 1. Its height follows the dashed red curve $e^{-2\tau/T_2}$, because the "irreversible" noise kicks each spin randomly during the run and no reflection can undo that.
+2. With a large spread $\sigma$, the free decay is fast (short $T_2^*$), but the echo still comes back. **Echo turns $T_2^*$ into $T_2$.**
+  </Reveal>
+</Predict>
+
+<CSCorner>
+Think of the echo as a **filter**. Noise that stays constant over one run (frequency close to zero) is cancelled exactly, because the reflection makes the phase picked up before and after the pulse subtract. Noise that varies faster than $1/\tau$ isn't. Adding more π pulses, evenly spaced, makes the high-pass filter steeper. These sequences are called **dynamical decoupling** (CPMG, XY4, UDD, …), and they are the quantum cousin of a signal-processing notch filter, designed in the time domain. The catch: every pulse is itself slightly imperfect, so more pulses aren't always better. You'll feel that tradeoff in the *Coherence Keeper* game.
+</CSCorner>
+
+<Quiz id="u10l2-whatfixes">
+  <Q>Which sources of decoherence can a single spin-echo pulse undo? (Select all that apply.)</Q>
+  <Opt correct>A qubit frequency that is offset by an unknown but constant amount during each run</Opt>
+  <Opt correct>Different spins in a sample having slightly different (static) frequencies</Opt>
+  <Opt why="Energy relaxation is irreversible: the energy left in a photon or phonon that the pulse can't fetch back.">Energy relaxation from $|1\rangle$ to $|0\rangle$ ($T_1$)</Opt>
+  <Opt why="Noise that changes faster than the pulse spacing doesn't cancel between the two halves of the sequence.">Frequency noise that fluctuates rapidly, many times between the pulses</Opt>
+  <Explain>Echo cancels **quasi-static** frequency offsets, which is the reversible part of dephasing ($T_2^*$). It can't reverse energy loss ($T_1$) or fast noise, which set the irreversible $T_2$.</Explain>
+</Quiz>
+
+---
+
+## Real numbers: how long do real qubits remember?
+
+What matters for computing is not the coherence time alone but how many operations fit inside it: **coherence time ÷ gate time**.
+
+| Platform | $T_1$ | $T_2$ (with echo / decoupling) | Two-qubit gate time | Rough ops per coherence time |
+|---|---|---|---|---|
+| Superconducting transmons | ~50–300 µs in large processors (Google Willow: mean 68–98 µs); lab record ≈ 1.6 ms | ~similar, up to ~2·T₁ | ~20–100 ns | ~10³–10⁴ |
+| Trapped ions (hyperfine qubits) | effectively unlimited (no spontaneous decay of the qubit levels) | ~1 s typical; > 1 hour (extrapolated) with heavy decoupling on a single ion | ~10–300 µs | ~10⁴–10⁵ |
+| Neutral atoms (hyperfine qubits in tweezers) | seconds (limited by trap light scattering) | ~1 s typical; 12.6 s record in a 6,100-atom array (Caltech, 2025) | ~0.2–1 µs (Rydberg gates), but atom moves take ~ms | ~10³–10⁵ |
+
+<Note title="Approximate and dated">
+These are ballpark values as of late 2026, compiled from Google's Willow spec sheet (Dec 2024), Bland et al. (Nature, 2025: 2D transmons with T₁ up to ≈1.68 ms), Wang et al. (Nature Communications, 2021: a ¹⁷¹Yb⁺ ion with an estimated coherence time of about 5,500 s), and Manetsch et al. (Nature, 2025: 6,100 atomic qubits, T₂ = 12.6 s). "Best lab result" and "typical in a 100-qubit processor" can differ by an order of magnitude. Hardware moves fast, so treat any single number with care.
+</Note>
+
+Ions and atoms remember far longer than superconducting circuits, but their gates are slower, so the *ratio* is closer than the raw numbers suggest. In every platform, though, the ratio is at most about $10^5$, while useful algorithms like Shor's need billions of reliable operations. Echoes and better materials buy factors of a few. To bridge the remaining gap we will need **error correction** (World 11).
+
+---
+
+## Summary
+
+- **$T_1$ (relaxation):** populations decay toward the ground state, $P_1 \propto e^{-t/T_1}$. The Bloch vector is pulled to the north pole.
+- **$T_2$ (dephasing):** coherences decay, $|\rho_{01}| \propto e^{-t/T_2}$. The Bloch vector shrinks toward the $z$ axis. Always $T_2 \le 2T_1$.
+- **$T_1$ lives on the diagonal of ρ and $T_2$ off it** (the Bloch equations).
+- **Ramsey** ($\pi/2$ – wait – $\pi/2$) turns phase into population. Its decaying fringes measure $T_2^*$, which includes reversible dephasing from unknown static frequency offsets.
+- **Spin echo** (Hahn, 1950): a $\pi$ pulse at $\tau$ mirrors every phase and refocuses the spins at $2\tau$, undoing static offsets. What's left is the irreversible $T_2$. More pulses give **dynamical decoupling**.
+- Coherence time ÷ gate time is about $10^3$–$10^5$ on today's hardware, which is far too few operations for big algorithms without error correction.

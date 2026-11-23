@@ -1,0 +1,127 @@
+import { BoxExplorer } from './widgets/BoxExplorer';
+import { SchrodingerSim } from './widgets/SchrodingerSim';
+
+Pluck a guitar string and you don't get just any pitch. You get a fundamental and its harmonics: 110 Hz, 220 Hz, 330 Hz, and so on. The string is pinned at both ends, so only waves that fit a whole number of half-wavelengths can survive. Pinning a wave **quantises** it.
+
+Now trap an electron. Semiconductor **quantum dots**, nanocrystals a few nanometres across, do exactly that. The striking part is that their colour depends on their size: a 2 nm cadmium selenide dot glows blue, a 6 nm one glows red. Same material, different box. (This earned Moungi Bawendi, Louis Brus and Alexei Ekimov the 2023 Nobel Prize in Chemistry.) This lesson explains why.
+
+<Predict id="u5l3-shrink">
+  <Q>An electron is trapped in a box. You shrink the box to **half** its width. What happens to the energy of its ground state?</Q>
+  <Opt>It halves</Opt>
+  <Opt>It stays the same</Opt>
+  <Opt>It doubles</Opt>
+  <Opt correct>It quadruples</Opt>
+  <Reveal>
+It goes up by a factor of **four**. The energies scale as $1/L^2$: the wavelength must shrink with the box, momentum goes as $1/\lambda$, and kinetic energy goes as $p^2$. Smaller dots therefore have larger level spacings, so they emit higher-energy, bluer photons.
+  </Reveal>
+</Predict>
+
+---
+
+## Solving the box
+
+Model the trap as an **infinite square well**: $V = 0$ for $0 < x < L$ and $V = \infty$ outside. The particle can never be outside, so $\psi = 0$ there, and continuity forces $\psi(0) = \psi(L) = 0$, just like the pinned string.
+
+We want the stationary states, the solutions of the **time-independent Schrödinger equation** $\hat H\psi = E\psi$. Inside the box that reads
+
+$$
+-\frac{\hbar^2}{2m}\,\psi''(x) = E\,\psi(x) \quad\Longrightarrow\quad \psi'' = -k^2\psi, \qquad k = \frac{\sqrt{2mE}}{\hbar}.
+$$
+
+The general solution is $A\sin kx + B\cos kx$. The condition $\psi(0) = 0$ kills the cosine. The condition $\psi(L) = 0$ then demands $\sin kL = 0$, so $kL = n\pi$ with $n = 1, 2, 3, \ldots$ Normalising gives:
+
+<KeyIdea>
+$$
+\psi_n(x) = \sqrt{\frac{2}{L}}\,\sin\frac{n\pi x}{L}, \qquad E_n = \frac{n^2\pi^2\hbar^2}{2mL^2}, \qquad n = 1, 2, 3, \ldots
+$$
+
+**Quantisation comes from boundary conditions.** Nothing about "quantum" was put in by hand: confining a wave allows only discrete wavelengths, and therefore discrete energies.
+</KeyIdea>
+
+Why not $n = 0$? Then $\psi = 0$ everywhere, which is no particle at all. And negative $n$ just flips the sign of $\psi$, which is a global phase giving the same state.
+
+---
+
+## Exploring the levels
+
+Pick a single level (set the weight of b to 0) and step through $n$:
+
+<BoxExplorer />
+
+<Try>
+- With weight 0, choose level a = 1, 2, 3, … The density has $n$ humps and $n - 1$ **nodes** (red dots), points where you will *never* find the particle.
+- Notice the colour: a single level has the same phase everywhere and simply cycles in time. Stationary states are spinning clocks, exactly as in World 4. The density doesn't move.
+- The ladder spaces out like $n^2$: $E_1, 4E_1, 9E_1, 16E_1, \ldots$ Shrink $L$ and every level shoots up, as $1/L^2$.
+</Try>
+
+Two consequences deserve names.
+
+**Zero-point energy.** The lowest energy is $E_1 = \pi^2\hbar^2/2mL^2 > 0$. A confined quantum particle can *never* sit still at the bottom. The uncertainty principle demands it: confining to $\Delta x \lesssim L$ forces $\Delta p \gtrsim \hbar/2L$, and therefore a kinetic energy of order $\hbar^2/mL^2$. That's why helium stays liquid down to absolute zero at ordinary pressure: its atoms' zero-point jiggling is too large for them to lock into a crystal.
+
+**Nodes count the level.** The $n$th state has $n - 1$ nodes. More wiggles means more curvature, which means more kinetic energy. This "more nodes = higher energy" rule holds for *every* 1D potential, not just boxes.
+
+<NumQuiz id="u5l3-transition" answer={1.667} tol={0.01}>
+  <Q>An electron in a box drops from $n = 3$ to $n = 2$, emitting a photon. Then a second electron drops from $n = 2$ to $n = 1$. What is the ratio of the first photon's energy to the second's?</Q>
+  <Hint>Photon energy = level difference. $E_n \propto n^2$.</Hint>
+  <Explain>$(9 - 4)/(4 - 1) = 5/3 \approx 1.67$. Unlike hydrogen, where lines crowd together at high $n$, box spectra spread *apart*.</Explain>
+</NumQuiz>
+
+---
+
+## Superpositions slosh
+
+A single level is boring: nothing moves. Now mix two of them. Set level a = 1, level b = 2, and drag the weight of b to 0.5.
+
+$$
+\psi(x,t) = c_1\,\psi_1(x)\,e^{-iE_1t/\hbar} + c_2\,\psi_2(x)\,e^{-iE_2t/\hbar}
+$$
+
+The two clocks on the ladder spin at different rates. Where the components are in phase they add; where they're out of phase they cancel. As the relative phase winds around, the probability **sloshes** from one side of the box to the other. The green ⟨x⟩ marker swings back and forth at the Bohr frequency $\omega_{21} = (E_2 - E_1)/\hbar = 3E_1/\hbar$.
+
+<Try>
+- Mix 1 and 2: big sloshing. Mix 2 and 3: faster sloshing ($\omega_{32} = 5E_1/\hbar$).
+- Mix 1 and 3. The density *breathes* (bunches up in the middle, then spreads to the sides) but ⟨x⟩ stays exactly at the centre. Can you explain why?
+- Change the relative phase. The sloshing starts from a different point in its cycle. Relative phase is physical.
+</Try>
+
+<Quiz id="u5l3-which-sloshes">
+  <Q>Which equal superposition leaves $\langle x\rangle$ fixed at the centre of the box for all time?</Q>
+  <Opt>$\psi_1 + \psi_2$</Opt>
+  <Opt correct>$\psi_1 + \psi_3$</Opt>
+  <Opt>$\psi_2 + \psi_3$</Opt>
+  <Opt>All of them</Opt>
+  <Explain>About the centre of the box, $\psi_1$ and $\psi_3$ are both **even** (symmetric), so any combination of them has a symmetric density and $\langle x\rangle = L/2$ always. Mixing an even state with an odd one ($\psi_2$ is odd) creates a lopsided density that sloshes. Symmetry is a powerful shortcut.</Explain>
+</Quiz>
+
+This sloshing is how quantum systems radiate. An electron in a superposition of two atomic levels has an oscillating charge distribution, a tiny antenna oscillating at exactly $\Delta E/\hbar$. It's the same Bohr frequency you computed for hydrogen in World 4.
+
+---
+
+## A packet in a box: bounce and revival
+
+Finally, launch a localised packet inside a box and let the exact dynamics run. A packet is a superposition of *many* box levels.
+
+<SchrodingerSim title="Wave packet in a box (L = 20)" preset="box" boxL={20} xRange={[-12, 12]} N={512} dt={0.02} x0={-4} sigma={1} k0={3} speed={16} lockPotential readouts={['t', 'x', 'dx', 'E']} />
+
+<Try>
+- Press play. The packet bounces off the walls like a ball. On reflection it **interferes with itself** (the colourful fringes near the walls) because incoming and outgoing waves overlap.
+- Keep watching. Spreading plus reflections smear the packet over the whole box until it looks like random noise.
+- Then, around $t \approx 255$, a mirror-image packet reassembles. At $t \approx 509$ the original packet **reappears**, almost exactly as it started. This is a **quantum revival**. (Use the speed slider and be patient.)
+</Try>
+
+Revivals happen because the box energies are all integer multiples of $E_1$: $E_n = n^2E_1$. After a time $T_\text{rev} = 2\pi\hbar/E_1$, every clock $e^{-in^2E_1t/\hbar}$ has made a whole number of turns, so every component is back in phase. For our box ($L = 20$, $\hbar = m = 1$), $T_\text{rev} = 4L^2/\pi \approx 509$. Revivals have been observed with electron wave packets in Rydberg atoms and with ultracold atoms in optical traps.
+
+<History>
+The particle in a box appeared in Schrödinger's 1926 work as the simplest exactly solvable problem, and it has been the first example in every quantum textbook since. Real "boxes" came later: **Alexei Ekimov** made quantum dots in coloured glass in 1981, **Louis Brus** in liquid solutions in 1983, and **Moungi Bawendi**'s group found a way to make them with near-perfect size control in 1993. Today they're in QLED television screens and in biomedical imaging.
+</History>
+
+---
+
+## Summary
+
+- Confining a wave quantises it. The infinite well gives $\psi_n = \sqrt{2/L}\sin(n\pi x/L)$ and $E_n = n^2\pi^2\hbar^2/2mL^2$.
+- Energies scale as $n^2$ and as $1/L^2$: smaller boxes have larger level spacings (quantum dot colours).
+- **Zero-point energy:** $E_1 > 0$, a consequence of the uncertainty principle.
+- The $n$th state has $n - 1$ nodes. More nodes means higher energy.
+- Superpositions **slosh** at Bohr frequencies $(E_m - E_n)/\hbar$. Symmetry decides whether ⟨x⟩ moves.
+- Packets in a box spread, scramble, and then **revive** at $T_\text{rev} = 2\pi\hbar/E_1$.

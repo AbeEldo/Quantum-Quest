@@ -1,0 +1,142 @@
+import { PacketBuilder } from './widgets/PacketBuilder';
+import { SchrodingerSim } from './widgets/SchrodingerSim';
+
+Throw a tennis ball and it stays a tennis ball. It doesn't get blurrier as it flies. Newton's laws move a point along a trajectory, and that's the end of the story.
+
+A quantum particle flying through empty space is described by a wavefunction, and the Schrödinger equation says how that function evolves. There are no forces and no obstacles, just a free particle. What could possibly happen?
+
+<Predict id="u5l2-spread">
+  <Q>An electron is prepared as a localised bump of probability (a "wave packet") moving to the right. With no forces at all, what happens to the bump?</Q>
+  <Opt>It moves right, keeping exactly its shape</Opt>
+  <Opt correct>It moves right and spreads out, getting wider and lower</Opt>
+  <Opt>It moves right and gets narrower</Opt>
+  <Opt>It stays put and oscillates</Opt>
+  <Reveal>
+It **spreads**. A free wave packet always disperses, and the narrower you make it, the faster it spreads. This isn't friction or noise. It follows from the Schrödinger equation and Heisenberg's uncertainty relation: a narrow packet contains a wide range of momenta, and different momenta travel at different speeds. You'll watch it happen in the simulator below.
+  </Reveal>
+</Predict>
+
+---
+
+## Plane waves: the free particle's stationary states
+
+For a free particle the only energy is kinetic, $\hat H = \dfrac{\hat p^2}{2m} = -\dfrac{\hbar^2}{2m}\dfrac{d^2}{dx^2}$. Last lesson you met the momentum eigenstates $e^{ikx}$. They are energy eigenstates too:
+
+$$
+\hat H\,e^{ikx} = \frac{\hbar^2k^2}{2m}\,e^{ikx}, \qquad E = \frac{p^2}{2m}, \quad p = \hbar k .
+$$
+
+From World 4, a stationary state just spins its phase clock at rate $\omega = E/\hbar$. So the plane wave evolves as
+
+$$
+\psi_k(x,t) = e^{i(kx - \omega t)}, \qquad \omega(k) = \frac{\hbar k^2}{2m}.
+$$
+
+That's a travelling wave. The colour pattern slides along at the **phase velocity** $v_\text{phase} = \omega/k = \hbar k/2m$.
+
+Something odd there: the classical velocity of a particle with momentum $p = \hbar k$ is $p/m = \hbar k/m$, which is *twice* the phase velocity. Also, a plane wave isn't localised at all: $|\psi|^2$ is the same everywhere, and it can't even be normalised. Real particles must be something else.
+
+The relation $\omega(k) = \hbar k^2/2m$ is called a **dispersion relation**. Because $\omega$ is not proportional to $k$, waves with different $k$ travel at different speeds. That's what "dispersive" means, and it's the root of everything in this lesson.
+
+---
+
+## Building a packet
+
+A localised particle is a **superposition of plane waves**, a wave packet:
+
+$$
+\psi(x,t) = \int \phi(k)\, e^{i(kx - \omega(k)t)}\,dk .
+$$
+
+Here $\phi(k)$ says how much of each momentum is in the mix. Build one yourself:
+
+<PacketBuilder />
+
+<Try>
+- Start with **1 wave**: a pure plane wave, the same everywhere. Now add waves. With 3 you get repeating beats. With 41 the beats merge into a single packet. A truly isolated packet needs a *continuum* of $k$ values.
+- Make the spread $\Delta k$ **small**: the packet is long. Make $\Delta k$ **large**: it's short. That trade-off is Fourier duality, $\Delta x\,\Delta k \ge \tfrac12$, coming in the last lesson.
+- Press **▶ evolve**. The red dot rides one crest at the phase velocity. The green triangle tracks the envelope. **Crests slide forward through the envelope**, which moves twice as fast as they do.
+</Try>
+
+The envelope moves at the **group velocity**:
+
+$$
+v_\text{group} = \frac{d\omega}{dk} = \frac{\hbar k}{m} = \frac{p}{m}.
+$$
+
+That's exactly the classical velocity. The phase velocity has no direct physical meaning: you can't send a signal on a single crest. **The packet is the particle**, and it moves just as Newton said it would.
+
+<Quiz id="u5l2-velocities">
+  <Q>An electron packet has mean momentum $p_0 = \hbar k_0$. Which statement is correct?</Q>
+  <Opt>The packet's peak moves at $\hbar k_0/2m$</Opt>
+  <Opt correct>The peak moves at $\hbar k_0/m$, the classical velocity, while individual crests move at half that</Opt>
+  <Opt>All parts of the wave move at $\hbar k_0/m$</Opt>
+  <Opt>The packet doesn't move; only its phase changes</Opt>
+  <Explain>Group velocity $d\omega/dk = \hbar k_0/m = p_0/m$ moves the envelope (and the probability). Phase velocity $\omega/k = \hbar k_0/2m$ moves the colour pattern. For matter waves the crests travel at half the particle's speed.</Explain>
+</Quiz>
+
+---
+
+## The Schrödinger simulator
+
+Now let the exact Schrödinger equation do the work. This simulator stores $\psi$ on 1024 grid points and advances it with the **split-step Fourier method**. Each tiny time step applies the potential's phase in position space, jumps to momentum space with an FFT, applies the kinetic phase $e^{-i\hbar k^2\Delta t/2m}$, and jumps back. Every piece is a pure phase, so each step is exactly unitary, just like the integrator race in World 4. Units: $\hbar = m = 1$.
+
+<SchrodingerSim title="Free particle — launch a packet" preset="free" x0={-25} sigma={1.5} k0={2} readouts={['t', 'x', 'dx', 'dp', 'E']} measure showMomentum />
+
+<Try>
+- Press **▶ play**. The packet glides right at speed $k_0$ (the readout ⟨x⟩ grows by 2 per unit time), and its width $\Delta x$ grows.
+- Watch the **momentum panel**: it never changes. With no forces, momentum is conserved, so $|\phi(p)|^2$ is frozen while $|\psi(x)|^2$ spreads.
+- Watch the colours. After a while the front of the packet cycles colours faster than the back: fast components have run ahead of slow ones (a "chirp").
+- Make $\sigma$ small (0.5) and reset. The packet spreads *much* faster. Make it wide (5): it barely spreads.
+- Set $k_0$ negative: it moves left, and the colour cycling reverses direction.
+- Press **📍 measure position** mid-flight. The packet collapses to a sharp spike, which then spreads explosively. A narrow position means a huge momentum spread.
+</Try>
+
+For a Gaussian packet of initial width $\sigma_0$ there's an exact formula for the width:
+
+$$
+\sigma(t) = \sigma_0\sqrt{1 + \left(\frac{\hbar t}{2m\sigma_0^2}\right)^2}.
+$$
+
+The spreading timescale is $\tau = 2m\sigma_0^2/\hbar$. It grows with the **square** of the initial width: halve the packet and it spreads four times faster.
+
+<NumQuiz id="u5l2-sigma-t" answer={2.236} tol={0.01}>
+  <Q>In simulator units ($\hbar = m = 1$), a Gaussian packet starts with $\sigma_0 = 1$. What is its width at $t = 4$?</Q>
+  <Hint>$\hbar t/(2m\sigma_0^2) = 4/2 = 2$.</Hint>
+  <Explain>$\sigma = \sqrt{1 + 2^2} = \sqrt5 \approx 2.24$. Try it: set $\sigma = 1$ and pause at $t \approx 4$. The Δx readout should agree.</Explain>
+</NumQuiz>
+
+---
+
+## Why baseballs don't blur
+
+So why doesn't the tennis ball spread? Put in real numbers.
+
+- An **electron** localised to $\sigma_0 = 1$ nm: $\tau = 2m_e\sigma_0^2/\hbar \approx 2(9.11\times10^{-31})(10^{-18})/(1.055\times10^{-34}) \approx 1.7\times10^{-14}$ s. In about 17 femtoseconds it has doubled in width.
+- A **1 gram marble** localised to $1$ µm: $\tau \approx 2(10^{-3})(10^{-12})/(1.055\times10^{-34}) \approx 2\times10^{19}$ s, more than 40 times the age of the universe.
+
+Spreading scales as $\hbar/m$. For anything you can hold, $\hbar/m$ is absurdly small, so packets stay sharp and Newton's trajectories are an excellent approximation. That's the **classical limit**: quantum mechanics doesn't switch off, its effects just become too small to see.
+
+<NumQuiz id="u5l2-electron-tau" answer={17.3} tol={0.5}>
+  <Q>Compute the spreading time $\tau = 2m\sigma_0^2/\hbar$ for an electron with $\sigma_0 = 1$ nm, in **femtoseconds**. ($m_e = 9.109\times10^{-31}$ kg, $\hbar = 1.0546\times10^{-34}$ J·s.)</Q>
+  <Explain>$\tau = 2(9.109\times10^{-31})(10^{-18})/(1.0546\times10^{-34}) \approx 1.73\times10^{-14}$ s $= 17.3$ fs.</Explain>
+</NumQuiz>
+
+<Warning>
+**Spreading doesn't mean the particle gets bigger.** The electron itself is still a point-like particle. Measure its position and you get one sharp answer. What spreads is our **uncertainty**, the range of places it could be found. And spreading isn't irreversible information loss: run the Schrödinger equation backwards and the packet re-focuses. (In the box lesson you'll see packets spontaneously re-form.)
+</Warning>
+
+<History>
+**Louis de Broglie**'s 1924 thesis proposed that matter has a wavelength $\lambda = h/p$, and he already noted that the particle should move at the **group** velocity of its waves. Davisson and Germer confirmed electron waves in 1927. The distinction between group and phase velocity itself is older: Hamilton noticed it in 1839, and Lord Rayleigh popularised it for water and sound waves. Phase velocities can exceed $c$ for some waves without violating relativity, because no information rides on a single crest.
+</History>
+
+---
+
+## Summary
+
+- Free-particle energy eigenstates are plane waves $e^{i(kx-\omega t)}$ with $p = \hbar k$ and $E = \hbar\omega = \hbar^2k^2/2m$ (dispersive).
+- A localised particle is a **wave packet**, a superposition of plane waves.
+- The envelope moves at the **group velocity** $d\omega/dk = p/m$, the classical velocity. Crests move at the phase velocity $\omega/k$, which is half that.
+- Free packets **spread**: $\sigma(t) = \sigma_0\sqrt{1 + (\hbar t/2m\sigma_0^2)^2}$. Narrower packets spread faster. The momentum distribution never changes.
+- For macroscopic masses, $\hbar/m$ makes spreading negligible. That's the classical limit.
+- The simulator uses the unitary **split-step Fourier** method with FFTs.

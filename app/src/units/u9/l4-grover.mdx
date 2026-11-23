@@ -1,0 +1,150 @@
+import { GroverGeometry } from './widgets/GroverGeometry';
+import { c } from '../../engine/complex';
+
+You have a function $f(x)$ that returns 1 on exactly one input $w$ out of $N = 1{,}000{,}000$ and 0 everywhere else. You know nothing else about $f$: no ordering, no structure, just a checker that says yes or no. Maybe $f$ checks whether $x$ is the password that decrypts a file, or whether an assignment satisfies a giant formula.
+
+Classically you have no choice but to try inputs one by one: $N/2$ queries on average and $N$ in the worst case. Randomness doesn't help either.
+
+<Predict id="u9l4-hook">
+  <Q>How many queries does a quantum computer need to find $w$ with high probability, for $N = 10^6$?</Q>
+  <Opt>1, by evaluating all inputs in superposition</Opt>
+  <Opt>About 20 ($\log_2 N$)</Opt>
+  <Opt correct>About 785 (roughly $\sqrt N$)</Opt>
+  <Opt>About 500,000, the same as classical</Opt>
+  <Explain>About $\frac{\pi}{4}\sqrt N \approx 785$. That's **Grover's algorithm** (1996): a quadratic speedup, and provably the best possible for unstructured search. This lesson shows *why* it's $\sqrt N$, with a picture so simple you'll be able to redo the analysis on a napkin.</Explain>
+</Predict>
+
+<Watch title="But what is quantum computing? (Grover's Algorithm)" by="3Blue1Brown" url="https://www.youtube.com/watch?v=RQWpF2Gb-gU" note="2025. The geometric picture this lesson builds on" />
+
+---
+
+## Two moves: flip the sign, then flip about the mean
+
+Start in the uniform superposition $|s\rangle = H^{\otimes n}|0\rangle = \frac{1}{\sqrt N}\sum_x|x\rangle$. Measuring now finds $w$ with probability $1/N$, no better than guessing. We have two tools:
+
+1. **The oracle** (a phase oracle, via kickback): $O|x\rangle = (-1)^{f(x)}|x\rangle$. It flips the sign of the marked amplitude and leaves everything else alone.
+2. **The diffuser**: $D = 2|s\rangle\langle s| - I$. Applied to a state with amplitudes $a_x$, it replaces each one by $2\mu - a_x$, where $\mu$ is the mean amplitude. Every amplitude is **reflected about the mean**.
+
+Here's why those two together amplify. Initially every bar has height $1/\sqrt N$. The oracle makes the marked bar $-1/\sqrt N$, which drags the mean down just slightly, to just under $1/\sqrt N$. Now reflect everything about the mean. The ordinary bars stay near $1/\sqrt N$, but the marked bar, sitting *far below* the mean, jumps to about $3/\sqrt N$. Repeat, and it keeps growing.
+
+<Quiz id="u9l4-mean">
+  <Q>Amplitudes are $(0.5, 0.5, -0.5, 0.5)$ (the oracle just flipped item 3 of $N = 4$). What are the amplitudes after inversion about the mean?</Q>
+  <Opt>$(0.5, 0.5, 0.5, 0.5)$</Opt>
+  <Opt correct>$(0, 0, 1, 0)$</Opt>
+  <Opt>$(-0.5, -0.5, 0.5, -0.5)$</Opt>
+  <Opt>$(0.25, 0.25, 1.25, 0.25)$</Opt>
+  <Explain>The mean is $(0.5+0.5-0.5+0.5)/4 = 0.25$. Each amplitude becomes $2(0.25) - a$: the $0.5$s become $0$, and $-0.5$ becomes $1$. For $N = 4$ a single Grover iteration finds the marked item **with certainty**.</Explain>
+</Quiz>
+
+---
+
+## The geometric picture: it's all happening in a plane
+
+Here is the beautiful part. The state never leaves a **two-dimensional plane**. Define
+
+- $|w\rangle$, the marked item, and
+- $|s'\rangle = \frac{1}{\sqrt{N-1}}\sum_{x\neq w}|x\rangle$, the uniform superposition of everything else.
+
+They're orthogonal, and the start state lies in their span:
+$$
+|s\rangle = \sin\theta\,|w\rangle + \cos\theta\,|s'\rangle, \qquad \sin\theta = \frac{1}{\sqrt N}.
+$$
+For large $N$, $|s\rangle$ is almost parallel to $|s'\rangle$, just a sliver of angle $\theta \approx 1/\sqrt N$ above it. Now look at our two moves:
+
+- The **oracle** negates the $|w\rangle$-component, so it is a **reflection across the $|s'\rangle$ axis**.
+- The **diffuser** $2|s\rangle\langle s| - I$ keeps the component along $|s\rangle$ and negates what's perpendicular, so it is a **reflection about the $|s\rangle$ line**.
+
+<KeyIdea>
+Two reflections across lines that meet at angle $\theta$ compose to a **rotation by $2\theta$**. So each Grover iteration $G = DO$ rotates the state by $2\theta$ toward $|w\rangle$. After $k$ iterations the state is at angle $(2k+1)\theta$ from the $|s'\rangle$ axis, and
+$$
+P(\text{find } w) = \sin^2\big((2k+1)\theta\big).
+$$
+</KeyIdea>
+
+Both views are driven by the *same* state vector below. The yellow arrow is $|\psi\rangle$ in the plane, and the bars are the amplitudes of all $N$ items. Each reflection is drawn as a straight-line "flip" through its mirror.
+
+<GroverGeometry initialN={16} />
+
+<Try>
+- Press **① Oracle** alone. In the plane, the arrow flips below the $|s'\rangle$ axis. In the bars, the starred item goes negative.
+- Press **② Diffuser**. The arrow reflects about the dashed $|s\rangle$ line and ends up *above* where it started. Meanwhile each bar flips about the dashed mean line. Same event, two views.
+- Keep iterating past $k^\ast$. The arrow rotates *past* $|w\rangle$ and the success probability falls. Watch the stem plot: it's a $\sin^2$ wave.
+- Set $N = 2^{20}$: $\theta$ is tiny, and it takes $804$ iterations to rotate a quarter turn.
+</Try>
+
+---
+
+## How many iterations?
+
+We want $(2k+1)\theta \approx \pi/2$, so
+$$
+k^\ast \approx \frac{\pi}{4\theta} - \frac12 \approx \frac{\pi}{4}\sqrt N \qquad(\text{using } \theta \approx 1/\sqrt N).
+$$
+For $N = 10^6$ that's 785 iterations, after which the failure probability is below $10^{-7}$. **Stopping at the right time matters.** Unlike classical search, more work is not always better: the rotation overshoots, and after about $2k^\ast$ iterations you're back near where you started.
+
+<GroverGeometry initialN={64} goal={{ N: 64, minP: 0.95, challengeId: 'u9l4-amplify' }} />
+
+<NumQuiz id="u9l4-n8" answer={0.9453} tol={0.003}>
+  <Q>$N = 8$ with one marked item. What is the success probability after **2** Grover iterations? (Use $\sin\theta = 1/\sqrt8$.)</Q>
+  <Hint>$\theta = \arcsin(1/\sqrt8) \approx 20.7^\circ$. Compute $\sin^2(5\theta)$.</Hint>
+  <Explain>$5\theta \approx 103.5^\circ$ and $\sin^2(103.5^\circ) \approx 0.945$. Notice it's not 100%: $\pi/2$ isn't an odd multiple of $\theta$ here, so you either stop slightly short (2 iterations) or overshoot (3 iterations gives just 33%).</Explain>
+</NumQuiz>
+
+<Note title="More than one marked item">
+With $M$ marked items, let $|w\rangle$ be the uniform superposition of all of them. Everything goes through with $\sin\theta = \sqrt{M/N}$, so $k^\ast \approx \frac{\pi}{4}\sqrt{N/M}$. If you don't know $M$, you can't know when to stop. The fixes are to run with randomly chosen iteration counts (Boyer, Brassard, Høyer and Tapp, 1998), or to estimate $M$ first with **quantum counting**, which is phase estimation applied to $G$ (two lessons from now).
+</Note>
+
+---
+
+## Building the diffuser from gates
+
+The diffuser looks exotic, but it's three familiar layers:
+$$
+D = 2|s\rangle\langle s| - I = H^{\otimes n}\big(2|0\rangle\langle 0| - I\big)H^{\otimes n}.
+$$
+The middle operator flips the sign of every basis state *except* $|0\cdots0\rangle$. Up to a global phase, that's "apply $X$ to every qubit, do a multi-controlled $Z$, apply $X$ again". So one Grover iteration costs one oracle call plus $O(n)$ gates.
+
+Your turn, with $N = 4$ (two qubits) and the marked item $|11\rangle$. The first two columns are already in place: $H\otimes H$ makes $|s\rangle$, and the oracle for $|11\rangle$ is a single CZ. Build the diffuser so the state ends as $|11\rangle$ with certainty.
+
+<CircuitLab n={2} circuit="H 0, H 1; CZ 0 1" gates={['H', 'X', 'Z', 'CZ']} goal={{ kind: 'state', amps: [c(0), c(0), c(0), c(1)], label: 'find |11⟩ with certainty' }} challengeId="u9l4-diffuser" maxGates={12} title="Challenge: one Grover iteration on 2 qubits" />
+
+<Quiz id="u9l4-diffuser-sign">
+  <Q>Your diffuser built from $H$, $X$, CZ, $X$, $H$ actually implements $I - 2|s\rangle\langle s|$, the *negative* of the textbook $D$. Does that matter?</Q>
+  <Opt>Yes: it rotates the state the wrong way</Opt>
+  <Opt correct>No: it differs by a global phase of $-1$, which is unobservable</Opt>
+  <Opt>Yes: success probability drops to $1/2$</Opt>
+  <Opt>It matters only for $N > 4$</Opt>
+  <Explain>$-D$ and $D$ differ by the overall factor $-1$. Over $k$ iterations that's $(-1)^k$, a global phase. Measurement probabilities are identical.</Explain>
+</Quiz>
+
+---
+
+## Why you can't do better, and why that matters
+
+<KeyIdea title="Optimality (BBBV)">
+In 1997, Bennett, Bernstein, Brassard and Vazirani proved that **any** quantum algorithm needs $\Omega(\sqrt N)$ queries to find a marked item in an unstructured space. Zalka (1999) showed Grover's iteration count is optimal even in the constant. Quantum search is quadratically faster than classical search, and **no faster**.
+</KeyIdea>
+
+This was a sobering result. Before Grover, some hoped quantum computers might solve NP-complete problems by "searching all solutions in parallel". BBBV shows that a black-box search over $2^n$ candidates still takes $2^{n/2}$ time. That's still exponential.
+
+<Warning title="Grover doesn't search your database">
+"Quantum computers will search databases faster" is mostly hype. A real database is indexed or sorted, so classical lookup is $O(\log N)$ or $O(1)$. Worse, to run Grover over stored data you must load all $N$ records into a quantum-accessible memory (QRAM), which costs at least $N$ operations and erases the speedup. Grover is useful when the "database" is **implicit**, a predicate you can *compute*: is this key correct, does this assignment satisfy the formula? Even then, error-corrected quantum gates are far slower than classical ones, so the quadratic speedup only pays off for enormous searches (more in lesson 8).
+</Warning>
+
+<CSCorner title="CS corner: amplitude amplification">
+Grover generalizes. If any quantum algorithm $A$ succeeds with probability $p$, **amplitude amplification** (Brassard, Høyer, Mosca and Tapp, 2000) boosts it to near-certainty with $O(1/\sqrt p)$ runs of $A$ and $A^{-1}$, instead of the $O(1/p)$ repetitions classical retrying needs. Replace "marked item" with "good outcome" and the same 2D rotation picture applies. This is how quadratic speedups show up all over quantum algorithms: in Monte Carlo estimation, collision finding, and backtracking search.
+</CSCorner>
+
+<History>
+Lov Grover, at Bell Labs, published the algorithm at STOC 1996 under the title *A fast quantum mechanical algorithm for database search*. That title launched decades of "database" hype. Its significance for cryptography is concrete: brute-forcing a 128-bit key takes about $2^{64}$ Grover iterations. That's why some guidance (such as the NSA's CNSA 2.0 suite) requires 256-bit AES keys. NIST still considers AES-128 adequate, because those $2^{64}$ iterations must run *one after another*. Grover parallelizes poorly: splitting the search over $P$ machines saves only a factor of $\sqrt P$.
+</History>
+
+---
+
+## Summary
+
+- **Unstructured search** over $N$ items: classical $\Theta(N)$ queries, quantum $\Theta(\sqrt N)$, and BBBV proves this is optimal.
+- One **Grover iteration** = oracle (sign flip of marked items) + diffuser (inversion about the mean, $2|s\rangle\langle s| - I$).
+- Geometrically, the state lives in the plane of $|w\rangle$ and $|s'\rangle$. The oracle reflects across $|s'\rangle$ and the diffuser reflects about $|s\rangle$, so each iteration is a **rotation by $2\theta$**, with $\sin\theta = \sqrt{M/N}$.
+- $P(\text{success after } k) = \sin^2((2k+1)\theta)$. Stop at $k^\ast \approx \frac{\pi}{4}\sqrt{N/M}$. **Overshooting hurts.**
+- The speedup is **quadratic, not exponential**. It doesn't make NP-complete problems easy, and it doesn't speed up lookups in real databases.

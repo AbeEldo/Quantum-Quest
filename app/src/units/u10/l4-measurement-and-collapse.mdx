@@ -1,0 +1,157 @@
+import { EnvironmentDecoherence } from './widgets/EnvironmentDecoherence';
+import { InterpretationsTour } from './widgets/InterpretationsTour';
+
+Since World 4 you've used two rules for how quantum states change:
+
+1. **Between measurements**, states evolve smoothly, deterministically and *linearly*, by a unitary.
+2. **At a measurement**, the state abruptly and randomly **collapses** onto one outcome.
+
+That should feel uncomfortable. A measuring device is made of atoms, and atoms obey rule 1. So model the device quantum-mechanically, as a "pointer" that starts in a ready state and records the qubit's value. Linearity forces
+
+$$
+\big(\alpha|0\rangle + \beta|1\rangle\big)\,|\text{ready}\rangle \;\longrightarrow\; \alpha\,|0\rangle|\text{pointer reads }0\rangle + \beta\,|1\rangle|\text{pointer reads }1\rangle .
+$$
+
+The pointer doesn't pick a reading. It joins the superposition. Nothing in rule 1 ever produces "the pointer reads 0." This is the **measurement problem**, and Schrödinger dramatised it in 1935 with his cat.
+
+This lesson shows how far the physics of **decoherence** goes toward resolving it, and where it stops.
+
+---
+
+## Measurement is entanglement
+
+In circuit language, the "pointer" step above is just a **CNOT** from the system to a fresh qubit. John von Neumann described measurement this way in 1932. Build it and look at the system qubit on its own:
+
+<CircuitLab title="A qubit, a pointer, and an environment" n={4} circuit="H 0; CNOT 0 1; CNOT 1 2; CNOT 1 3" gates={['H', 'X', 'Z', 'CNOT']} qubitLabels={['system', 'pointer', 'env 1', 'env 2']} showHistogram />
+
+<Try>
+Use the step slider. After step 1, the system is in $|+\rangle$, a full arrow on the equator. After the CNOT to the pointer (step 2), the system's arrow **shrinks to nothing**: its reduced state is $I/2$, exactly what Lesson 1 said a coin-flip mixture of $|0\rangle$ and $|1\rangle$ looks like. Steps 3–4 copy the pointer's reading into two environment qubits: more and more of the world now "knows" the result.
+</Try>
+
+<Predict id="u10l4-reduced">
+  <Q>After the CNOT, the system's reduced density matrix is $\tfrac12\begin{pmatrix}1&0\\0&1\end{pmatrix}$. What does that mean for an experimenter who only has access to the system qubit?</Q>
+  <Opt correct>Every measurement on the system alone gives exactly the statistics of "it was collapsed to 0 or 1, we just don't know which."</Opt>
+  <Opt>The system has literally collapsed, and the global superposition is gone.</Opt>
+  <Opt>The system is still in $|+\rangle$; measuring along $x$ will give + every time.</Opt>
+  <Explain>The coherence between $|0\rangle$ and $|1\rangle$ hasn't vanished from the universe. It now lives in the **correlations** between system and pointer. But no measurement on the system alone can reveal it. Locally, a pre-measured qubit is indistinguishable from a collapsed one.</Explain>
+</Predict>
+
+So the "collapse" you see in the lab could be the *local appearance* of entanglement with a measuring device. To check, you'd need to interfere $|0\rangle|\text{reads }0\rangle$ with $|1\rangle|\text{reads }1\rangle$, which means precisely controlling the device's quantum state. For a two-qubit "device" that's easy (undo the CNOT!). For a real device with $10^{23}$ atoms in contact with air and light, it's hopeless. Why it's hopeless is the subject of the next step.
+
+---
+
+## The environment is always watching
+
+A real object is constantly hit by air molecules, photons and thermal radiation. Each collision depends a little on *where* the object is or *what state* it's in, so each scattered particle leaves carrying a tiny record. If the system is in $\alpha|0\rangle + \beta|1\rangle$ and the environment ends up in $|E_0\rangle$ or $|E_1\rangle$ correspondingly,
+
+$$
+\alpha|0\rangle|E_0\rangle + \beta|1\rangle|E_1\rangle
+\quad\Longrightarrow\quad
+\rho_{\text{sys}} = \begin{pmatrix} |\alpha|^2 & \alpha\beta^*\,\langle E_1|E_0\rangle \\ \alpha^*\beta\,\langle E_0|E_1\rangle & |\beta|^2\end{pmatrix}.
+$$
+
+The coherences are multiplied by the **overlap** of the two environment states. One gentle collision barely changes the environment, so the overlap is close to 1. But overlaps multiply: after $N$ independent collisions, each with overlap $c \lt 1$, the factor is $c^N$, which falls **exponentially fast**. This is **decoherence**.
+
+<EnvironmentDecoherence />
+
+<Try>
+- Start in $|+\rangle$ and watch each scattered particle split into a blue and a red "ghost" — its two possible states, depending on the qubit. The overlap curve drops step by step, and the fringes on the "screen" wash out.
+- Lower the coupling to almost zero. Decoherence slows dramatically, but it never stops as long as particles keep hitting.
+- Now start in $|0\rangle$ or $|1\rangle$. **Nothing happens.** The purity stays at 1 no matter how many particles hit.
+- Check the readouts: fringe visibility $V$ and which-state information $D$ obey $V^2 + D^2 = 1$. This is the same complementarity you met in World 2's which-path experiments, now with the *environment* as the detector.
+</Try>
+
+Rough estimates going back to Joos and Zeh (1985) show how lopsided this gets for everyday objects. A 10-micron dust grain in deep space, struck only by the faint cosmic microwave background, loses the coherence between positions a grain-width apart in roughly a second. Put the same grain in air and it decoheres many, many orders of magnitude faster, far too fast for any experiment to resolve. That's why you have never seen a chair in two places.
+
+<History>
+In 1996 **Serge Haroche**'s group in Paris watched decoherence happen. They put a microwave field in a superconducting cavity into a superposition of two "classical-looking" states (a small Schrödinger cat of a few photons) and probed it with atoms. The coherence between the two components decayed, and it decayed **faster the more different the two components were**, just as decoherence theory predicts. Haroche shared the 2012 Nobel Prize in Physics with David Wineland for methods of measuring and manipulating individual quantum systems.
+</History>
+
+<Quiz id="u10l4-overlap">
+  <Q>A qubit in $|+\rangle$ scatters 50 environment particles. Each leaves the environment in states with overlap $\langle E_0|E_1\rangle = 0.98$ per particle. Roughly how big is the remaining coherence $|\rho_{01}|$ (initially 0.5)?</Q>
+  <Opt>0.49</Opt>
+  <Opt correct>About 0.18</Opt>
+  <Opt>About 0.01</Opt>
+  <Opt>Exactly 0</Opt>
+  <Explain>$0.5 \times 0.98^{50} \approx 0.5 \times 0.364 \approx 0.18$. Each particle is a weak "measurement," but they compound exponentially. A macroscopic object is hit by billions of particles per microsecond.</Explain>
+</Quiz>
+
+---
+
+## Einselection: why the world looks classical in *this* basis
+
+Notice what happened in the widget with $|0\rangle$ and $|1\rangle$: they were immune. The coupling to the environment *monitors* a particular observable, here $Z$. States that are eigenstates of the monitored observable don't get entangled, because the environment records the same thing whatever happens. Every other superposition decoheres into a mixture of them.
+
+**Wojciech Zurek** called this **environment-induced superselection**, or **einselection**, and the surviving states **pointer states**. For everyday objects, interactions depend on *position* (air molecules bounce off things that are *somewhere*), so the pointer states are well-localised positions. That's why the classical world is made of objects with definite locations, not superpositions of them. Decoherence explains not just *that* interference disappears, but *which* basis looks classical.
+
+Zurek later added **quantum Darwinism**. The environment doesn't just destroy coherence, it makes **many redundant copies** of the pointer-state information (in the circuit above, the reading copied into env 1 and env 2). Many observers can each read a fragment of the environment, say different photons bouncing off the same chair, and all agree, without disturbing the system. That shared, redundant record is what makes a fact feel *objective*.
+
+<CSCorner>
+Quantum Darwinism looks a lot like **replication in a distributed system**. A value written once to a single register is fragile: reading it, or entangling with it, can change it. A value replicated to thousands of nodes is "objective": any client can read any replica and get the same answer, and no single read can corrupt it. The analogy holds in one more way: to "undo" a decohered measurement you'd have to recall and coherently erase *every* replica, the quantum version of retracting a message that has already gone viral.
+</CSCorner>
+
+<Quiz id="u10l4-pointer">
+  <Q>A qubit is coupled to its environment by an interaction that records the value of $X$ (not $Z$). Which states are pointer states that survive decoherence?</Q>
+  <Opt>$|0\rangle$ and $|1\rangle$</Opt>
+  <Opt correct>$|+\rangle$ and $|-\rangle$</Opt>
+  <Opt>Every state equally</Opt>
+  <Opt>None. Every state decoheres to $I/2$.</Opt>
+  <Explain>The pointer basis is the eigenbasis of the monitored observable. An $X$-recording environment leaves $|\pm\rangle$ alone and decoheres $|0\rangle$ (a superposition of $|+\rangle$ and $|-\rangle$) into a mixture of them. On the Bloch ball, everything collapses onto the $x$ axis.</Explain>
+</Quiz>
+
+---
+
+## What decoherence does **not** explain
+
+Decoherence is standard, experimentally confirmed physics. But be precise about what it delivers. After decoherence the system's reduced state is
+
+$$
+\rho_{\text{sys}} \approx |\alpha|^2\,|0\rangle\langle 0| + |\beta|^2\,|1\rangle\langle 1| ,
+$$
+
+which *looks* like "it's 0 or 1 and we don't know which." But remember Lesson 1: this is an **improper mixture**. The global state is still the superposition $\alpha|0\rangle|E_0\rangle + \beta|1\rangle|E_1\rangle$. Both terms are still there. Decoherence explains
+
+- why we never see **interference** between macroscopically different alternatives,
+- **which basis** behaves classically (pointer states),
+- why **many observers agree** (redundant records),
+
+but on its own it does not explain why **one particular outcome** occurs in a given run. That residue is often called the **problem of outcomes**, and it is where interpretations of quantum mechanics part ways.
+
+<Warning>
+**"Decoherence solves the measurement problem."** It solves a big part of it, the "why does the world look classical" part, but not the "why this outcome?" part. Equally wrong is the opposite myth, **"measurement requires a conscious observer."** Any interaction that records information in the environment produces the observed effects of measurement. A stray photon, a phonon in a chip or a Geiger counter all do the job, and none of them needs a mind.
+</Warning>
+
+---
+
+## Interpretations: what might be going on
+
+Physicists agree on the mathematics and on every experimental prediction (with one family of exceptions below). They do *not* agree on what the mathematics says reality is like. Here is a quick, even-handed tour. Each view has serious defenders and serious critics.
+
+<InterpretationsTour />
+
+<History>
+**Hugh Everett III** proposed his "relative state" formulation in his 1957 Princeton PhD thesis under John Wheeler. It was coolly received, especially by Bohr's circle, and Everett left physics for defence analysis. The idea only became widely known as "many worlds" after Bryce DeWitt promoted it around 1970. **David Bohm**'s 1952 hidden-variable theory was also largely ignored until **John Bell** studied it. Bohm's explicitly non-local theory is what led Bell to ask whether *every* hidden-variable theory must be non-local, the question behind the Bell inequalities of World 6.
+</History>
+
+<Quiz id="u10l4-interp">
+  <Q>Which interpretation (or modification) makes predictions that differ from standard quantum mechanics and can therefore be tested experimentally?</Q>
+  <Opt>Many-Worlds</Opt>
+  <Opt>Bohmian mechanics</Opt>
+  <Opt correct>Objective-collapse models such as GRW or Diósi–Penrose</Opt>
+  <Opt>QBism</Opt>
+  <Explain>Objective-collapse theories change the dynamics, adding spontaneous localisation. They predict tiny effects such as spontaneous heating and loss of interference for large molecules, and experiments have already ruled out some parameter ranges. The others reproduce standard quantum predictions exactly and differ in what they say is *real*.</Explain>
+</Quiz>
+
+<Note title="What this means for quantum computing">
+None of the interpretations changes a single number in this course. Quantum computers work the same under all of them. Decoherence, however, matters enormously: from the computer's point of view, **every uncontrolled interaction is an unwanted measurement**. Error correction (World 11) is the art of letting the environment "measure" only harmless things, namely syndromes, while the encoded information stays hidden.
+</Note>
+
+---
+
+## Summary
+
+- **Measurement problem:** linear, unitary evolution never picks an outcome. A quantum pointer just joins the superposition.
+- **Measurement is entanglement:** after a CNOT-like interaction, the system's reduced state is a mixture that's locally indistinguishable from "collapsed."
+- **Decoherence:** each environment particle carries away a little which-state information, coherences shrink by $\langle E_0|E_1\rangle$, and the effect compounds exponentially. Macroscopic superpositions decohere almost instantly.
+- **Einselection:** states the environment monitors (*pointer states*, e.g. positions) survive, and superpositions of them don't. **Quantum Darwinism:** redundant records make facts objective.
+- Decoherence explains why the world looks classical, but not by itself why one outcome happens. **Interpretations** (Copenhagen, Many-Worlds, Bohmian, objective collapse, QBism) answer that differently. Only objective collapse predicts measurable deviations.

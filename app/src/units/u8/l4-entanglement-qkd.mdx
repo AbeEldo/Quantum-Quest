@@ -1,0 +1,112 @@
+import { E91Lab } from './widgets/E91Lab';
+import { SWAP_GOAL } from './lib/states';
+
+BB84 trusts a lot. Alice trusts her laser to emit the states she asked for, and both trust their detectors to do what the manual says. The detector-blinding attacks of the last lesson broke exactly those assumptions.
+
+In 1991 **Artur Ekert**, then a PhD student at Oxford, had a strikingly different idea: **use Bell's theorem as the eavesdropping test.** If the correlations between Alice's and Bob's results violate a Bell inequality, they *can't* have been written in advance by anyone. That includes Eve.
+
+<Predict id="u8l4-preprogram">
+  <Q>Eve secretly replaces the entangled-photon source with her own device that gives each pair of photons pre-agreed instructions, so she knows every outcome. Alice and Bob run a CHSH test on part of their data. What will they see?</Q>
+  <Opt>$S \approx 2\sqrt2$, because Eve can mimic anything</Opt>
+  <Opt correct>$\lvert S\rvert \le 2$, so Eve's source is a local hidden-variable model and Bell's theorem caps it</Opt>
+  <Opt>$S = 4$</Opt>
+  <Opt>$S = 0$ exactly</Opt>
+  <Explain>Pre-programmed instructions are by definition a local hidden-variable model, so $|S| \le 2$, whatever Eve does. A violation, $S > 2$, certifies that the outcomes weren't predetermined, so nobody could have known them in advance.</Explain>
+  <Reveal>
+That's the seed of **device-independent** cryptography: security that rests on observed statistics, not on trusting the hardware. This lesson builds entanglement-based QKD, then zooms out to the quantum networks that would carry it: satellites, repeaters, and entanglement swapping.
+  </Reveal>
+</Predict>
+
+---
+
+## BBM92: BB84 with entangled pairs
+
+The simplest entanglement-based protocol (**Bennett, Brassard & Mermin, 1992**) is BB84 in disguise. A source, which can sit in the middle or even be run by Eve, sends $|\Phi^+\rangle$ pairs. Alice and Bob each measure in $Z$ or $X$ at random. Since $|\Phi^+\rangle = \tfrac{1}{\sqrt2}(|00\rangle+|11\rangle) = \tfrac{1}{\sqrt2}(|{+}{+}\rangle+|{-}{-}\rangle)$, rounds with matching bases give identical random bits. Sift, estimate the QBER, correct errors and amplify privacy, exactly as before.
+
+What's new is that **nobody chose the key**. It's created by the measurements. Alice's laser can't leak it because there's no laser on her side, and the source can't know it because the outcomes don't exist until measured.
+
+## E91: let Bell certify the source
+
+Ekert's version uses *more* settings. In polarisation language, Alice measures at $0°, 22.5°, 45°$ and Bob at $22.5°, 45°, 67.5°$, each at random.
+
+- When they happen to use the **same angle** ($22.5°/22.5°$ or $45°/45°$), the results agree, and those rounds become **key**.
+- The other combinations ($0°, 45°$ with $22.5°, 67.5°$) are exactly the CHSH angles from World 6, so they give an estimate of **$S$**.
+
+<E91Lab />
+
+<Try>
+- **Honest source**, 5000 pairs: $S\approx 2.83$ and key QBER ≈ 0. Certified.
+- **Eve intercepts & resends:** she measures each photon and sends replacements. The entanglement is destroyed, so $S$ drops to about $1.41$ and the key QBER jumps to ~25%.
+- **Eve's pre-programmed source:** the key bits agree *perfectly* and the QBER is 0, so BB84-style checking would be fooled. But $S\approx 2$, no violation, and E91 aborts.
+- Lower the honest source's visibility $V$. Below about 71% you can't certify the key any more, even with no Eve.
+</Try>
+
+<Quiz id="u8l4-monogamy">
+  <Q>Why does a near-maximal Bell violation between Alice and Bob guarantee that Eve knows (almost) nothing about the key?</Q>
+  <Opt>Because Eve can't detect photons</Opt>
+  <Opt correct>Entanglement is **monogamous**: if A and B are (nearly) maximally entangled with each other, neither can be significantly correlated with a third system E</Opt>
+  <Opt>Because the key is encrypted with RSA afterwards</Opt>
+  <Opt>Because Bell violations only occur at night</Opt>
+  <Explain>If $|\Phi^+\rangle_{AB}$ were also correlated with Eve's system, the joint state couldn't be the pure $|\Phi^+\rangle$, and the correlations would be weaker. Quantitatively, the closer $S$ is to $2\sqrt2$, the less information any third party can hold. That's **monogamy of entanglement**, and it's what device-independent security proofs turn into numbers.</Explain>
+</Quiz>
+
+<Note title="Device-independent QKD is real (but slow)">
+**Device-independent QKD** uses only the observed Bell violation, treating the devices as untrusted black boxes. It needs a *loophole-free* Bell test, since a detection loophole would let a hacked device fake the violation. In 2022 the first DIQKD experiments generated keys this way, with trapped ions in Oxford and with neutral atoms in Munich, at very low rates over short distances.
+</Note>
+
+---
+
+## Quantum networks: the loss problem
+
+Real QKD links send photons down optical fibre, and fibre loses about **0.2 dB per km** at telecom wavelengths. Losses compound exponentially:
+
+$$
+T = 10^{-0.2\,L/10}, \qquad L = 100\text{ km} \Rightarrow T = 10^{-2},\quad L = 1000\text{ km} \Rightarrow T = 10^{-20}.
+$$
+
+A classical network fixes loss with **amplifiers**. A quantum network can't, because amplifying an unknown quantum state would be cloning it. Direct fibre QKD tops out at a few hundred kilometres.
+
+<NumQuiz id="u8l4-fibre" answer={0.001} tol={0.0002}>
+  <Q>What fraction of photons survives 150 km of fibre at 0.2 dB/km?</Q>
+  <Explain>$0.2 \times 150 = 30$ dB, and $10^{-30/10} = 10^{-3}$. One photon in a thousand. At 1000 km it would be one in $10^{20}$: at a billion photons per second, you'd wait thousands of years for a single detection.</Explain>
+</NumQuiz>
+
+**Workarounds in use today:**
+
+- **Trusted nodes:** chain short QKD links through relay stations that decrypt and re-encrypt. China's Beijing–Shanghai backbone (over 2,000 km) works this way, but every node must be trusted.
+- **Satellites:** in space there's almost no absorption. China's **Micius** satellite (launched August 2016) distributed entangled photon pairs to two ground stations about **1,200 km** apart (Yin et al., *Science*, 2017), performed satellite-to-ground QKD and ground-to-satellite teleportation (both 2017), and in 2020 achieved **entanglement-based QKD between stations 1,120 km apart** with no trusted relay (Yin et al., *Nature*). It also relayed keys for an intercontinental video call between Beijing and Vienna (2017).
+
+---
+
+## Entanglement swapping and quantum repeaters
+
+The real fix is the **quantum repeater**. Make entanglement over short links, then **stitch it together**. The stitching operation is **entanglement swapping**, which is teleportation applied to half of a Bell pair.
+
+Take two pairs, $(q_0, q_1)$ and $(q_2, q_3)$. A middle station holds $q_1$ and $q_2$ and performs a **Bell measurement** on them, the same CNOT + H + measure as Alice's step in teleportation. That teleports $q_1$'s state onto $q_3$. But $q_1$ was entangled with $q_0$, so now **$q_0$ and $q_3$ are entangled**, even though they never interacted.
+
+**Challenge:** the circuit below makes the two pairs and performs the middle station's Bell-measurement gates. Add the (deferred) corrections so that $q_0$ and $q_3$ end in $|\Phi^+\rangle$. Hint: it's exactly the teleportation correction, with $q_1, q_2$ as Alice's qubits and $q_3$ as Bob's. When it works, the mini Bloch spheres of $q_0$ and $q_3$ turn pink, and those of $q_1$, $q_2$ become pure.
+
+<CircuitLab n={4} circuit="H 0, H 2; CNOT 0 1, CNOT 2 3; CNOT 1 2; H 1" gates={['X', 'Z', 'H', 'CNOT', 'CZ']} qubitLabels={['A', 'R₁', 'R₂', 'B']} goal={{ kind: 'state', amps: SWAP_GOAL, label: 'A and B share |Φ⁺⟩ (repeater qubits left in |+⟩|+⟩)' }} challengeId="u8l4-swap" maxGates={8} title="Challenge: entanglement swapping" />
+
+A repeater chain does this repeatedly. It builds entanglement over $N$ short links (each attempt succeeds with modest probability), stores the successes in **quantum memories** while it waits for neighbours, swaps them together, and **purifies** (distils high-fidelity pairs from several noisy ones). The time needed then grows only polynomially with distance instead of exponentially. Once Alice and Bob share end-to-end entanglement, they can run E91, or teleport arbitrary qubits.
+
+<Warning>
+"The quantum internet will be faster." **No.** Entanglement can't send signals, teleportation still needs classical bits, and repeaters add waiting time. What a quantum network offers is **new capabilities**: keys secured by physics, linking quantum computers, distributed sensing and clock synchronisation, and blind quantum computing. Speed isn't one of them.
+</Warning>
+
+<History>
+Entanglement swapping was proposed by **Żukowski, Zeilinger, Horne and Ekert** in 1993 and demonstrated by Zeilinger's group in 1998 (Pan et al.). The quantum repeater architecture was introduced by **Briegel, Dür, Cirac and Zoller** in 1998. Two-decade-old ideas are now engineering targets: multi-node entanglement networks with quantum memories have been demonstrated in labs in Delft, Boston, Hefei and elsewhere.
+</History>
+
+<CSCorner>
+A repeater chain is a classic **pipelining-under-uncertainty** problem. Links succeed stochastically, memories expire (decoherence acts like a TTL), and swaps must be scheduled to maximise end-to-end fidelity per second. Network-stack proposals for the quantum internet even have layered protocols: a physical layer (heralded entanglement), link layer, network layer (routing swaps) and transport layer (teleporting qubits). Try the scheduling yourself in the *Teleport Relay* game.
+</CSCorner>
+
+---
+
+## Summary
+
+- **BBM92:** BB84 run on shared $|\Phi^+\rangle$ pairs. The key is created by the measurements, so the source needn't be trusted.
+- **E91:** extra measurement angles let Alice and Bob estimate CHSH $S$. $S\approx2\sqrt2$ certifies the key (monogamy of entanglement), while $S\le2$ means anything from intercept-resend to a pre-programmed source. This is the idea behind **device-independent QKD** (first demonstrated 2022).
+- Fibre loss (~0.2 dB/km) and no-cloning (no amplifiers) limit direct links. **Micius** (2016–) distributed entanglement over ~1,200 km and ran entanglement-based QKD over 1,120 km.
+- **Entanglement swapping** (a Bell measurement on the middle qubits) entangles qubits that never met. Chained with memories and purification, it forms a **quantum repeater**.

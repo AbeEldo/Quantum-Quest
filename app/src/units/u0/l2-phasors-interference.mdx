@@ -1,0 +1,169 @@
+import { PhasorAdder, InterferenceDial } from './widgets/PhasorAdder';
+
+Noise-cancelling headphones do something that sounds like nonsense: they make a quiet room **quieter by adding more sound**. A microphone listens to the noise outside, and the speaker plays a carefully timed copy of it into your ear. Sound plus sound equals silence.
+
+This is **interference**, and it is the single most important phenomenon in this course. Light does it, water waves do it, and (as you will see in Worlds 1 and 2) electrons, atoms and qubits do it too. Quantum computing is, at heart, the art of arranging for wrong answers to interfere away.
+
+The mathematics of interference is the mathematics of adding the rotating arrows from the previous lesson. Let's warm up with a prediction.
+
+<Predict id="u0l2-two-speakers">
+  <Q>Two identical loudspeakers play the same steady tone. At a certain spot, either speaker alone gives a sound intensity $I$. With both switched on, what intensity can you measure at that spot?</Q>
+  <Opt>Exactly $2I$ everywhere: intensities add</Opt>
+  <Opt correct>Anything from $0$ to $4I$, depending on where you stand</Opt>
+  <Opt>Anything from $0$ to $2I$, depending on where you stand</Opt>
+  <Opt>Exactly $I$: the second speaker just repeats the first</Opt>
+  <Reveal>
+What adds is the **amplitude** (the pressure wiggle), not the intensity. Intensity goes as amplitude *squared*. If the two waves arrive in step, the amplitude doubles and the intensity becomes $2^2 = 4$ times bigger: $4I$. If they arrive exactly out of step, the amplitudes cancel: $0$. In between you get everything in between.
+
+That $4I$ is not a violation of energy conservation: the extra energy at the loud spots is exactly the energy missing from the quiet spots. We will prove that below.
+  </Reveal>
+</Predict>
+
+---
+
+## Waves are shadows of spinning arrows
+
+A steady wave at one point in space wiggles like $A\cos(\omega t + \varphi)$: an **amplitude** $A$, an **angular frequency** $\omega$, and a **phase** $\varphi$ that says where in its cycle the wiggle starts.
+
+Here is the trick (engineers call it the **phasor** method). By Euler's formula,
+
+$$
+A\cos(\omega t + \varphi) = \mathrm{Re}\!\left[A e^{i(\omega t + \varphi)}\right] = \mathrm{Re}\!\left[\underbrace{A e^{i\varphi}}_{\text{phasor } a}\; e^{i\omega t}\right].
+$$
+
+The wave is the **shadow on the real axis** of an arrow of length $A$ spinning at rate $\omega$. All of the information specific to this wave (its size and its starting angle) is packed into a single complex number $a = Ae^{i\varphi}$, the **phasor**. The spinning factor $e^{i\omega t}$ is the same for every wave of that frequency.
+
+So when two waves of the same frequency meet, adding them is easy:
+
+$$
+\mathrm{Re}[a\,e^{i\omega t}] + \mathrm{Re}[b\,e^{i\omega t}] = \mathrm{Re}[(a+b)\,e^{i\omega t}] .
+$$
+
+**Adding waves = adding their phasors**, tip to tail. The size of the combined wave is $|a+b|$.
+
+<PhasorAdder />
+
+<Try>
+- Click **Three at 120°**. Three perfectly good waves, and the sum is *nothing*: the arrows form a closed triangle. Look at the wave panel underneath: three wiggles that add up to a flat line.
+- Click **All in phase**, then drag one arrow's tip around in a circle. Watch |sum|² swing between big and small.
+- Toggle **rotate all together**. Every arrow spins, but the *shape* of the chain is frozen, so |sum| never changes. Only **relative** phases matter. This is the reason a "global phase" will turn out to be physically meaningless in quantum mechanics.
+</Try>
+
+<Quiz id="u0l2-closed">
+  <Q>Four phasors, each of length 1, have phases $0, \tfrac{\pi}{2}, \pi, \tfrac{3\pi}{2}$. What is the length of their sum?</Q>
+  <Opt>4</Opt>
+  <Opt>2</Opt>
+  <Opt correct>0</Opt>
+  <Opt>1</Opt>
+  <Explain>The four arrows are $1, i, -1, -i$. Tip to tail they walk around a square and come back to the start, so the sum is 0. Any set of equal arrows spread evenly around the circle cancels completely. Keep this pattern in mind: it reappears in the Fourier transform and in Shor's algorithm.</Explain>
+</Quiz>
+
+---
+
+## The interference term
+
+Intensity (or, later, probability) is the **squared length** of the total phasor. Let's expand it, using $|z|^2 = z\bar z$ from last lesson:
+
+$$
+|a+b|^2 = (a+b)(\bar a + \bar b) = a\bar a + b\bar b + a\bar b + \bar a b .
+$$
+
+The last two terms are conjugates of each other, and $z + \bar z = 2\,\mathrm{Re}\,z$. So
+
+$$
+\boxed{\;|a+b|^2 = |a|^2 + |b|^2 + 2\,\mathrm{Re}(a\bar b)\;}
+$$
+
+If $a = |a|e^{i\varphi_a}$ and $b = |b|e^{i\varphi_b}$, then $a\bar b = |a||b|e^{i(\varphi_a - \varphi_b)}$ and the extra term is $2|a||b|\cos\Delta\varphi$, where $\Delta\varphi$ is the **relative phase**. This extra piece is the **interference term**. It can be positive (constructive interference), negative (destructive interference) or zero.
+
+<InterferenceDial />
+
+<Try>
+- With $|a| = |b| = 1$, sweep $\Delta\varphi$ from $0$ to $2\pi$. The total swings from $4$ down to $0$ and back. That is the "0 to $4I$" from the opening question.
+- Set $|b| = 0.3$. The swing is much smaller, and the minimum is no longer zero. Perfect cancellation needs equal lengths.
+- Find the phase where the interference term is exactly zero. At $\Delta\varphi = \pi/2$ the arrows are perpendicular and Pythagoras holds: $|a+b|^2 = |a|^2+|b|^2$.
+</Try>
+
+<KeyIdea>
+**Amplitudes add; intensities don't.** For two contributions,
+
+- in phase ($\Delta\varphi = 0$): $|a+b|^2 = (|a|+|b|)^2$, the maximum;
+- out of phase ($\Delta\varphi = \pi$): $|a+b|^2 = (|a|-|b|)^2$, the minimum;
+- the "naive" answer $|a|^2 + |b|^2$ is only right when the interference term $2|a||b|\cos\Delta\varphi$ happens to vanish.
+</KeyIdea>
+
+<NumQuiz id="u0l2-quarter" answer={2} tol={0.01}>
+  <Q>Let $a = 1$ and $b = i$. Compute $|a+b|^2$.</Q>
+  <Hint>Either use $|1+i|^2 = 1^2 + 1^2$, or the formula with $\Delta\varphi = \pi/2$.</Hint>
+  <Explain>$|1+i|^2 = 2 = |a|^2 + |b|^2$. The relative phase is $90°$, so $\mathrm{Re}(a\bar b) = \mathrm{Re}(1\cdot(-i)) = 0$: no interference term.</Explain>
+</NumQuiz>
+
+---
+
+## Where phase differences come from
+
+Back to the two loudspeakers. They emit the same wave, in step. Why would the waves arrive at your ear *out* of step? Because they travel **different distances**.
+
+A wave advances its phase by $2\pi$ (one full turn of the arrow) for every wavelength $\lambda$ it travels. If one path is longer by $\Delta L$, its arrow arrives turned by an extra
+
+$$
+\Delta\varphi = 2\pi\,\frac{\Delta L}{\lambda} .
+$$
+
+- $\Delta L = 0, \lambda, 2\lambda, \dots$: arrows aligned, **bright/loud** (constructive).
+- $\Delta L = \tfrac12\lambda, \tfrac32\lambda, \dots$: arrows opposite, **dark/quiet** (destructive).
+
+As you walk across a room, $\Delta L$ changes smoothly, so you pass through alternating loud and quiet spots. With light and two narrow slits, those spots are the famous bright and dark **fringes** of the double-slit experiment. You will build exactly this, with a ripple tank, in World 1.
+
+<NumQuiz id="u0l2-path" answer={270} tol={1}>
+  <Q>Two equal waves (wavelength $\lambda$) reach a point by paths that differ by $\Delta L = 0.75\lambda$. What is their relative phase, in degrees?</Q>
+  <Hint>One wavelength of extra path = 360° of extra phase.</Hint>
+  <Explain>$\Delta\varphi = 360° \times 0.75 = 270°$ (equivalently $-90°$). The arrows are perpendicular, so the interference term is zero and the intensity is exactly the sum of the two separate intensities.</Explain>
+</NumQuiz>
+
+<Warning>
+"Destructive interference destroys energy." It doesn't. Interference **moves** energy around: darker here, brighter there. Average the interference term $2|a||b|\cos\Delta\varphi$ over all phases and you get exactly zero, because $\cos$ averages to zero over a full cycle. Summed over a whole fringe pattern, the total intensity is $|a|^2 + |b|^2$ per point on average, exactly what no interference would give.
+</Warning>
+
+---
+
+## Why this is *the* quantum idea
+
+In a moment of genius, Richard Feynman reduced all of quantum mechanics to one rule about arrows.
+
+To find the probability that something happens:
+1. For each way it can happen, draw an arrow (a complex **amplitude**).
+2. **Add** the arrows for all the ways, tip to tail.
+3. The probability is the **squared length** of the total arrow.
+
+Compare classical probability, where you add *probabilities* of alternative ways (non-negative numbers, which can only pile up). In quantum mechanics you add amplitudes, and amplitudes can **cancel**. Two ways for an event to happen, each with probability $1/4$ on its own, can combine to make the event *impossible*, or make it happen with probability 1.
+
+<History>
+Feynman presented this "little arrows" picture in four public lectures at UCLA in 1983, published in 1985 as *QED: The Strange Theory of Light and Matter*. It is the most accessible account of quantum electrodynamics ever written by one of its inventors, and well worth an evening.
+</History>
+
+<CSCorner>
+A randomized algorithm combines paths with non-negative weights, so no path can ever cancel another. A quantum algorithm combines paths with complex amplitudes. The art of designing a quantum algorithm is to choreograph the phases so that paths leading to wrong answers arrive with opposite phases and cancel, while paths to the right answer line up. That's the honest version of "quantum parallelism"; you'll see it in Grover's and Shor's algorithms. (The *dishonest* version, "a quantum computer tries every answer at once", leaves out the cancellation, which is the whole trick.)
+</CSCorner>
+
+<Quiz id="u0l2-average">
+  <Q>Two amplitudes $a$ and $b$ have a relative phase that fluctuates randomly and uniformly over $[0, 2\pi)$ from one run to the next. Averaged over many runs, what is $|a+b|^2$?</Q>
+  <Opt>$(|a| + |b|)^2$</Opt>
+  <Opt correct>$|a|^2 + |b|^2$</Opt>
+  <Opt>$0$</Opt>
+  <Opt>$(|a| - |b|)^2$</Opt>
+  <Explain>The interference term $2|a||b|\cos\Delta\varphi$ averages to zero when $\Delta\varphi$ is uniformly random. Random phases wash out interference and you are back to adding intensities, which is the classical rule. This is a preview of **decoherence** (World 10): when a quantum system's phases get scrambled by its environment, it starts to behave classically.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- A wave $A\cos(\omega t+\varphi)$ is the real part of a spinning arrow; its **phasor** $a = Ae^{i\varphi}$ stores amplitude and phase.
+- Waves of the same frequency add by **adding phasors** tip to tail. Only **relative** phases affect the result.
+- $|a+b|^2 = |a|^2 + |b|^2 + 2\,\mathrm{Re}(a\bar b)$, where the last piece, $2|a||b|\cos\Delta\varphi$, is the **interference term**.
+- A path difference $\Delta L$ produces a phase difference $2\pi\Delta L/\lambda$: constructive for whole wavelengths, destructive for half-odd wavelengths.
+- Interference redistributes energy; random phases average it away.
+- Quantum rule (Feynman): **add amplitudes, then square.** Cancellation is the resource behind quantum algorithms.
+
+<Watch title="The Feynman Lectures on Physics, Vol. I, Ch. 29: Interference" by="R. P. Feynman" url="https://www.feynmanlectures.caltech.edu/I_29.html" kind="book" note="phasor addition of waves, free online" />

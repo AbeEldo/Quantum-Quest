@@ -1,0 +1,160 @@
+import { SimonLab } from './widgets/SimonLab';
+
+In the early 1990s Daniel Simon tried to show that classical computers could efficiently simulate quantum ones. He ended up finding the opposite: a quantum circuit that resisted every simulation idea he had, and a problem built around it where quantum computers need exponentially fewer queries than any classical algorithm, randomized or not.
+
+Here it is. A box computes $f:\{0,1\}^n\to\{0,1\}^n$, and you are promised there's a hidden non-zero **mask** $s$ such that
+$$
+f(x) = f(y) \iff y = x \ \text{ or }\ y = x\oplus s .
+$$
+So $f$ is **2-to-1**: inputs come in pairs $\{x, x\oplus s\}$ that collide, and different pairs give different outputs. Find $s$.
+
+Classically, the only way to learn anything about $s$ is to find a **collision**, two inputs with the same output, since then $s = x\oplus y$. Until you find one, every answer just looks like a fresh random string.
+
+<Predict id="u9l3-hook">
+  <Q>For $n = 100$, roughly how many queries does a *randomized* classical algorithm need to find $s$ with good probability?</Q>
+  <Opt>About 100</Opt>
+  <Opt>About $100^2 = 10^4$</Opt>
+  <Opt correct>About $2^{50} \approx 10^{15}$</Opt>
+  <Opt>About $2^{100} \approx 10^{30}$</Opt>
+  <Explain>Finding a collision among random-looking outputs is the **birthday problem**. After $q$ queries there are about $q^2/2$ pairs, and each pair collides with probability about $2^{-n}$, so you need $q \approx 2^{n/2}$. Simon proved that no classical algorithm can do fundamentally better: $\Omega(2^{n/2})$ queries are required. A quantum computer needs about $n$.</Explain>
+</Predict>
+
+---
+
+## The circuit
+
+Simon's algorithm uses the **bit oracle** with an $n$-qubit output register (no phase trick this time):
+
+1. Start with $|0\rangle^{\otimes n}|0\rangle^{\otimes n}$ and apply $H^{\otimes n}$ to the input register: $\frac{1}{\sqrt{2^n}}\sum_x|x\rangle|0\rangle$.
+2. Query once: $\frac{1}{\sqrt{2^n}}\sum_x|x\rangle|f(x)\rangle$. The two registers are now entangled.
+3. Measure the output register. You get some value $f(x_0)$, which by itself is useless. But the input register **collapses** onto the two preimages:
+$$
+\frac{1}{\sqrt2}\big(|x_0\rangle + |x_0\oplus s\rangle\big).
+$$
+4. Apply $H^{\otimes n}$ and measure, getting a string $y$.
+
+Step 3 has delivered a state that *contains* $s$, as the difference between two strings, but you can't read it directly. Measuring now would give $x_0$ or $x_0\oplus s$, a random string. Repeating would give a *different* random pair, since $x_0$ changes every run. That's where the Fourier transform comes in.
+
+<SimonLab />
+
+<Try>
+- With $s = 110$, run the circuit several times and step through the four stages. Which outputs $y$ ever appear at stage ④? Check each one: compute $y\cdot s$.
+- Watch the **lab notebook**. Each run adds an equation. Note how many runs it takes before the consistent-mask list shrinks to a single answer.
+- Switch to **🎲 Mystery s**, collect equations, and solve for $s$ yourself before peeking at the list.
+</Try>
+
+---
+
+## Why only $y \perp s$ survives
+
+Apply $H^{\otimes n}$ to the collapsed pair:
+$$
+H^{\otimes n}\,\frac{|x_0\rangle + |x_0\oplus s\rangle}{\sqrt2} = \frac{1}{\sqrt{2^{n+1}}}\sum_y \Big[(-1)^{x_0\cdot y} + (-1)^{(x_0\oplus s)\cdot y}\Big]|y\rangle = \frac{1}{\sqrt{2^{n+1}}}\sum_y (-1)^{x_0\cdot y}\Big[1 + (-1)^{s\cdot y}\Big]|y\rangle .
+$$
+The bracket is $2$ if $s\cdot y = 0$ and $0$ if $s\cdot y = 1$. So:
+
+<KeyIdea>
+Each run of Simon's circuit returns a **uniformly random** $y$ with $y\cdot s = 0$. The random offset $x_0$ only affects the *sign* $(-1)^{x_0\cdot y}$, which measurement can't see. The unknown, run-dependent $x_0$ drops out, and what's left is a clean linear equation about $s$.
+</KeyIdea>
+
+<Note title="Do we really need to measure the output register?">
+No. By the **principle of deferred measurement**, the distribution of $y$ is identical if you never look at the output register at all; it just acts as a record that decoheres the pairs from one another. Measuring it in step 3 is a convenient story, not a necessary step.
+</Note>
+
+<Quiz id="u9l3-which-y">
+  <Q>The hidden mask is $s = 110$. Which of these outputs can Simon's circuit produce? (Select all that apply.)</Q>
+  <Opt correct>$000$</Opt>
+  <Opt correct>$001$</Opt>
+  <Opt>$010$</Opt>
+  <Opt correct>$111$</Opt>
+  <Opt>$100$</Opt>
+  <Explain>We need $y\cdot s = y_1\oplus y_2 = 0$, i.e. the first two bits equal. That allows $000, 001, 110, 111$, each with probability ¼. $010$ and $100$ have $y\cdot s = 1$, so they're cancelled by interference.</Explain>
+</Quiz>
+
+---
+
+## Finishing classically: linear algebra over GF(2)
+
+Each run gives one equation $y\cdot s = 0$ over the two-element field GF(2), where addition is XOR. The solutions form the subspace $s^\perp$, of dimension $n-1$. After you've collected $n-1$ **linearly independent** equations, the only non-zero solution left is $s$. Gaussian elimination finds it in $O(n^3)$ bit operations.
+
+**Worked example ($n=3$).** Suppose the runs give $y = 011$ and $y = 101$:
+$$
+s_2\oplus s_3 = 0,\qquad s_1\oplus s_3 = 0 \quad\Longrightarrow\quad s_1 = s_2 = s_3 .
+$$
+The non-zero solution is $s = 111$.
+
+How many runs does it take? Each new $y$ is uniform on $s^\perp$, so it fails to be independent of the previous $k$ equations with probability $2^k/2^{n-1}$. The probability that $n-1$ samples are independent is $\prod_{j=1}^{n-1}(1-2^{-j}) > 0.288$, and the expected number of runs is **less than $n+1$**. That's $O(n)$ quantum queries in total, plus polynomial classical work.
+
+<Quiz id="u9l3-solve">
+  <Q>For $n = 3$, the runs produced $y = 110$ and $y = 011$. What is $s$?</Q>
+  <Opt>$110$</Opt>
+  <Opt correct>$111$</Opt>
+  <Opt>$101$</Opt>
+  <Opt>$010$</Opt>
+  <Explain>$110$ gives $s_1\oplus s_2 = 0$ and $011$ gives $s_2\oplus s_3 = 0$, so all three bits are equal and the non-zero solution is $111$. Check: $110\cdot111 = 1\oplus1 = 0$ ✓ and $011\cdot111 = 0$ ✓.</Explain>
+</Quiz>
+
+<Warning title="A useless measurement">
+Sometimes you get $y = 0\cdots0$ (probability $2^{-(n-1)}$ per run), or a $y$ that's a combination of equations you already have. Those runs are wasted, but harmless. Simon's algorithm is a **Las Vegas** algorithm: it never outputs a wrong $s$, it only occasionally needs another run. (Brassard and Høyer later made it exact, with a guaranteed $O(n)$ queries.)
+</Warning>
+
+---
+
+## An exponential separation
+
+Put the two costs side by side:
+
+<Plot
+  series={[
+    { f: (n) => (n / 2) * Math.log10(2), color: '#fc6255', label: 'classical (birthday): ~2^(n/2) queries' },
+    { f: (n) => Math.log10(n + 1), color: '#58c4dd', label: 'quantum (Simon): ~n queries' },
+  ]}
+  xRange={[2, 100]}
+  yRange={[0, 16]}
+  xLabel="n (bits)"
+  yLabel="log₁₀(queries)"
+  height={240}
+/>
+
+At $n = 100$ the classical cost is about $10^{15}$ queries and the quantum cost is about 100. This is a **provable exponential gap in query complexity against randomized algorithms**, the first one known. Deutsch–Jozsa's gap vanished when we allowed randomness. Simon's doesn't.
+
+<CSCorner>
+In complexity language, Simon's problem gives an **oracle** $O$ relative to which $\mathsf{BQP}^O \not\subseteq \mathsf{BPP}^O$. Oracle separations aren't proofs about the real world: the unrelativized question $\mathsf{BPP} \overset{?}{=} \mathsf{BQP}$ is open, and settling it would imply $\mathsf{P}\neq\mathsf{PSPACE}$, which is far beyond current techniques. But they are strong evidence, and they tell you *what kind* of structure a quantum computer can exploit: here, a hidden XOR-period.
+</CSCorner>
+
+<NumQuiz id="u9l3-birthday" answer={1024} tol={120}>
+  <Q>Using the birthday estimate $q \approx 2^{n/2}$, about how many classical queries are needed for $n = 20$?</Q>
+  <Explain>$2^{20/2} = 2^{10} = 1024$. (The quantum algorithm needs about 20 runs.) The precise constant depends on the success probability you want, but the scaling $\Theta(2^{n/2})$ is tight.</Explain>
+</NumQuiz>
+
+---
+
+## The road to Shor
+
+Simon's algorithm finds a hidden **period under XOR**: $f(x\oplus s) = f(x)$. Shor's algorithm finds a hidden **period under addition**: $f(x + r) = f(x)$, for $f(x) = a^x \bmod N$. The structure of the two algorithms is the same:
+
+| | Simon | Shor (order finding) |
+|---|---|---|
+| hidden structure | $f(x\oplus s) = f(x)$ | $f(x + r) = f(x)$ |
+| group | $\mathbb{Z}_2^n$ (XOR) | $\mathbb{Z}_{2^t}$ (addition, approximately) |
+| Fourier transform | $H^{\otimes n}$ | quantum Fourier transform |
+| each run gives | random $y$ with $y\cdot s = 0$ | $y/2^t \approx k/r$ for random $k$ |
+| classical finish | Gaussian elimination over GF(2) | continued fractions |
+
+<History>
+Simon submitted his paper to the STOC conference in 1993, and it was **rejected**. One member of the program committee, Peter Shor of AT&T Bell Labs, couldn't stop thinking about it. He later recalled that the committee saw it as an incremental improvement over Bernstein–Vazirani, and that he regretted not arguing harder for it. Within a year Shor had generalized Simon's idea from XOR-periods to ordinary periods and found polynomial-time quantum algorithms for **factoring and discrete logarithms**. Both papers appeared at FOCS 1994, and Shor's credits Simon's algorithm as its inspiration.
+</History>
+
+<CSCorner title="CS corner: the hidden subgroup problem">
+Deutsch–Jozsa, Bernstein–Vazirani, Simon, factoring and discrete log are all instances of one problem. Given $f$ on a group $G$ that is constant on the cosets of a hidden subgroup $H$ and distinct across cosets, find $H$. For **abelian** groups, Fourier sampling solves it efficiently. For some **non-abelian** groups it would be huge news: the symmetric group would give graph isomorphism, and the dihedral group relates to lattice problems underlying post-quantum cryptography. No efficient quantum algorithm is known for either.
+</CSCorner>
+
+---
+
+## Summary
+
+- **Simon's problem:** $f$ is 2-to-1 with $f(x) = f(x\oplus s)$. Find $s$.
+- Classically you need a collision: $\Theta(2^{n/2})$ queries by the **birthday bound**, even with randomness.
+- Quantumly: superpose, query, (measure output), $H^{\otimes n}$, measure. Each run yields a **uniform random $y$ with $y\cdot s = 0$**.
+- About $n$ runs give $n-1$ independent equations, and **Gaussian elimination over GF(2)** recovers $s$. That's $O(n)$ queries.
+- It was the first **exponential separation from randomized classical computation** (relative to an oracle), and it inspired **Shor's algorithm**: same template, with the integers in place of XOR.

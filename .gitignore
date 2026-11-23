@@ -1,0 +1,16 @@
+# Dependencies and build output (recreate with `npm install` / `npm run release`)
+node_modules/
+app/dist/
+
+# Local-only tools and notes (kept on disk, not published)
+tools/
+.claude/
+PLAN.md
+MORNING_REPORT.md
+
+# OS / editor clutter
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+*.log

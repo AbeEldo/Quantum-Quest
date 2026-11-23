@@ -1,0 +1,143 @@
+import { OrbitWave, DeBroglieExplorer, DavissonGermer } from './widgets/MatterWaves';
+
+The story so far: light, which everyone was sure was a wave, turned out to arrive in particle-like lumps of energy $hf$. In 1923 Arthur Compton clinched it by bouncing X-rays off electrons: the X-rays recoiled exactly like billiard balls carrying **momentum**
+
+$$
+p = \frac{E}{c} = \frac{hf}{c} = \frac{h}{\lambda}.
+$$
+
+So waves have particle properties. In 1924 a French PhD student, Prince Louis de Broglie, asked the obvious, outrageous question: does it work the other way round?
+
+<Predict id="u1l5-reverse">
+  <Q>Light waves turned out to carry particle-like momentum $p = h/\lambda$. What do you expect for particles such as electrons?</Q>
+  <Opt>Nothing: electrons are particles, full stop</Opt>
+  <Opt correct>Electrons should behave like waves with wavelength $\lambda = h/p$, and should be able to interfere and diffract</Opt>
+  <Opt>Electrons should turn into light at high speed</Opt>
+  <Opt>Only charged particles have wavelengths</Opt>
+  <Reveal>
+That is exactly de Broglie's hypothesis: **every** particle with momentum $p$ has an associated wave of wavelength
+$$
+\lambda = \frac{h}{p}.
+$$
+His thesis examiners didn't know what to make of it and sent a copy to Einstein, who replied that de Broglie had "lifted a corner of the great veil". Three years later it was confirmed by experiment.
+  </Reveal>
+</Predict>
+
+---
+
+## Matter waves explain Bohr's rule
+
+De Broglie's first success was to explain the mysterious quantization rule from lesson 4. Picture the electron in a hydrogen atom as a wave travelling around the nucleus. After one lap the wave meets itself. If a whole number of wavelengths fits around the circle, the crests line up and the wave reinforces itself: a **standing wave**. If not, every lap lands at a different phase and the wave cancels itself out.
+
+<OrbitWave />
+
+So the allowed orbits satisfy $2\pi r = n\lambda$. With $\lambda = h/p$, that gives $pr = nh/2\pi$, i.e. angular momentum $L = n\hbar$: **Bohr's postulate**, now with a reason. Quantization is what you get when a wave is confined: like a guitar string, it can only vibrate in whole numbers of half-wavelengths.
+
+<Quiz id="u1l5-orbit">
+  <Q>In de Broglie's picture, why is an orbit with $3.5$ wavelengths around the nucleus not allowed?</Q>
+  <Opt>Because angular momentum must be even</Opt>
+  <Opt correct>Because after each lap the wave returns out of step with itself and destructively interferes</Opt>
+  <Opt>Because the electron would radiate too much light</Opt>
+  <Opt>Because half wavelengths are physically impossible</Opt>
+  <Explain>A wave that doesn't close on itself arrives half a cycle off after one lap, so successive laps cancel. Only whole-number fits survive. Quantization from interference: the same idea will give the energy levels of a particle in a box in World 5.</Explain>
+</Quiz>
+
+---
+
+## How long is a matter wave?
+
+Plug in numbers. Planck's constant is tiny, so $\lambda = h/p$ is only noticeable when the momentum is tiny too.
+
+<DeBroglieExplorer />
+
+<Try>
+- **Electron** at the default speed: $\lambda \approx 0.17$ nm, about the spacing between atoms in a solid. Crystals should diffract electrons the way they diffract X-rays.
+- **Baseball** (a 145 g ball at 40 m/s): $\lambda \approx 10^{-34}$ m, a hundred billion billion times smaller than a proton. Set the gap to a doorway (1 m): the spreading angle is around $10^{-34}$ radians. Baseballs don't diffract in any measurable way, ever.
+- **Buckyball C₆₀**, a molecule of 60 carbon atoms: still a few picometres. Small, but measurable with a fine enough grating.
+- For the electron, switch to **accelerate through V**. Higher voltage, more momentum, shorter wavelength: this is how electron microscopes beat the resolution limit of light.
+</Try>
+
+For an electron accelerated from rest through a voltage $V$ (non-relativistic), $eV = p^2/2m_e$, so
+
+$$
+\lambda = \frac{h}{\sqrt{2 m_e e V}} \approx \frac{1.226\ \text{nm}}{\sqrt{V/\text{volt}}}.
+$$
+
+<NumQuiz id="u1l5-electron-100v" answer={0.1226} tol={0.002}>
+  <Q>What is the de Broglie wavelength of an electron accelerated through 100 V, in nm?</Q>
+  <Hint>$1.226/\sqrt{100}$.</Hint>
+  <Explain>$1.226/10 = 0.123$ nm, comparable to the spacing of atoms in a crystal (0.1–0.3 nm). That coincidence is what made the first electron-diffraction experiments possible.</Explain>
+</NumQuiz>
+
+<NumQuiz id="u1l5-baseball" answer={1.14} tol={0.03}>
+  <Q>A 0.145 kg baseball moves at 40 m/s. Its de Broglie wavelength is $x\times10^{-34}$ m. What is $x$?</Q>
+  <Hint>$p = mv = 5.8$ kg m/s; $\lambda = 6.626\times10^{-34}/5.8$.</Hint>
+  <Explain>$\lambda = 6.626\times10^{-34}/5.8 \approx 1.14\times10^{-34}$ m. Everyday objects have absurdly short wavelengths, which is why the wave nature of matter went unnoticed for all of human history.</Explain>
+</NumQuiz>
+
+---
+
+## Davisson and Germer: electrons diffract
+
+At Bell Labs in New York, Clinton Davisson and Lester Germer were studying how electrons bounce off nickel, for purely practical reasons (vacuum tubes). In 1925 an accident (an air leak that oxidized their sample) forced them to clean the nickel by heating it, which unknowingly turned it into a few large single crystals. Afterwards, the scattered electrons came out in strange lobes. In 1926 Davisson heard about de Broglie's idea at a conference in Oxford, and realized what he might be seeing.
+
+Here is a model of their experiment. Electrons are fired straight down at the crystal, and a detector swings around to measure how many come back at each angle.
+
+<DavissonGermer />
+
+<Try>
+- At low voltage (below about 33 V) there is just a smooth fall-off with angle, the boring result you'd expect for particles scattering off a rough surface.
+- Raise the voltage. A sharp **bump** appears and sweeps to smaller angles as the voltage increases. Set **54 V**: the peak sits near 51°. Davisson and Germer measured 50°.
+- The peak position obeys $D\sin\varphi = \lambda$, the grating equation from lesson 1, with $\lambda$ given by $h/p$. Particles are behaving exactly like waves.
+</Try>
+
+<History>
+Davisson and Germer published in *Nature* in 1927. The same year, in Aberdeen, George Paget Thomson fired faster electrons through thin metal foils and photographed diffraction rings. Davisson and Thomson shared the 1937 Nobel Prize; de Broglie had already received the 1929 prize. A famous irony: G. P. Thomson's father, J. J. Thomson, won the 1906 prize for showing that the electron is a **particle**; the son won for showing it is a **wave**. Both were right.
+</History>
+
+<Quiz id="u1l5-dg-angle">
+  <Q>In the Davisson–Germer setup, you **increase** the accelerating voltage. What happens to the diffraction peak?</Q>
+  <Opt>It moves to larger angles</Opt>
+  <Opt correct>It moves to smaller angles, because the electrons' wavelength gets shorter</Opt>
+  <Opt>It stays at 50°: the angle is set by the crystal alone</Opt>
+  <Opt>It disappears, because fast electrons are particles</Opt>
+  <Explain>Higher voltage means more momentum and so a shorter $\lambda = h/p$. With $D$ fixed, $\sin\varphi = \lambda/D$ gets smaller. That the peak moves exactly as $h/p$ predicts is what made the experiment convincing.</Explain>
+</Quiz>
+
+---
+
+## Why don't baseballs diffract?
+
+Every object has a de Broglie wavelength, but wave effects are only visible when the wavelength is comparable to the size of the openings or structures the wave meets. The spreading angle through a gap of width $a$ is about $\lambda/a$. For a baseball through a doorway, that's $10^{-34}$ rad: if the ball flew for the age of the universe, the spreading would still be far smaller than an atom.
+
+That's the honest reason the everyday world looks classical. Not because quantum mechanics switches off for big things, but because $h$ is so small. Physicists keep pushing the boundary: in 1999 Markus Arndt, Anton Zeilinger and colleagues in Vienna diffracted C₆₀ buckyballs, and by 2019 the same group had shown interference of molecules made of about 2000 atoms, heavier than 25 000 atomic mass units.
+
+<Warning>
+"A matter wave means the electron is smeared out, like a cloud of electron-stuff spread over space." When you detect an electron, you always find a whole electron at one spot, never a fraction of one. The wave describes something subtler: as Max Born proposed in 1926, its squared amplitude gives the **probability** of finding the particle at each place. The waves interfere; the detections are dots. You'll watch both happen at once in World 2's double-slit experiment.
+</Warning>
+
+<CSCorner>
+Resolution is limited by wavelength: you can't image features much smaller than the wavelength you use. Visible light (400–700 nm) can't resolve a virus, let alone an atom. A transmission electron microscope at 300 kV uses electrons with $\lambda\approx2$ pm and routinely images individual atomic columns. The same physics drives chip manufacturing: lithography moved to extreme-ultraviolet light at 13.5 nm because shorter wavelengths print smaller transistors.
+</CSCorner>
+
+<Quiz id="u1l5-bridge">
+  <Q>Electrons are sent one at a time towards two narrow slits, and land on a screen as individual dots. If electrons are waves with $\lambda = h/p$, what pattern should the dots build up over time?</Q>
+  <Opt>Two bright stripes, one behind each slit</Opt>
+  <Opt correct>An interference pattern of many bright and dark fringes</Opt>
+  <Opt>A uniform smear</Opt>
+  <Opt>A single bright spot in the middle</Opt>
+  <Explain>Each electron lands as a single dot, but the dots pile up into the fringe pattern of a wave passing through both slits: bright where the paths differ by whole wavelengths, dark where they differ by half-odd wavelengths. Experiments (Tonomura, 1989) show exactly this. How a single particle "goes through both slits" is the central puzzle of World 2.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- **Compton (1923):** photons carry momentum $p = h/\lambda$. **De Broglie (1924):** so does everything else, in reverse: $\lambda = h/p$.
+- Bohr's rule $L = n\hbar$ is the condition for an electron wave to fit around an orbit as a **standing wave**: quantization from interference.
+- Electrons accelerated through $V$ volts have $\lambda \approx 1.226/\sqrt V$ nm, comparable to atomic spacings.
+- **Davisson–Germer and G. P. Thomson (1927)** saw electrons diffract from crystals exactly as $h/p$ predicts.
+- Big objects have unmeasurably small wavelengths ($\sim10^{-34}$ m for a baseball), which is why the everyday world looks classical.
+- The waves are waves of **probability amplitude**, which is where World 2 picks up the story.
+
+<Watch title="Davisson–Germer experiment (HyperPhysics)" by="C. R. Nave, Georgia State University" url="http://hyperphysics.phy-astr.gsu.edu/hbase/quantum/DavGer2.html" kind="article" />

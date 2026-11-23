@@ -1,0 +1,138 @@
+import { BellTimeline } from './widgets/BellTimeline';
+import { LightConeDiagram, DetectionLoophole } from './widgets/Loopholes';
+
+In 1969, a young physicist named **John Clauser** read Bell's paper and realised nobody had actually *checked*. He wrote to Bell, Bohm and de Broglie asking whether an experiment was worth doing. Most physicists thought it wasn't: quantum mechanics had never been wrong, and the question seemed like philosophy. Clauser later recalled that the work was not good for his career.
+
+He did it anyway. In 1972, at Berkeley, **Stuart Freedman and John Clauser** sent pairs of entangled photons from excited calcium atoms through two polarisers and counted coincidences for days.
+
+<Predict id="u6l7-first-test">
+  <Q>What did the first Bell test find?</Q>
+  <Opt>The data obeyed Bell's inequality, so Einstein's local realism survived</Opt>
+  <Opt correct>Bell's inequality was clearly violated, matching the quantum prediction</Opt>
+  <Opt>The results were inconclusive, because the detectors were too noisy to tell</Opt>
+  <Explain>The inequality was violated by about six standard deviations, in line with quantum mechanics. Clauser later admitted he had half expected, maybe hoped, to see quantum mechanics fail.</Explain>
+  <Reveal>
+But one experiment doesn't settle a question this deep. A determined local realist could point to **loopholes**: ways real apparatus falls short of Bell's ideal assumptions, which a sneaky local model could exploit. Closing those loopholes took another 43 years, and it earned a Nobel Prize. This lesson covers how the case was built, and what exactly it proves.
+  </Reveal>
+</Predict>
+
+---
+
+## Half a century in one timeline
+
+<BellTimeline />
+
+<Try>
+- Step through the events with ◀ ▶ and watch which loopholes each experiment addressed. Before 2015, no experiment closed locality and detection **simultaneously**.
+- Compare the 1982 and 2015 entries. Aspect's statistics were far stronger ($S = 2.697 \pm 0.015$), so why did 2015 matter more? The next step answers that.
+</Try>
+
+<Quiz id="u6l7-aspect">
+  <Q>What was the key new feature of Aspect's 1982 experiment with time-varying analysers?</Q>
+  <Opt>It used electrons instead of photons</Opt>
+  <Opt correct>The analyser settings were switched while the photons were already in flight</Opt>
+  <Opt>It was the first experiment to violate a Bell inequality</Opt>
+  <Opt>It closed the detection loophole with perfect detectors</Opt>
+  <Explain>In earlier experiments the polarisers sat at fixed angles for long periods, so in principle the source "knew" the settings, or the two analysers could have exchanged information. Aspect's optical switches changed the settings every ~10 ns, faster than light could cross the ≈12 m between them. (The switching was periodic rather than truly random, a gap later closed by Weihs et al. in 1998.)</Explain>
+</Quiz>
+
+---
+
+## The three loopholes
+
+Bell's derivation assumes an ideal experiment. Real experiments must make sure a local hidden-variable model can't sneak through any of these gaps.
+
+### 1. Locality (communication)
+
+If information about Alice's setting could reach Bob's apparatus before his outcome is recorded, even by an unknown mechanism travelling at light speed, a local model could cheat. The fix is to make the setting choice and the distant measurement **spacelike separated**: each outcome must be recorded within a time $\tau$ shorter than the light-travel time $d/c$ between the labs.
+
+<LightConeDiagram />
+
+<Try>
+- Load *Freedman–Clauser 1972*. The settings stayed fixed for minutes, so the loophole was wide open.
+- Load *Aspect 1982*. $12\text{ m}/c = 40$ ns, and the settings switched in about 10 ns. Enforced, though with periodic switching.
+- Load *Delft 2015*: 1.3 km gives about $4.3\ \mu s$ of light-travel time. The fast random choice plus spin readout fit inside it.
+</Try>
+
+### 2. Detection (fair sampling)
+
+Photon detectors miss a lot of photons. If you only analyse the pairs where *both* photons were detected, you're assuming the detected subset is a fair sample. A clever local model could break that assumption: its particles "decide" not to be detected when the setting is unfavourable, and the surviving events then show fake Bell violations.
+
+<DetectionLoophole />
+
+For the CHSH test with maximally entangled states, the overall efficiency must exceed $2(\sqrt2-1)\approx 82.8\%$. Eberhard showed in 1993 that cleverly chosen *partially* entangled states lower the requirement to $2/3$. For decades, photon detectors were far below either threshold, around 5 to 30% end to end.
+
+### 3. Freedom of choice (measurement independence)
+
+Bell assumes the settings are independent of the hidden variables $\lambda$. If the "random" choices were secretly correlated with the source, any correlation could be faked. Experiments use fast quantum random-number generators, human choices (the 2016 **BIG Bell Test** collected input from about 100,000 volunteers playing an online game), and even the colour of light from distant **quasars**, emitted billions of years ago. Then any conspiracy would have to be set up before the Earth existed. This loophole can never be closed *completely*. A fully **superdeterministic** universe, where every choice is preordained along with every particle, can't be ruled out by any experiment. Most physicists regard that as a reductio rather than a theory.
+
+<Quiz id="u6l7-loopholes">
+  <Q>An experiment uses 2 m of separation, 1 μs measurements, and detectors with 98% efficiency. Which loophole is open?</Q>
+  <Opt correct>Locality: 1 μs is far longer than the ~7 ns light-travel time across 2 m</Opt>
+  <Opt>Detection: 98% is below the 82.8% threshold</Opt>
+  <Opt>None, the experiment is loophole-free</Opt>
+  <Explain>$2\text{ m}/c \approx 6.7$ ns, much shorter than the 1 μs measurement, so a light-speed signal could carry setting information in time. 98% is comfortably *above* 82.8%. That's roughly the situation of the 2001 trapped-ion experiment: detection closed, locality open.</Explain>
+</Quiz>
+
+---
+
+## 2015: loophole-free
+
+In autumn 2015, three groups independently closed locality and detection in the same experiment.
+
+- **Delft (Hensen et al., *Nature*):** two nitrogen-vacancy centres, single electron spins in diamond, in labs **1.3 km** apart on the TU Delft campus. Each spin emitted a photon, and the photons met at a station in between. When a particular joint detection occurred there, the distant spins were entangled. This **event-ready** scheme heralds the good runs in advance, so lost photons don't open a detection loophole, and spin readout is nearly perfect. Over 245 trials they found $S = 2.42 \pm 0.20$, with a $p$-value of about 0.04.
+- **Vienna (Giustina et al.) and NIST Boulder (Shalm et al.)**, published together in *Physical Review Letters*: entangled photons with superconducting detectors efficient enough to beat the detection threshold, and random settings spacelike separated from the distant measurement. Much higher event rates gave overwhelming statistics. Vienna reported $p \approx 3.7\times10^{-31}$.
+
+<NumQuiz id="u6l7-delft-time" answer={4.3} tol={0.15} unit="μs">
+  <Q>The Delft labs were about 1.3 km apart. How many **microseconds** does light take to cross that distance? (That's the time budget for choosing a setting and reading out the spin.)</Q>
+  <Hint>$c \approx 3\times10^8$ m/s $= 300$ m/μs.</Hint>
+  <Explain>$1300\text{ m} / (300\text{ m}/\mu\text{s}) \approx 4.3\ \mu$s. Delft's random-number generation and spin readout fit inside this window, so no light-speed signal could tell one side what the other had chosen. (The measured distance was 1,280 m, giving $4.27\ \mu$s.)</Explain>
+</NumQuiz>
+
+<History>
+The **2022 Nobel Prize in Physics** went to **Alain Aspect, John F. Clauser and Anton Zeilinger** "for experiments with entangled photons, establishing the violation of Bell inequalities and pioneering quantum information science". Clauser did the first test. Aspect closed the locality loophole in its classic form. Zeilinger's group made strict-locality tests, and also showed that entanglement could be *used*: quantum teleportation (1997), entanglement swapping (1998), and later intercontinental quantum key distribution with the Chinese satellite Micius. You'll build several of these protocols in World 8.
+</History>
+
+---
+
+## What it rules out, and what it doesn't
+
+The verdict, from many experiments with many technologies (photons, atoms, ions, electron spins, superconducting circuits), is clear: **nature violates Bell inequalities**. So no theory satisfying all of Bell's assumptions can describe the world:
+
+- **Realism / hidden variables:** outcomes are determined by pre-existing properties $\lambda$.
+- **Locality:** no influence on an outcome from events outside its past light cone.
+- **Freedom of choice:** the settings are independent of $\lambda$.
+
+The usual summary is that **local realism is dead**. Which assumption to give up is a question of interpretation, and physicists still argue about it.
+
+<Quiz id="u6l7-ruled-out">
+  <Q>Which of these do loophole-free Bell tests establish? (Select all that apply.)</Q>
+  <Opt correct>No local hidden-variable theory can reproduce the observed correlations</Opt>
+  <Opt>Information can be sent faster than light using entangled particles</Opt>
+  <Opt>The many-worlds interpretation is correct</Opt>
+  <Opt correct>Measured correlations violate the CHSH bound $\lvert S\rvert\le 2$, consistent with quantum predictions</Opt>
+  <Opt>Quantum mechanics is the final, complete theory of nature</Opt>
+  <Explain>Bell tests falsify **local realism**, a whole class of theories, and agree with quantum mechanics. They don't enable signalling (no-signalling still holds), don't pick an interpretation (Bohmian, many-worlds, Copenhagen-style and others all predict the same violation), and can't prove any theory final. A future theory must reproduce these correlations too.</Explain>
+</Quiz>
+
+<Warning>
+Common overstatements to avoid:
+
+- "Bell tests prove that particles communicate instantly." They show the correlations can't be explained by *local* pre-existing values. They don't show a usable signal, and no-signalling is itself a theorem of quantum mechanics.
+- "Bell tests prove quantum mechanics." Experiments falsify theories. They can't prove one. What they prove is that *any* correct theory must be nonlocal in Bell's sense, or give up realism or free choice.
+- "The loopholes mean the question is still open." Every major loophole has been closed, all together in single experiments. What remains is superdeterminism, which can't be tested by construction.
+</Warning>
+
+<CSCorner>
+Loophole-free Bell tests now power applications. **Device-independent randomness:** NIST has run a public randomness beacon whose bits are certified random by a loophole-free Bell violation. If the bits were predictable, local realism would hold. **Device-independent key distribution:** experiments in 2022 (trapped ions in Oxford, neutral atoms in Munich) generated secret keys whose security rests on a Bell violation rather than on trusting the hardware. In engineering terms, the Bell test has gone from a foundations experiment to a self-testing **certificate**.
+</CSCorner>
+
+---
+
+## Summary
+
+- **1972, Freedman & Clauser:** first Bell test, violated. **1982, Aspect:** settings switched in flight, $S \approx 2.70$. **1998, Weihs/Zeilinger:** strict locality with random settings. **2001, NIST ions:** detection loophole closed.
+- **Loopholes:** *locality* (outcome recorded within $\tau < d/c$), *detection* (efficiency above ≈82.8% for CHSH, or 2/3 with Eberhard's trick), *freedom of choice* (random, human or cosmic setting choices, never fully closable against superdeterminism).
+- **2015:** Delft (NV spins 1.3 km apart, $S = 2.42\pm0.20$), Vienna and NIST (photons) close locality and detection together.
+- **2022 Nobel Prize:** Aspect, Clauser, Zeilinger.
+- **Ruled out:** local realism. **Not implied:** faster-than-light signalling, or any particular interpretation.

@@ -1,0 +1,174 @@
+import { ProductStateBuilder } from './widgets/ProductStateBuilder';
+
+You already know everything about **one** qubit: two complex amplitudes, a point on the Bloch sphere, gates as rotations. So here is an innocent-sounding question.
+
+You put two qubits side by side. One sits on the left of the lab bench, one on the right. Each one is a point on its own Bloch sphere. **How many real numbers does it take to describe the pair?**
+
+<Predict id="u6l1-count">
+  <Q>Each qubit alone takes 2 real numbers (its Bloch angles $\theta,\phi$). How many real numbers does a general state of *two* qubits need?</Q>
+  <Opt>4: two angles for each sphere</Opt>
+  <Opt correct>6, and the extra 2 don't belong to either sphere</Opt>
+  <Opt>8: four complex numbers, no constraints</Opt>
+  <Opt>Infinitely many</Opt>
+  <Explain>Quantum mechanics says two qubits have **four** complex amplitudes, one for each classical configuration 00, 01, 10, 11. That's 8 real numbers. Normalisation removes one and global phase removes another, which leaves **6**. Two Bloch spheres only account for 4.</Explain>
+  <Reveal>
+So two qubits are *more* than two qubits. There are states of the pair that can't be described by giving each qubit its own state. That leftover room is where **entanglement** lives, and it's the subject of this whole world.
+
+This lesson covers the bookkeeping: what the four-dimensional state space looks like, how to combine two single-qubit states into one, and why the count grows exponentially with the number of qubits.
+  </Reveal>
+</Predict>
+
+---
+
+## One amplitude per classical configuration
+
+Two classical bits can be in four configurations: 00, 01, 10, 11. Quantum mechanics has one rule here, and it scales to any system: **give every classical configuration its own complex amplitude.** A general two-qubit state is
+
+$$
+|\psi\rangle = a\,|00\rangle + b\,|01\rangle + c\,|10\rangle + d\,|11\rangle,
+\qquad |a|^2+|b|^2+|c|^2+|d|^2 = 1 .
+$$
+
+The **Born rule** works just as before: measuring both qubits gives the outcome $01$ with probability $|b|^2$, and so on. The four kets $|00\rangle, |01\rangle, |10\rangle, |11\rangle$ form the **computational basis** of a 4-dimensional complex vector space, written $\mathbb{C}^2 \otimes \mathbb{C}^2 \cong \mathbb{C}^4$. That $\otimes$ is the **tensor product** from World 0.
+
+<KeyIdea>
+**Convention used throughout this course (Nielsen & Chuang):** in $|q_0 q_1\rangle$, qubit $q_0$ is the **left** bit. In circuit diagrams $q_0$ is the **top** wire. As a vector, the basis states are ordered like binary numbers:
+
+$$
+|00\rangle \to \text{index }0,\quad |01\rangle \to 1,\quad |10\rangle \to 2,\quad |11\rangle \to 3 .
+$$
+</KeyIdea>
+
+So $|01\rangle$ means "$q_0$ is 0 **and** $q_1$ is 1". It does *not* mean "the first qubit is in state $|01\rangle$". The label names a configuration of the *pair*.
+
+<Quiz id="u6l1-index">
+  <Q>Using our ordering, which entry of the 4-component state vector holds the amplitude for "$q_0 = 1$, $q_1 = 0$"?</Q>
+  <Opt>Entry 0 (the first)</Opt>
+  <Opt>Entry 1 (the second)</Opt>
+  <Opt correct>Entry 2 (the third)</Opt>
+  <Opt>Entry 3 (the last)</Opt>
+  <Explain>$q_0=1, q_1=0$ is the ket $|10\rangle$. Read as binary, 10 is 2, so it's the third entry (counting from 0). The vector reads $(a, b, c, d)$ for $(|00\rangle, |01\rangle, |10\rangle, |11\rangle)$.</Explain>
+</Quiz>
+
+---
+
+## Building pairs: the tensor product
+
+Suppose $q_0$ is in $|\alpha\rangle = \alpha_0|0\rangle + \alpha_1|1\rangle$ and, *independently*, $q_1$ is in $|\beta\rangle = \beta_0|0\rangle + \beta_1|1\rangle$. What is the state of the pair?
+
+The amplitude for a joint configuration is the **product** of the individual amplitudes, the same way independent probabilities multiply:
+
+$$
+|\alpha\rangle \otimes |\beta\rangle =
+\begin{pmatrix}\alpha_0\\ \alpha_1\end{pmatrix} \otimes \begin{pmatrix}\beta_0\\ \beta_1\end{pmatrix} =
+\begin{pmatrix}\alpha_0\beta_0\\ \alpha_0\beta_1\\ \alpha_1\beta_0\\ \alpha_1\beta_1\end{pmatrix}.
+$$
+
+This is the **Kronecker product**. Picture it as a multiplication table: $q_0$'s amplitudes run down the side, $q_1$'s along the top, and each cell is a product. Multiplying complex numbers multiplies their lengths and **adds their phases**, and you can watch both happen below. Remember that colour shows phase.
+
+<ProductStateBuilder />
+
+<Try>
+- Set $q_0 = |+\rangle$ and $q_1 = |0\rangle$. Only $|00\rangle$ and $|10\rangle$ survive, each at 50%.
+- Set both to $|+\rangle$. All four cells are equal: $\tfrac12(|00\rangle+|01\rangle+|10\rangle+|11\rangle)$.
+- Give $q_1$ a phase ($\phi = \pi/2$). Only the right-hand column changes colour, because $q_1$'s phase rides along on every amplitude where $q_1 = 1$.
+- Watch the readout $a\cdot d - b\cdot c$ at the bottom right. No matter what you do, it stays at **0**. Keep that in mind for next lesson.
+</Try>
+
+States you can write as $|\alpha\rangle\otimes|\beta\rangle$ are called **product states** (or *separable* states). We often drop the $\otimes$ and write $|\alpha\rangle|\beta\rangle$ or $|\alpha\beta\rangle$. So $|0\rangle\otimes|1\rangle = |01\rangle$, which is where the basis labels come from.
+
+<NumQuiz id="u6l1-plus-one" answer={0.5} tol={0.01}>
+  <Q>The pair is in $|+\rangle \otimes |1\rangle$. What is the probability of measuring $11$?</Q>
+  <Hint>Compute the Kronecker product: $\tfrac{1}{\sqrt2}(1, 1) \otimes (0, 1)$.</Hint>
+  <Explain>$\tfrac{1}{\sqrt2}(1,1)\otimes(0,1) = \tfrac{1}{\sqrt2}(0, 1, 0, 1)$, so the state is $\tfrac{1}{\sqrt2}(|01\rangle + |11\rangle)$ and $P(11) = \tfrac12$. You could also multiply probabilities directly: $P(q_0{=}1)\cdot P(q_1{=}1) = \tfrac12 \cdot 1$.</Explain>
+</NumQuiz>
+
+---
+
+## Gates on one qubit of a pair
+
+If you apply a gate $U$ to $q_0$ and leave $q_1$ alone, the 4×4 matrix acting on the pair is $U \otimes I$. For a product state it does exactly what you'd hope:
+
+$$
+(U\otimes I)\,(|\alpha\rangle\otimes|\beta\rangle) = (U|\alpha\rangle)\otimes|\beta\rangle .
+$$
+
+Written out, $X \otimes I$ swaps $|0\cdot\rangle \leftrightarrow |1\cdot\rangle$, so the top half of the vector trades places with the bottom half. $I \otimes X$ swaps neighbouring entries:
+
+$$
+X\otimes I = \begin{pmatrix} 0&0&1&0\\0&0&0&1\\1&0&0&0\\0&1&0&0 \end{pmatrix},\qquad
+I\otimes X = \begin{pmatrix} 0&1&0&0\\1&0&0&0\\0&0&0&1\\0&0&1&0 \end{pmatrix}.
+$$
+
+Try it in the Circuit Lab. Gates on the top wire act on $q_0$, the left bit. The mini Bloch spheres on the right show each qubit's own state. As long as you only use single-qubit gates, every arrow stays **yellow and full length**: each qubit keeps a definite state of its own.
+
+<CircuitLab n={2} circuit="H 0; X 1" gates={['H', 'X', 'Z', 'S']} title="Single-qubit gates on a pair" />
+
+<Quiz id="u6l1-h-on-q1">
+  <Q>Starting from $|00\rangle$, you apply $H$ to $q_1$ only (the **bottom** wire). What is the state?</Q>
+  <Opt>$\tfrac{1}{\sqrt2}(|00\rangle + |10\rangle)$</Opt>
+  <Opt correct>$\tfrac{1}{\sqrt2}(|00\rangle + |01\rangle)$</Opt>
+  <Opt>$\tfrac12(|00\rangle + |01\rangle + |10\rangle + |11\rangle)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}(|00\rangle + |11\rangle)$</Opt>
+  <Explain>$(I\otimes H)|0\rangle|0\rangle = |0\rangle\otimes|+\rangle = \tfrac{1}{\sqrt2}(|00\rangle + |01\rangle)$. The *right* bit is the one that becomes a superposition. Mixing up the qubit order is the most common bug in multi-qubit code, so it pays to be careful about it now.</Explain>
+</Quiz>
+
+---
+
+## Product states measure like independent coins
+
+For a product state, measuring both qubits gives
+
+$$
+P(q_0 = i,\ q_1 = j) = |\alpha_i \beta_j|^2 = |\alpha_i|^2\,|\beta_j|^2 = P(q_0=i)\,P(q_1=j).
+$$
+
+The outcomes are **statistically independent**. Learning $q_0$'s result tells you nothing about $q_1$'s. In this sense a product state is no stranger than two separate experiments that happen to sit on the same bench.
+
+But count again. A product state is fixed by $2 + 2 = 4$ real numbers. A general two-qubit state needs 6. Most states of the pair are **not** products, which means most two-qubit states have correlations built into them that no pair of individual states can describe. The next lesson is about those states.
+
+<Quiz id="u6l1-product-check">
+  <Q>Which of these is a product state? (Select all that apply.)</Q>
+  <Opt correct>$\tfrac12(|00\rangle + |01\rangle + |10\rangle + |11\rangle)$</Opt>
+  <Opt correct>$\tfrac{1}{\sqrt2}(|10\rangle - |11\rangle)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}(|01\rangle + |10\rangle)$</Opt>
+  <Explain>The first is $|+\rangle|+\rangle$. The second is $|1\rangle \otimes |-\rangle$. The third can't be factored: if it were $(\alpha_0\beta_0, \alpha_0\beta_1, \alpha_1\beta_0, \alpha_1\beta_1) = (0, \tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2}, 0)$, then $\alpha_0\beta_0 = 0$ forces $\alpha_0$ or $\beta_0$ to vanish. But then $\alpha_0\beta_1$ or $\alpha_1\beta_0$ would vanish too, and neither does. You'll get a one-line test for this in the next lesson.</Explain>
+</Quiz>
+
+---
+
+## The exponential wall
+
+The rule "one amplitude per classical configuration" has a dramatic consequence. $n$ classical bits have $2^n$ configurations, so **$n$ qubits need $2^n$ complex amplitudes.**
+
+| qubits $n$ | amplitudes $2^n$ | memory at 16 bytes per amplitude |
+|---|---|---|
+| 2 | 4 | 64 bytes |
+| 10 | 1,024 | 16 KB |
+| 30 | about $10^9$ | 16 GiB (a good laptop) |
+| 50 | about $10^{15}$ | 16 PiB (a supercomputer) |
+| 300 | about $10^{90}$ | more than the number of atoms in the observable universe |
+
+Product states, by contrast, need only $2n$ real numbers. The gap between $2n$ and $2^{n+1}-2$ is all entangled states. That gap is the reason classical computers struggle to simulate quantum systems, and the reason anyone thought to build quantum computers.
+
+<History>
+In a 1981 lecture published as *Simulating Physics with Computers* (1982), **Richard Feynman** pointed out exactly this exponential blow-up and asked whether a computer *made of quantum parts* could simulate nature efficiently. Years earlier, in 1935, **Erwin Schrödinger** had already put his finger on the strange part. When two systems interact and separate, he wrote, their joint state generally can't be split back into separate states for each. He named the phenomenon *Verschränkung*, which translates as **entanglement**.
+</History>
+
+<Warning>
+"$n$ qubits hold $2^n$ numbers, so they store $2^n$ bits of information." **No.** Measuring $n$ qubits gives you $n$ bits, period. **Holevo's theorem** (1973) says you can never extract more than $n$ classical bits from $n$ qubits. The exponential state space is real, but you can't read it out directly. Quantum algorithms have to make the answer you want show up with high probability through interference. That's why there are only a handful of great quantum algorithms, not one for every problem.
+</Warning>
+
+<CSCorner>
+A classical simulator stores an $n$-qubit state as an array `amps: Complex[2**n]`. The qubit index tells you which **bit of the array index** to look at. In this app's engine, qubit $q$ is bit $n-1-q$ of the index, because $q_0$ is the most significant bit. Applying a one-qubit gate to qubit $q$ loops over all index pairs $(i,\ i \oplus 2^{n-1-q})$ and applies the 2×2 matrix to each pair. That's $O(2^n)$ work per gate, and it's exactly what `StateVector.apply` does under the hood.
+</CSCorner>
+
+---
+
+## Summary
+
+- Two qubits live in $\mathbb{C}^2\otimes\mathbb{C}^2 = \mathbb{C}^4$ with basis $|00\rangle, |01\rangle, |10\rangle, |11\rangle$. **$q_0$ is the left bit** (top wire), and the index is the binary number $q_0q_1$.
+- **Product states** $|\alpha\rangle\otimes|\beta\rangle$ have amplitudes $\alpha_i\beta_j$ (the Kronecker product). Their measurement outcomes are independent.
+- A gate on one qubit acts as $U\otimes I$ or $I \otimes U$. Single-qubit gates keep product states as products.
+- A general two-qubit state has 6 real parameters, while product states have only 4. The extra room is **entanglement**.
+- $n$ qubits need $2^n$ amplitudes, but you can read out at most $n$ bits (Holevo).

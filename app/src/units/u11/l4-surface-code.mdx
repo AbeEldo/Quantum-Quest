@@ -1,0 +1,141 @@
+import { SurfaceCodePlayground } from './widgets/SurfaceCodePlayground';
+import { ThresholdLab } from './widgets/ThresholdLab';
+
+In December 2024, Google Quantum AI published a result that the field had been chasing for almost thirty years. On their new 105-qubit **Willow** chip they built logical qubits of three sizes, using 17, 49 and 97 data-plus-measurement qubits, and found that **each time they made the code bigger, the logical error rate went down**, by more than a factor of two per step.
+
+That sounds obvious: more redundancy, fewer errors. But adding qubits also adds more things that can break.
+
+<Predict id="u11l4-bigger">
+  <Q>You enlarge an error-correcting code from 17 to 49 physical qubits on the *same* hardware. What happens to the logical error rate?</Q>
+  <Opt>It always goes down: more redundancy is always better.</Opt>
+  <Opt>It always goes up: more qubits means more errors.</Opt>
+  <Opt correct>It depends: down if the physical error rate is below a threshold, up if it is above.</Opt>
+  <Explain>Remember the repetition code: below its threshold, more copies help, and above it, they hurt. Quantum codes behave the same way, but the threshold is much lower, around 1% per operation for the surface code, and getting real hardware below it took until 2023–24.</Explain>
+</Predict>
+
+---
+
+## A code made of tiles
+
+The **surface code** is the leading candidate for practical error correction, and you can see why from its picture: it's a chessboard.
+
+- **Data qubits** sit on the vertices of a $d \times d$ grid.
+- Each square **tile** (plaquette) is a stabilizer check on its 4 corner qubits. Tiles alternate between **X-type** ($X\otimes X\otimes X\otimes X$, blue) and **Z-type** ($Z\otimes Z\otimes Z\otimes Z$, orange) like the colours of a chessboard. Half-tiles on the edges check just 2 qubits.
+- Every X-tile shares either 0 or 2 qubits with every Z-tile, so all checks **commute**, which makes this a valid stabilizer code. It's a CSS code, in fact.
+- In hardware, each tile gets its own **measure qubit** in the middle, wired only to its 4 neighbours.
+
+Count: $d^2$ data qubits and $d^2 - 1$ checks leave exactly **one logical qubit**: a $[[d^2, 1, d]]$ code using $2d^2 - 1$ physical qubits in total. Its killer feature is that **every check is local**. Qubits only ever talk to their nearest neighbours on a flat chip, which is exactly what superconducting hardware is good at.
+
+<SurfaceCodePlayground />
+
+<Try>
+1. Click **one** data qubit in the middle (X mode). **Two** orange tiles light up, the two Z-checks touching it.
+2. Now click a neighbouring qubit diagonally across one of those tiles. That tile goes **dark** again and a new one lights further along. Make a chain of three or four errors: only the **two ends** of the chain are lit. **The syndrome sees the endpoints of error chains, not the chains themselves.**
+3. Errors next to the top or bottom edge light only **one** tile: the chain's other end has vanished into the boundary.
+4. Turn on "show logical operators." A full column of X errors, from the top edge to the bottom edge, lights **nothing at all**, yet it flips the logical qubit. That's a logical $\bar X$.
+</Try>
+
+---
+
+## Errors are strings, logicals are strings that cross
+
+Here's the surface code's beautiful geometry:
+
+- A chain of X errors lights up the Z-tiles at its **two endpoints**. Every tile in the middle of the chain is touched twice, and two flips cancel in a parity check.
+- A **closed loop** of errors has no endpoints, so it's invisible. But a closed loop is a product of stabilizer tiles, so it's also **harmless**.
+- A chain that runs **from one boundary to the opposite one** also has no visible endpoints, but it is *not* a product of tiles. It's a **logical operator** that silently flips the encoded qubit.
+
+The **code distance** $d$ is the length of the shortest such boundary-to-boundary chain: $d$ qubits for a $d\times d$ lattice. So an undetectable logical error needs at least $d$ physical errors lined up across the board, and the decoder only fails when roughly $d/2$ errors conspire.
+
+<Quiz id="u11l4-distance">
+  <Q>On a distance-7 surface code, what is the minimum number of single-qubit X errors that can flip the logical qubit **without lighting any check**?</Q>
+  <Opt>1</Opt>
+  <Opt>4</Opt>
+  <Opt correct>7</Opt>
+  <Opt>49</Opt>
+  <Explain>An undetectable logical $\bar X$ needs an unbroken chain from the top boundary to the bottom one, at least $d = 7$ qubits. (A *decoder* can be fooled by fewer: about 4 errors along a line, which it "completes" the wrong way.)</Explain>
+</Quiz>
+
+---
+
+## Decoding is matching
+
+The syndrome shows only endpoints, so the decoder has to **guess which chains caused them**. The most likely explanation, when errors are rare, is the one with the **fewest** errors. So: pair up the lit tiles (or pair a tile with the nearest boundary) so that the total length of the connecting chains is as small as possible. This is **minimum-weight perfect matching** (MWPM), a classic graph problem that Jack Edmonds' blossom algorithm (1965) solves in polynomial time.
+
+In the playground, sprinkle random errors, press **decode**, and look at the dashed pairings and green rings. Then **apply correction**:
+
+- If the correction plus the real error forms only closed loops: ✓ success.
+- If together they form a chain across the lattice: ✗ **logical error**. The decoder picked the "wrong side" of an ambiguous pairing.
+
+Push $p$ up to 15–20% on $d = 3$ and logical errors become common. Then try $d = 7$ at 3–5%: it's very hard to fool.
+
+<CSCorner>
+The decoder is the classical half of every quantum computer, and it has a hard real-time constraint: superconducting surface codes produce a full round of syndrome bits every **~1 µs**, and the decoder must keep up or a backlog grows without bound. MWPM (e.g. the open-source **PyMatching** library) runs in roughly linear time on typical syndromes. **Union-Find** decoders trade a little accuracy for near-linear worst-case speed. Google DeepMind's **AlphaQubit** (Nature, 2024) showed that a neural-network decoder can beat matching in accuracy on real Willow-precursor data, though making learned decoders fast enough remains active work. In the real experiment, syndromes are also noisy, so decoders match in **3D**: two space dimensions plus time.
+</CSCorner>
+
+---
+
+## The threshold theorem
+
+Here's the key result that makes the whole enterprise sensible:
+
+<KeyIdea>
+**Threshold theorem** (Aharonov & Ben-Or; Kitaev; Knill, Laflamme & Zurek; 1996–98). If every physical component fails with probability below some constant $p_{\text{th}}$, and errors are not too correlated, then logical errors can be suppressed **as much as you like** with only polylogarithmic overhead. For the surface code, roughly
+
+$$
+\varepsilon_L(d) \;\approx\; A\left(\frac{p}{p_{\text{th}}}\right)^{(d+1)/2}, \qquad p_{\text{th}} \approx 1\% .
+$$
+</KeyIdea>
+
+Every time $d$ grows by 2, the logical error is divided by $\Lambda \approx p_{\text{th}}/p$, the **suppression factor**. With $p$ ten times below threshold, each step buys a factor of 10. With $p$ just under threshold, adding qubits barely helps.
+
+The lab below lets you *discover* a threshold yourself with a real Monte-Carlo simulation of the surface code and the matching decoder, then explore what Λ means for the cost of a useful logical qubit.
+
+<ThresholdLab />
+
+<NumQuiz id="u11l4-lambda" answer={0.00025} tol={0.00002}>
+  <Q>A surface code has $\Lambda = 2$ and a distance-7 logical error rate of $10^{-3}$ per cycle. Assuming the scaling continues, what is the error rate at distance 11?</Q>
+  <Hint>From 7 to 11 is two steps of +2.</Hint>
+  <Explain>$10^{-3}/2^2 = 2.5\times10^{-4}$. Slow! At $\Lambda = 2$, reaching $10^{-12}$ needs about 40 more steps of +2. This is why improving physical qubits (raising Λ) matters as much as adding them.</Explain>
+</NumQuiz>
+
+<Warning>
+**"The threshold is 1%, so 0.9%-error qubits are good enough."** Technically below threshold, practically useless: Λ ≈ 1.1 means you'd need astronomically large codes. Useful fault tolerance needs physical error rates several times below threshold (Λ of 2–10+). The "threshold" also depends on the noise model, the decoder and the circuit used to measure the checks. Quoted values range from about 0.5% to 1% for realistic circuit noise.
+</Warning>
+
+---
+
+## Willow: below threshold, for real
+
+Google's experiment (published in *Nature*, online December 2024) is the clearest demonstration so far that the theory works on real hardware:
+
+- Surface-code memories of distance **3, 5 and 7** on the 105-qubit Willow processor. The $d = 7$ memory used **101** physical qubits in total (49 data qubits plus measure and auxiliary qubits).
+- Logical error per cycle fell by **Λ = 2.14 ± 0.02** with each +2 in distance, reaching **0.143% ± 0.003% per cycle** at $d = 7$.
+- The $d=7$ logical qubit lived **2.4 ± 0.3 times longer** than the best physical qubit on the chip: **beyond breakeven**, the first time a surface code beat its own components.
+- A **real-time decoder** kept up at $d = 5$ for up to a million cycles (average latency 63 µs, with a 1.1 µs cycle time).
+- Rare **correlated error bursts**, about once an hour, set an error floor around $10^{-10}$ in related repetition-code tests. Their origin was not yet understood, a reminder that the assumption of "independent errors" is itself something hardware must earn.
+
+For comparison, Google's 2023 attempt on the older Sycamore chip had gone from $d=3$ to $d=5$ with an improvement of only about 4% (Λ ≈ 1.04): barely below threshold. The jump to Λ ≈ 2 came mostly from better physical qubits (mean $T_1$ rose from about 20 µs to 68–98 µs).
+
+<History>
+**Alexei Kitaev** introduced the **toric code** in 1997: qubits on a torus, with errors as strings and logical operators as strings that wrap around. **Bravyi and Kitaev** (1998) flattened it onto a plane with boundaries, giving the surface code. **Dennis, Kitaev, Landahl and Preskill** (2002) connected decoding to statistical mechanics and estimated its thresholds. In 2012, **Fowler, Mariantoni, Martinis and Cleland** wrote the practical blueprint, "Surface codes: Towards practical large-scale quantum computation," which guided superconducting labs for the next decade. John Martinis later led the Google team that built Sycamore.
+</History>
+
+<Quiz id="u11l4-willow">
+  <Q>What does it mean that Willow's distance-7 logical qubit was "beyond breakeven"?</Q>
+  <Opt>It had zero logical errors.</Opt>
+  <Opt correct>The encoded qubit kept its information longer than the best individual physical qubit on the same chip.</Opt>
+  <Opt>It could run Shor's algorithm on RSA-2048.</Opt>
+  <Opt>Its physical qubits had error rates below $10^{-6}$.</Opt>
+  <Explain>Breakeven means error correction is a net win: the logical qubit outperforms its best constituent (here by a factor of 2.4). It still failed about 0.14% of the time per cycle, far from the $10^{-10}$ or better that large algorithms need, but now on the right side of the curve.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- The **surface code**: data qubits on a $d\times d$ grid, alternating X and Z plaquette checks, all local. It's a $[[d^2,1,d]]$ code using $2d^2-1$ physical qubits.
+- Errors form **chains**, and syndromes reveal only their **endpoints** (defects). Closed loops are harmless stabilizers. Boundary-to-boundary chains are **logical operators**.
+- **Decoding** = pairing defects with the shortest chains (**minimum-weight perfect matching**). It fails if correction + error spans the lattice.
+- **Threshold theorem:** below $p_{\text{th}}$ (≈1% for the surface code), $\varepsilon_L \propto (p/p_{\text{th}})^{(d+1)/2}$, and each $d\to d+2$ divides errors by **Λ**.
+- **Google Willow (2024):** $d = 3, 5, 7$; Λ = 2.14; 0.143% per cycle at $d=7$; logical lifetime 2.4× the best physical qubit. Error correction now works, and it needs to get much better still.

@@ -1,0 +1,143 @@
+import { KickbackClocks } from './widgets/KickbackClocks';
+import { stateGoal } from './lib/goals';
+
+The names "control" and "target" suggest that information flows one way. The control decides, and the target gets acted on. Here is an experiment where the opposite happens.
+
+<Predict id="u7l4-paradox">
+  <Q>Prepare the control in $|+\rangle$ and the target in $|-\rangle$, then apply a CNOT. Which qubit changes?</Q>
+  <Opt>The target: it gets flipped (in superposition)</Opt>
+  <Opt>Both: they become entangled</Opt>
+  <Opt correct>The control: it turns into $|-\rangle$, and the target is untouched</Opt>
+  <Opt>Neither: CNOT does nothing to this input</Opt>
+  <Reveal>
+Check it in the lab. Step through and watch the Bloch spheres: q0 swings from $+x$ to $-x$, and q1 never moves.
+
+<CircuitLab title="The control changes, the target doesn't" n={2} circuit="H 0, X 1; H 1; CNOT 0 1" gates={['H', 'X', 'Z', 'CNOT']} />
+
+The algebra takes one line. $X$ flips $|-\rangle$ into $-|-\rangle$: $X|-\rangle = \tfrac{1}{\sqrt2}(|1\rangle - |0\rangle) = -|-\rangle$. So "apply $X$ to the target when the control is 1" really means "multiply by $-1$ when the control is 1":
+
+$$
+\text{CNOT}\;\tfrac{1}{\sqrt2}\big(|0\rangle + |1\rangle\big)|-\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle|-\rangle + |1\rangle(-|-\rangle)\big) = \tfrac{1}{\sqrt2}\big(|0\rangle - |1\rangle\big)|-\rangle = |-\rangle|-\rangle.
+$$
+
+A minus sign can sit anywhere in a tensor product. It "belongs" to the control as much as to the target, and on the control it is a *relative* phase between $|0\rangle$ and $|1\rangle$, which is visible. This is **phase kickback**.
+  </Reveal>
+</Predict>
+
+---
+
+## The mechanism: eigenvectors
+
+The general version needs only one fact. Suppose the target is in an **eigenvector** of $U$:
+
+$$
+U|u\rangle = e^{i\varphi}|u\rangle .
+$$
+
+Then controlled-$U$ acting on any control state $a|0\rangle + b|1\rangle$ gives
+
+$$
+C(U)\,\big(a|0\rangle + b|1\rangle\big)|u\rangle = a|0\rangle|u\rangle + b|1\rangle\,e^{i\varphi}|u\rangle = \big(a|0\rangle + e^{i\varphi}b|1\rangle\big)\,|u\rangle .
+$$
+
+<KeyIdea>
+When the target is an eigenvector of $U$, controlled-$U$ leaves the target **unchanged** and applies the phase gate $P(\varphi) = \mathrm{diag}(1, e^{i\varphi})$ to the **control**. The eigenvalue gets *kicked back* onto the control.
+</KeyIdea>
+
+Picture the four joint amplitudes as clocks in a $2\times2$ grid, with a row for each control value. Controlled-$U$ touches only the bottom row (control = 1). If the target is an eigenvector, the whole bottom row turns **rigidly** by $\varphi$. A row that turns rigidly is a common factor, and a common factor of the control-1 row is a relative phase of the control.
+
+<KickbackClocks />
+
+<Try>
+- **controlled-P(φ), target $|1\rangle$:** press ▶ and watch the bottom-right clock turn by $\varphi$. The control's phase dial turns by the same angle, and the target's Bloch vector stays put.
+- **target $|0\rangle$:** an eigenvector with eigenvalue 1. Nothing happens, because a kicked phase of $0$ is no phase.
+- **target $|+\rangle$:** not an eigenvector of $P(\varphi)$. Only one clock in the bottom row turns, so the rows are no longer proportional. The qubits become **entangled**, and the control's arrow shrinks inside the sphere.
+- **X (CNOT), target $|-\rangle$:** the bottom row turns by $\pi$, which is the paradox from the start of the lesson.
+</Try>
+
+<NumQuiz id="u7l4-readout" answer={0.25} tol={0.01}>
+  <Q>Control in $|+\rangle$, target in $|1\rangle$. Apply controlled-$P(2\pi/3)$, then a Hadamard on the control, and measure it. What is the probability of reading $0$?</Q>
+  <Hint>After the kickback the control is $\tfrac{1}{\sqrt2}(|0\rangle + e^{i\varphi}|1\rangle)$. Then $H$ maps this to $\tfrac{1+e^{i\varphi}}{2}|0\rangle + \tfrac{1-e^{i\varphi}}{2}|1\rangle$.</Hint>
+  <Explain>$P(0) = \left|\tfrac{1+e^{i\varphi}}{2}\right|^2 = \cos^2\tfrac{\varphi}{2} = \cos^2\tfrac{\pi}{3} = \tfrac14$. The eigenphase $\varphi$, a property of $U$, has become a measurable probability. **Phase estimation** builds on exactly this, and the "read-out preview" in the widget computes it live.</Explain>
+</NumQuiz>
+
+---
+
+## When the target is not an eigenvector
+
+Any target state can be expanded in eigenvectors of $U$: $|\psi\rangle = \sum_k c_k|u_k\rangle$. By linearity, each piece kicks back its own phase:
+
+$$
+C(U)\,|+\rangle|\psi\rangle = \sum_k c_k\;\frac{|0\rangle + e^{i\varphi_k}|1\rangle}{\sqrt2}\;|u_k\rangle .
+$$
+
+The control's state now depends on which eigenvector the target is in, so the two are **entangled**. This is not a failure. Measure the control cleverly and you learn *which* eigenphase you got, and the target collapses onto the matching eigenvector. That is the full phase-estimation algorithm in miniature (World 9).
+
+<Warning title="Global phase becomes local under a control">
+$R_z(\varphi)$ and $P(\varphi)$ are the same single-qubit gate up to global phase: $P(\varphi) = e^{i\varphi/2}R_z(\varphi)$. Controlled, they differ. With target $|0\rangle$, controlled-$P$ does nothing, while controlled-$R_z$ kicks a phase $e^{-i\varphi/2}$ onto the control. Try both in the widget. **A "global" phase of $U$ becomes a relative phase of the control in $C(U)$.** When you build a controlled gate, keep track of phases you would normally ignore.
+</Warning>
+
+<Quiz id="u7l4-rz-vs-p">
+  <Q>Control $|+\rangle$, target $|0\rangle$. You apply controlled-$R_z(\pi)$. What is the control's state afterwards (up to global phase)?</Q>
+  <Opt>$|+\rangle$: target $|0\rangle$ is unaffected by $z$-rotations</Opt>
+  <Opt correct>$|{-i}\rangle$</Opt>
+  <Opt>$|-\rangle$</Opt>
+  <Opt>A mixed state: the qubits are entangled</Opt>
+  <Explain>$R_z(\pi)|0\rangle = e^{-i\pi/2}|0\rangle$: $|0\rangle$ is an eigenvector with eigenvalue $-i$. So the control becomes $\tfrac{1}{\sqrt2}(|0\rangle - i|1\rangle) = |{-i}\rangle$, a quarter-turn backwards around the equator. Controlled-$P(\pi)$ (that is, $CZ$) would have done nothing to this input.</Explain>
+</Quiz>
+
+---
+
+## The engine of quantum algorithms
+
+Kickback turns a *computation* into a *phase*. Most famous quantum algorithms are built on this conversion.
+
+**Phase oracles.** Suppose a reversible circuit computes a Boolean function into a target: $U_f|x\rangle|y\rangle = |x\rangle|y\oplus f(x)\rangle$. Put the target in $|-\rangle$. Writing $f(x)$ into it is an $X$ or nothing, so the eigenvalue is $(-1)^{f(x)}$:
+
+$$
+U_f\,|x\rangle|-\rangle = (-1)^{f(x)}\,|x\rangle|-\rangle .
+$$
+
+Now the *answer* is stored as a sign on the input, and signs can interfere.
+
+**Deutsch's algorithm** (1985), the first quantum speed-up, needs nothing more. Put $|+\rangle|-\rangle$ through $U_f$, apply $H$ to the first qubit, and it reads $f(0)\oplus f(1)$. One query to $f$ tells you whether $f$ is constant or balanced. Classically that takes two queries. In the lab below the oracle is a CNOT, so $f(x) = x$ is balanced and q0 reads 1. Swap the oracle for nothing ($f = 0$), for $X$ on q1 ($f = 1$), or for CNOT followed by $X$ on q1 ($f(x) = \lnot x$).
+
+<CircuitLab title="Deutsch's algorithm: the oracle sits between the Hadamard layers" n={2} circuit="X 1; H 0, H 1; CNOT 0 1; H 0" gates={['CNOT', 'X', 'H', 'M']} showHistogram />
+
+From there the same move scales up:
+
+- **Deutsch–Jozsa and Bernstein–Vazirani**: the same idea on $n$ input qubits at once.
+- **Grover's search**: a phase oracle marks the answer with $-1$, and reflections amplify it.
+- **Phase estimation**: controlled-$U^{2^k}$ on the $k$-th control kicks back $2^k\varphi$, and an inverse Fourier transform reads off the digits of $\varphi$.
+- **Shor's factoring algorithm**: phase estimation applied to modular multiplication.
+
+Practise the basic move: kick a quarter-turn onto the control using one controlled-phase gate. (Choose the CP gate, set its angle, then click the control wire and the target wire.)
+
+<CircuitLab title="Challenge: turn |+⟩ into |+i⟩ without touching q0 directly" n={2} gates={['CP', 'CNOT', 'H']} initialState={[[0, 0], [0.7071067811865476, 0], [0, 0], [0.7071067811865476, 0]]} goal={stateGoal([[0, 0], [0.7071067811865476, 0], [0, 0], [0, 0.7071067811865476]], 'control → |+i⟩, target stays |1⟩')} challengeId="u7l4-cp-kick" maxGates={1} columns={3} />
+
+<History>
+Deutsch's 1985 paper already contained the trick, but the name and the unifying picture came in 1998. That year Richard Cleve, Artur Ekert, Chiara Macchiavello and Michele Mosca showed in "Quantum algorithms revisited" that Deutsch–Jozsa, Simon, Shor and phase estimation all follow one pattern: controlled-$U$ on an eigenvector, kickback, interference. Every modern textbook presents these algorithms their way.
+</History>
+
+<CSCorner title="Computing into the sign bit">
+Classically, a function's output is a value written into a register. Kickback writes the output into a **phase**, a kind of sign bit that no single measurement can read directly. On its own that looks useless. Its value comes from interference: across a superposition of inputs, the signs make some outcomes add up and others cancel, which reveals a *global* property of $f$ (constant or balanced, a period, a hidden string). Individual values of $f$ never get read out at all. That is why quantum speed-ups come from *structure*, and why unstructured problems gain only Grover's square-root speed-up.
+</CSCorner>
+
+<Quiz id="u7l4-oracle">
+  <Q>An oracle $U_f|x\rangle|y\rangle = |x\rangle|y\oplus f(x)\rangle$ acts on $|x\rangle|-\rangle$ for a basis input $x$. What does it output?</Q>
+  <Opt>$|x\rangle|f(x)\rangle$</Opt>
+  <Opt correct>$(-1)^{f(x)}|x\rangle|-\rangle$</Opt>
+  <Opt>$|x \oplus f(x)\rangle|-\rangle$</Opt>
+  <Opt>An entangled state of input and target</Opt>
+  <Explain>If $f(x) = 0$ nothing happens. If $f(x) = 1$ the target gets an $X$, and $X|-\rangle = -|-\rangle$. Either way the target stays $|-\rangle$ and the input picks up $(-1)^{f(x)}$. With the input in superposition, those signs become relative phases between inputs.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- If $U|u\rangle = e^{i\varphi}|u\rangle$, then $C(U)\,|c\rangle|u\rangle = \big(P(\varphi)|c\rangle\big)|u\rangle$. The target is unchanged and the eigenphase lands on the **control**.
+- Example: CNOT with target $|-\rangle$ acts as $Z$ on the control. Example: controlled-$P(\varphi)$ with target $|1\rangle$ rotates the control by $\varphi$ about $z$.
+- Targets that aren't eigenvectors get entangled with the control, one kicked phase per eigen-component. That is the seed of phase estimation.
+- Under a control, a "global" phase of $U$ becomes relative: $C(R_z) \ne C(P)$.
+- Phase oracle: $|x\rangle|-\rangle \to (-1)^{f(x)}|x\rangle|-\rangle$. Combined with Hadamard interference this drives Deutsch–Jozsa, Bernstein–Vazirani, Grover, phase estimation and Shor.

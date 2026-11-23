@@ -1,0 +1,121 @@
+import { SternGerlachApparatus } from './widgets/SternGerlachApparatus';
+
+Frankfurt, early 1922. Otto **Stern** and Walther **Gerlach** heat silver in a tiny oven until it evaporates. A thin beam of silver atoms streams out through two slits and flies between the poles of an oddly shaped magnet. After hours of running, a faint smudge of silver, too thin to see, sits on a glass plate.
+
+What they found on that plate is the cleanest early evidence that nature is quantized, and it introduces the protagonist of the rest of this course: **spin**, the original qubit.
+
+---
+
+## Atoms are tiny magnets
+
+From intro E&M you know that a current loop is a magnet: a loop of area $A$ carrying current $I$ has **magnetic dipole moment** $\vec\mu$ of magnitude $IA$, perpendicular to the loop. An electron going around an atom is a tiny current loop, so atoms with angular momentum are tiny magnets. Silver atoms turn out to have a magnetic moment of about one **Bohr magneton**:
+
+$$
+\mu_B = \frac{e\hbar}{2m_e} \approx 9.27\times10^{-24}\ \text{J/T}.
+$$
+
+What does a magnetic field do to a little dipole? Its energy is $U = -\vec\mu\cdot\vec B$, so:
+
+- In a **uniform** field there is a **torque** $\vec\tau = \vec\mu\times\vec B$, but **no net force**: the pull on the north end is cancelled by the push on the south end.
+- In a **non-uniform** field there is a net force, $\vec F = \nabla(\vec\mu\cdot\vec B)$. If the field points mostly along $z$ and gets stronger in the $+z$ direction,
+$$
+F_z \approx \mu_z\,\frac{\partial B_z}{\partial z}.
+$$
+
+The force is proportional to $\mu_z$, the **component of the moment along the field gradient**. So the magnet sorts atoms by $\mu_z$: atoms with $\mu_z > 0$ are pushed up, those with $\mu_z < 0$ down, and by an amount proportional to $\mu_z$. That's why Stern and Gerlach's magnet had a sharp knife-edge north pole above a grooved south pole. The field lines crowd together near the knife edge, giving a strong gradient.
+
+<Quiz id="u3l1-uniform">
+  <Q>A beam of silver atoms passes through a very strong but perfectly **uniform** magnetic field. What happens to the beam?</Q>
+  <Opt>It splits, because the field is strong</Opt>
+  <Opt correct>It goes straight: a uniform field exerts torques on the dipoles but no net force</Opt>
+  <Opt>It is deflected as a whole toward the north pole</Opt>
+  <Opt>The atoms stop</Opt>
+  <Explain>Net force needs a gradient: $F_z = \mu_z\,\partial B_z/\partial z$. In a uniform field the dipoles just precess (spin like tops around the field direction) and fly straight on.</Explain>
+</Quiz>
+
+---
+
+## What classical physics predicts
+
+The oven is hot (around $1000\,°$C) and chaotic. Nothing picks out a preferred direction, so each atom's magnetic moment should point in a **random direction in 3D**. Then $\mu_z = \mu\cos\vartheta$ can be anything from $-\mu$ to $+\mu$.
+
+<CSCorner title="CS corner: sampling a random direction">
+How is $\mu_z$ distributed if directions are uniform on the sphere? Here's a beautiful fact (Archimedes' "hat-box theorem"): the area of a sphere's band between heights $z$ and $z + dz$ is $2\pi R\,dz$, **independent of $z$**. So for a uniformly random unit vector, the $z$-component is **uniformly distributed** on $[-1, 1]$. That's also the standard trick for sampling random directions in code: draw $z \sim U(-1,1)$ and $\phi \sim U(0, 2\pi)$, then set $x = \sqrt{1-z^2}\cos\phi$ and $y = \sqrt{1-z^2}\sin\phi$.
+</CSCorner>
+
+So classically, the deflections should be spread **evenly** over a band: a smear on the plate, from "maximum up" to "maximum down".
+
+<Predict id="u3l1-two-spots">
+  <Q>Stern and Gerlach run the beam through the inhomogeneous magnet. What pattern appears on the glass plate?</Q>
+  <Opt>A continuous vertical smear, densest nowhere in particular (the classical prediction)</Opt>
+  <Opt>A single spot in the middle: the magnet does nothing</Opt>
+  <Opt correct>Two separate spots (one deflected up, one down) with nothing in between</Opt>
+  <Opt>Three spots: up, middle, down</Opt>
+  <Reveal>
+Start in **Classical prediction** mode and let the plate fill up. Then switch to **What nature does**.
+
+<SternGerlachApparatus />
+
+**Two spots.** Every single silver atom is deflected either *up* by a fixed amount or *down* by the same amount. None lands in between. Measured along the field, $\mu_z$ takes only two values: $+\mu$ or $-\mu$.
+  </Reveal>
+</Predict>
+
+<Try>
+- Turn the **field gradient** to zero: one line, no splitting. Increase it slowly: the beam splits into two lips that move apart, but there are always exactly two.
+- Look at the face-on view of the plate. The split is widest in the middle and closes at the ends, because the gradient is strongest under the centre of the knife edge. That "lips" shape is exactly what appears on Gerlach's famous postcard.
+</Try>
+
+---
+
+## How big is the effect?
+
+<NumQuiz id="u3l1-deflection" answer={0.105} tol={0.012}>
+  <Q>Estimate the deflection at the end of the magnet. Take $\mu_z = \mu_B = 9.27\times10^{-24}$ J/T, a gradient $\partial B_z/\partial z = 10$ T/cm $= 1000$ T/m, a silver-atom mass of $1.79\times10^{-25}$ kg, a speed of $550$ m/s, and a magnet $3.5$ cm long. How far (in **millimetres**) is an atom deflected by the time it leaves the magnet?</Q>
+  <Hint>$F = \mu_z\,\partial B/\partial z$, $a = F/m$, time in the magnet $t = L/v$, deflection $= \tfrac12 a t^2$.</Hint>
+  <Explain>$F = 9.27\times10^{-21}$ N, so $a \approx 5.2\times10^4$ m/s² (about 5000 g!). $t = 0.035/550 \approx 6.4\times10^{-5}$ s. Deflection $= \tfrac12 a t^2 \approx 1.05\times10^{-4}$ m $\approx 0.1$ mm. The two beams end up only a fraction of a millimetre apart, which is why the experiment was so hard.</Explain>
+</NumQuiz>
+
+<History>
+The experiment almost failed. The silver deposit was so thin it was invisible. In Stern's later telling, the trace only appeared because his breath, laden with sulfur from cheap cigars ("my salary was too low to afford good cigars"), turned the silver into black silver sulfide. On **8 February 1922** Gerlach sent Niels Bohr a postcard with a photo of the split beam and the words (in German): *"Attached is the experimental proof of directional quantization. We congratulate you on the confirmation of your theory."*
+
+The irony: it confirmed Bohr's idea for the wrong reason. Silver's outer electron has **no** orbital angular momentum. The two spots come from a property nobody knew about yet: the electron's intrinsic **spin**, proposed by Goudsmit and Uhlenbeck in **1925**. Stern received the 1943 Nobel Prize, in part for this work.
+</History>
+
+---
+
+## Spin: two answers, whatever the question
+
+What happens if we **rotate the magnet**, say so the gradient points sideways along $x$? Classically nothing about the atoms has changed. They are just as random as before.
+
+<Quiz id="u3l1-rotate">
+  <Q>The Stern–Gerlach magnet is rotated by $90°$ so it now measures $\mu_x$. A fresh beam from the oven goes through. What do you see?</Q>
+  <Opt>A smear along $x$</Opt>
+  <Opt correct>Two spots, now separated sideways (left and right)</Opt>
+  <Opt>Four spots</Opt>
+  <Opt>A single spot</Opt>
+  <Explain>Two spots again: every atom gives $\mu_x = +\mu$ or $-\mu$. Measured along **any** axis, the answer is one of exactly two values. That's the signature of a **spin-½** particle.</Explain>
+</Quiz>
+
+This is strange if you think of $\vec\mu$ as an ordinary arrow. An arrow whose component along *every* axis is $\pm\mu$ would need length $\sqrt3\,\mu$, with components $\pm\mu$ along $x$, $y$, $z$ simultaneously. Yet along a diagonal axis it would also have to be $\pm\mu$, which no single arrow can satisfy. The resolution, which you'll see next lesson, is that the components **don't all have values at the same time**. Measuring one disturbs the others.
+
+<Definition term="Spin-½">
+An intrinsic angular momentum of electrons (and protons, neutrons, silver atoms with one unpaired electron…). Measured along any axis $\hat n$, it gives only $S_{\hat n} = +\tfrac{\hbar}{2}$ ("spin up along $\hat n$") or $-\tfrac{\hbar}{2}$ ("spin down"). The magnetic moment is tied to it, which is why the Stern–Gerlach magnet sees two spots.
+</Definition>
+
+<Warning>
+"Spin means the electron is a tiny ball rotating on its axis." It's a useful mnemonic for "carries angular momentum and a magnetic moment", but it fails badly: as far as anyone can tell the electron is point-like, and a classical sphere of the electron's size would need a surface speed faster than light to have this much angular momentum. Most tellingly, a spinning ball could point its axis in *any* direction and give a continuum of $\mu_z$ values. Spin is an intrinsic quantum property with exactly two outcomes per axis.
+</Warning>
+
+<CSCorner>
+A Stern–Gerlach magnet is a **measurement device with a choice of basis**: point it along $\hat n$ and it asks "up or down along $\hat n$?", returning one classical bit. The spin itself is our first physical **qubit**. Two outcomes per question, but infinitely many possible questions, and (spoiler) the answers to different questions are linked by amplitudes, not by a hidden lookup table.
+</CSCorner>
+
+---
+
+## Summary
+
+- An atom with angular momentum is a magnetic dipole. In a **non-uniform** field it feels a force $F_z = \mu_z\,\partial B_z/\partial z$ that sorts atoms by $\mu_z$.
+- Classical physics: random orientations ⇒ $\mu_z$ uniform on $[-\mu, \mu]$ ⇒ a smear.
+- **Stern–Gerlach (1922): two spots.** Every silver atom has $\mu_z = +\mu$ or $-\mu$, nothing in between.
+- Rotate the magnet: still two spots. Spin-½ gives $\pm\hbar/2$ along **any** axis.
+- The two spots come from the electron's **spin** (Goudsmit & Uhlenbeck, 1925), not from orbital motion: the first physical qubit.

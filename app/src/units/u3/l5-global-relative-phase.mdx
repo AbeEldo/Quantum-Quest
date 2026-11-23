@@ -1,0 +1,128 @@
+import { PhaseRevealer, SameStateChallenge } from './widgets/PhaseRevealer';
+
+A qubit state has two complex amplitudes. Each one has a magnitude and a **phase**, the direction its clock-hand points. Magnitudes are easy to interpret: their squares are probabilities. But what do the phases *do*? Two facts look as if they contradict each other:
+
+- $|+\rangle = \tfrac{1}{\sqrt2}(|0\rangle + |1\rangle)$ and $|-\rangle = \tfrac{1}{\sqrt2}(|0\rangle - |1\rangle)$ have **identical** $z$ statistics (50/50), yet they are perfectly distinguishable, orthogonal states.
+- $|\psi\rangle$ and $-|\psi\rangle$ also differ only by phase, but they are **the same physical state**. No experiment can ever tell them apart.
+
+This lesson sorts out which phases are real and which are bookkeeping, and why phase is the "hidden" resource behind quantum computing.
+
+---
+
+## Global phase is invisible
+
+Multiply a whole state by a unit complex number $e^{i\gamma}$. For **any** measurement basis $\{|b_k\rangle\}$,
+
+$$
+\big|\langle b_k|\,e^{i\gamma}\psi\rangle\big|^2 = |e^{i\gamma}|^2\,|\langle b_k|\psi\rangle|^2 = |\langle b_k|\psi\rangle|^2 .
+$$
+
+Every probability for every possible measurement is unchanged, and (as you'll see in World 4) time evolution keeps the factor along for the ride. So $e^{i\gamma}|\psi\rangle$ and $|\psi\rangle$ are physically **the same state**. This is called a **global phase**.
+
+<KeyIdea>
+States are really **rays**: vectors up to an overall factor $e^{i\gamma}$. We write $|\psi\rangle \simeq e^{i\gamma}|\psi\rangle$. Only *relative* phases between components carry physics.
+</KeyIdea>
+
+<PhaseRevealer />
+
+<Try>
+- Drag **γ (global)**. Both clocks rotate together. The Bloch vector doesn't move, and **none** of the Z, X, Y statistics change.
+- Now drag **φ (relative)**. Only the $|1\rangle$ clock turns. The Z bar doesn't change, but the X and Y bars swing, and the Bloch vector sweeps around the equator.
+- Set $\theta = 0$ (the state $|0\rangle$). Now φ does nothing either: with only one nonzero amplitude there is no relative phase to speak of.
+</Try>
+
+<Quiz id="u3l5-global-same">
+  <Q>Which of these is the **same physical state** as $\tfrac{1}{\sqrt2}(|0\rangle + i|1\rangle)$?</Q>
+  <Opt>$\tfrac{1}{\sqrt2}(|0\rangle - i|1\rangle)$</Opt>
+  <Opt correct>$\tfrac{1}{\sqrt2}(-i|0\rangle + |1\rangle)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}(|0\rangle + |1\rangle)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}(i|0\rangle + i|1\rangle)$</Opt>
+  <Explain>Multiply the original by $-i$: $-i\cdot|0\rangle + (-i)(i)|1\rangle = -i|0\rangle + |1\rangle$. A global phase. The first option flips the *relative* phase (that's $|{-i}\rangle$); the others change it to $0$.</Explain>
+</Quiz>
+
+---
+
+## Relative phase is real, but hidden from $z$
+
+Now look at the relative phase $\varphi$ in
+
+$$
+|\psi_\varphi\rangle = \tfrac{1}{\sqrt2}\left(|0\rangle + e^{i\varphi}|1\rangle\right).
+$$
+
+In the $z$ basis, $P(0) = P(1) = \tfrac12$ for **every** $\varphi$. A $z$ measurement is blind to it. But measure along $x$:
+
+$$
+P(+) = \left|\langle +|\psi_\varphi\rangle\right|^2 = \tfrac14\left|1 + e^{i\varphi}\right|^2 = \cos^2\frac{\varphi}{2}, \qquad P(-) = \sin^2\frac{\varphi}{2}.
+$$
+
+The relative phase controls whether the two amplitudes **add or cancel** when they are recombined by the change of basis. You've seen this formula before. It's the Mach–Zehnder output from World 2, with $\varphi$ as the phase shifter! Measuring in the $x$ basis is exactly "send the two arms through a second beam splitter".
+
+<NumQuiz id="u3l5-x-prob" answer={0.75} tol={0.01}>
+  <Q>A qubit is in $\tfrac{1}{\sqrt2}\left(|0\rangle + e^{i\pi/3}|1\rangle\right)$. What is the probability of the outcome $+$ when measuring in the $x$ basis?</Q>
+  <Hint>$P(+) = \cos^2(\varphi/2)$.</Hint>
+  <Explain>$\cos^2(\pi/6) = 3/4$. In the $z$ basis this state would be a dull 50/50; the $x$ measurement reveals its phase.</Explain>
+</NumQuiz>
+
+The relative phase is also exactly the **longitude** on the Bloch sphere (Lesson 4). States around the equator all have the same $z$ statistics, but they are different points, and measuring along $x$ or $y$ tells you where on the equator you are.
+
+<Predict id="u3l5-y-needed">
+  <Q>You must tell $|{+i}\rangle = \tfrac{1}{\sqrt2}(|0\rangle + i|1\rangle)$ apart from $|{-i}\rangle = \tfrac{1}{\sqrt2}(|0\rangle - i|1\rangle)$. Which measurement basis works?</Q>
+  <Opt>$z$</Opt>
+  <Opt>$x$</Opt>
+  <Opt correct>$y$</Opt>
+  <Opt>None: they differ only by phase</Opt>
+  <Explain>Their relative phases are $\pm 90°$. In the $x$ basis $P(+) = \cos^2(\pm 45°) = \tfrac12$ for both, so $x$ is as blind as $z$. Along $y$ they are the two opposite outcomes, perfectly distinguishable. Check it in the widget: set $\varphi = \pi/2$, then $3\pi/2$, and watch which bar changes.</Explain>
+</Predict>
+
+---
+
+## Practise: same state or not?
+
+Decide whether each pair describes the same physical state. The trick is to compare the **relative** angle between each state's two clocks (and their lengths), ignoring any rotation the two clocks share.
+
+<SameStateChallenge challengeId="u3l5-same-state" />
+
+<Warning>
+"Phase isn't measurable, so it isn't physical." Half true. A *global* phase is pure bookkeeping. But a *relative* phase is as physical as a probability. You just can't see it in the basis where you wrote the state. Rotate the measurement (or equivalently rotate the state with a gate, then measure in $z$), and relative phase turns into hard counts. Every interference experiment, from the double slit onwards, *is* a measurement of relative phase.
+</Warning>
+
+<Note title="Where global phase sneaks back in">
+A phase that is global for one qubit can become *relative* once that qubit is part of a bigger system. If you apply $e^{i\gamma}$ to a qubit only when a *control* qubit is $|1\rangle$, the phase sits on half of the joint superposition and is no longer global. This "phase kickback" is the engine of most quantum algorithms (World 7). So global phase is irrelevant for an isolated state, but controlled phases matter a lot.
+</Note>
+
+---
+
+## Phase: the hidden resource
+
+Why care so much? Compare what a classical probabilistic bit can do. A random bit is a point on the line segment $[0, 1]$: one number, $p$. A qubit is a point on a sphere: the latitude matches the classical $p$, and the **longitude** (the relative phase) has *no classical counterpart*.
+
+<CSCorner>
+Quantum algorithms are choreographies of relative phases. A typical pattern:
+
+1. Make a uniform superposition: all amplitudes equal, nothing special yet.
+2. Let an oracle or a controlled operation **imprint phases** that encode the answer. The probabilities in the computational basis are still all equal, so measuring now would tell you nothing.
+3. Change basis (Hadamards, QFT) so that the phases **interfere**: right answers add up, wrong answers cancel.
+4. Measure.
+
+Step 2 is invisible to a $z$-basis peek, exactly like $|+\rangle$ vs $|-\rangle$. That's why "a quantum computer tries all answers in parallel and reads them off" is wrong. The information lives in phases, and getting it out takes interference. (Deutsch–Jozsa, the simplest example, is just "$|+\rangle$ or $|-\rangle$?" in disguise; see World 9.)
+</CSCorner>
+
+<Quiz id="u3l5-which-physical">
+  <Q>Select **all** quantities that can change measurement statistics in *some* basis.</Q>
+  <Opt correct>The magnitudes $|\alpha|$, $|\beta|$</Opt>
+  <Opt correct>The relative phase $\arg\beta - \arg\alpha$</Opt>
+  <Opt>A global phase $e^{i\gamma}$ multiplying the whole state</Opt>
+  <Opt>The sign of the whole state vector</Opt>
+  <Explain>Magnitudes set the latitude on the Bloch sphere and the relative phase sets the longitude. Together they are the two physical parameters. A global phase (a sign flip is the special case $\gamma = \pi$) changes nothing.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- **Global phase:** $e^{i\gamma}|\psi\rangle$ gives identical probabilities for *every* measurement, so it's the same physical state. States are rays.
+- **Relative phase:** in $\alpha|0\rangle + e^{i\varphi}\beta|1\rangle$, $\varphi$ is invisible to a $z$ measurement but changes $x$ and $y$ statistics. For equal magnitudes, $P(x+) = \cos^2(\varphi/2)$, the Mach–Zehnder formula.
+- $|+\rangle$ vs $|-\rangle$: same $z$ statistics, orthogonal states. $|{+i}\rangle$ vs $|{-i}\rangle$: need a $y$ measurement.
+- On the Bloch sphere, relative phase is the **longitude**, and global phase isn't drawn at all.
+- Relative phase is the hidden resource that quantum algorithms manipulate and then convert into measurable probabilities by interference.

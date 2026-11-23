@@ -1,0 +1,111 @@
+import { TeleportTheater } from './widgets/TeleportTheater';
+import { TELEPORT_INIT_PAIRS, TELEPORT_GOAL } from './lib/states';
+
+Alice has a qubit in a state $|\psi\rangle$ she knows nothing about. Bob is in another city. There's no quantum channel between them, only a phone line. Alice needs Bob to end up with $|\psi\rangle$.
+
+Everything you know says this should be impossible. Measuring $|\psi\rangle$ gives her one bit and destroys the rest. She can't clone it and keep trying. And a phone line carries bits, while $\theta$ and $\phi$ are continuous numbers.
+
+<Predict id="u8l2-possible">
+  <Q>Alice and Bob share one Bell pair in advance. Can Alice transfer the unknown state $|\psi\rangle$ to Bob *exactly*, using only a phone call?</Q>
+  <Opt>No, a classical channel can't carry continuous amplitudes</Opt>
+  <Opt>Only approximately, with fidelity at most 2/3</Opt>
+  <Opt correct>Yes, exactly, by sending just 2 classical bits</Opt>
+  <Opt>Yes, and Bob receives it instantly, before the phone call</Opt>
+  <Explain>This is **quantum teleportation** (Bennett et al., 1993). One shared Bell pair plus two classical bits move an arbitrary qubit state perfectly. The bits travel no faster than light, and Alice's original is destroyed along the way. (Without entanglement, the best a measure-and-describe strategy can manage is an average fidelity of 2/3.)</Explain>
+  <Reveal>
+The $\theta$ and $\phi$ never get sent at all. They're never even learned. The pre-shared entanglement carries the "quantum part", and the two bits just say which of four fixed corrections Bob should apply. Step through it below.
+  </Reveal>
+</Predict>
+
+---
+
+## The protocol, animated
+
+Three qubits: $q_0 = |\psi\rangle$ (Alice), $q_1$ = Alice's half of a Bell pair, $q_2$ = Bob's half.
+
+<TeleportTheater />
+
+<Try>
+- At **step 3**, look at the four little Bloch spheres. Even before anyone measures, Bob's qubit is $|\psi\rangle$, $X|\psi\rangle$, $Z|\psi\rangle$ or $XZ|\psi\rangle$ in the four branches. These are all *rigid rotations* of $|\psi\rangle$.
+- At **step 4**, compare "true state" with "what Bob can know". The true state is already a rotated copy of $|\psi\rangle$, but Bob doesn't know *which* rotation, and averaged over the four equally likely outcomes his qubit is completely random (a dot).
+- Re-run the measurement a few times. Each outcome needs a different correction, and every one ends at fidelity 1.
+</Try>
+
+<Quiz id="u8l2-correction">
+  <Q>Alice's Bell measurement gives $m_1m_2 = 10$. What must Bob do?</Q>
+  <Opt>Apply $X$</Opt>
+  <Opt correct>Apply $Z$</Opt>
+  <Opt>Apply $X$ then $Z$</Opt>
+  <Opt>Nothing</Opt>
+  <Explain>Bob's qubit is $X^{m_2}Z^{m_1}|\psi\rangle = Z|\psi\rangle$, and $Z$ undoes itself. In general he applies $X^{m_2}$, then $Z^{m_1}$.</Explain>
+</Quiz>
+
+---
+
+## Why it works: the algebra
+
+Write $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$. The starting state is $|\psi\rangle \otimes \tfrac{1}{\sqrt2}(|00\rangle + |11\rangle)$. After Alice's CNOT ($q_0 \to q_1$) and $H$ on $q_0$, expanding and regrouping by Alice's two qubits gives
+
+$$
+\tfrac12\Big[\,|00\rangle(\alpha|0\rangle+\beta|1\rangle) + |01\rangle(\alpha|1\rangle+\beta|0\rangle) + |10\rangle(\alpha|0\rangle-\beta|1\rangle) + |11\rangle(\alpha|1\rangle-\beta|0\rangle)\Big]
+$$
+
+$$
+= \tfrac12\Big[\,|00\rangle\,|\psi\rangle + |01\rangle\,X|\psi\rangle + |10\rangle\,Z|\psi\rangle + |11\rangle\,XZ|\psi\rangle\Big].
+$$
+
+That's the whole trick. CNOT followed by $H$ is the **Bell-basis measurement** circuit (the reverse of the Bell-pair maker). It sorts the joint state into four branches. In each branch $\alpha$ and $\beta$ already sit on Bob's qubit, scrambled by a Pauli that depends only on the branch label, not on $\alpha$ or $\beta$. Measuring tells Alice the label. Two bits name one of four labels, and Bob unscrambles.
+
+<NumQuiz id="u8l2-prob" answer={0.25} tol={0.001}>
+  <Q>What is the probability that Alice's measurement gives $m_1m_2 = 11$? (Does it depend on $|\psi\rangle$?)</Q>
+  <Explain>Each branch has amplitude $\tfrac12$ times a *normalised* state, so every outcome has probability $\tfrac14$, **independent of $|\psi\rangle$**. That's essential. If the outcome probabilities depended on $\alpha, \beta$, Alice's bits would leak information about $|\psi\rangle$, and a measurement that learns about the state has to disturb it.</Explain>
+</NumQuiz>
+
+---
+
+## Teleportation in the Circuit Lab (deferred measurement)
+
+In a circuit you can replace "measure, phone, then classically controlled $X$/$Z$" with **controlled gates**. A CNOT from $q_1$ to $q_2$ applies $X$ exactly when $q_1 = 1$, and a CZ from $q_0$ to $q_2$ applies $Z$ when $q_0 = 1$. This is the **principle of deferred measurement**: measuring a control qubit and then classically controlling a gate gives the same statistics as using the quantum controlled gate and measuring later (or never).
+
+Below, $q_0$ starts in a fixed "mystery" state ($\theta=\pi/3$, $\phi=\pi/4$), shown as ψ on the wire. The first four columns are already built: Bell pair, then Alice's CNOT and $H$. **Add Bob's two corrections** so that $q_2$ ends up holding $|\psi\rangle$. Watch $q_2$'s mini Bloch sphere: it should become a full-length yellow arrow matching $q_0$'s original.
+
+<CircuitLab n={3} circuit="H 1; CNOT 1 2; CNOT 0 1; H 0" initialState={TELEPORT_INIT_PAIRS} gates={['X', 'Z', 'CNOT', 'CZ', 'H']} qubitLabels={['ψ', 'Alice', 'Bob']} goal={{ kind: 'state', amps: TELEPORT_GOAL, label: 'Bob’s qubit holds |ψ⟩ (others end in |+⟩|+⟩)' }} challengeId="u8l2-deferred" maxGates={6} title="Challenge: finish the teleportation circuit" />
+
+<Note title="Why do Alice's qubits end in |+⟩|+⟩?">
+With deferred measurement, nobody measures $q_0$ and $q_1$. After the corrections they're left in $|+\rangle|+\rangle$, an equal superposition of all four "outcomes", completely unentangled with Bob. Measuring them would give each $m_1 m_2$ with probability ¼, exactly as before. Either way, **none** of $|\psi\rangle$ remains on Alice's side.
+</Note>
+
+---
+
+## What teleportation is not
+
+<Warning>
+**Teleportation doesn't send anything faster than light.** Until Alice's two bits arrive, Bob's qubit is maximally mixed from his point of view (the "what Bob can know" sphere), whatever $|\psi\rangle$ was. Only the classical bits make it useful, and they travel at light speed at most. **It doesn't clone either.** Alice's measurement leaves her qubits in $|m_1m_2\rangle$, and the original $|\psi\rangle$ is gone. At no moment do two copies exist. And no matter is transported: only a *state* moves, from one qubit onto another that was already at Bob's end.
+</Warning>
+
+<Quiz id="u8l2-what">
+  <Q>Which statements about teleportation are true? (Select all that apply.)</Q>
+  <Opt correct>It consumes one Bell pair and two classical bits per qubit teleported</Opt>
+  <Opt>Bob can use his qubit before the bits arrive by guessing the correction, with no loss</Opt>
+  <Opt correct>Alice never learns $\theta$ or $\phi$</Opt>
+  <Opt correct>After the protocol, Alice no longer has $|\psi\rangle$</Opt>
+  <Explain>A guess is right only ¼ of the time, and Bob can't tell when it is. Averaged over outcomes his qubit is maximally mixed until the bits arrive. Alice's outcomes are uniformly random, so they say nothing about $|\psi\rangle$. And the no-cloning theorem requires the original to be destroyed.</Explain>
+</Quiz>
+
+<History>
+Teleportation was discovered by **Charles Bennett, Gilles Brassard, Claude Crépeau, Richard Jozsa, Asher Peres and William Wootters**, published in *Physical Review Letters* in 1993. The first experiments came in 1997–98, from **Anton Zeilinger's group in Innsbruck** (Bouwmeester et al., *Nature*, with photon polarisation) and from Francesco De Martini's group in Rome. In 2017 the Chinese satellite **Micius** teleported photon states from a ground station in Tibet to orbit, over distances up to about **1,400 km**.
+</History>
+
+<CSCorner>
+Teleportation is the quantum version of `mv`. It moves state between registers using a pre-shared resource and a 2-bit message. Its generalisation, **gate teleportation**, lets you apply a hard gate by teleporting through a specially prepared entangled state, and that idea underlies much of fault-tolerant quantum computing (magic-state injection) and measurement-based quantum computing. In distributed quantum computing, teleportation is how quantum data moves between processors linked only by entanglement and classical networks.
+</CSCorner>
+
+---
+
+## Summary
+
+- **Resources:** 1 shared Bell pair + 2 classical bits → 1 qubit state moved ($1\text{ ebit} + 2\text{ bits} \ge 1\text{ qubit}$).
+- **Protocol:** Alice does CNOT($\psi\to$ her half), then $H$ on $\psi$, then measures both and gets $m_1m_2$ with probability ¼ each. Bob applies $X^{m_2}$ then $Z^{m_1}$.
+- Key identity: $|\psi\rangle|\Phi^+\rangle = \tfrac12\sum_{m}|m_1m_2\rangle\,X^{m_2}Z^{m_1}|\psi\rangle$ after Alice's gates.
+- **Deferred measurement:** the classical corrections can be replaced by CNOT and CZ gates.
+- No faster-than-light signalling (Bob's qubit is random until the bits arrive) and no cloning (Alice's original is destroyed).

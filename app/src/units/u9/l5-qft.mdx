@@ -1,0 +1,160 @@
+import { QFTClocks } from './widgets/QFTClocks';
+import { qftMatrix } from './algos';
+
+The **fast Fourier transform** is one of the most important algorithms ever written. It takes $N$ numbers and returns their frequency content in $O(N\log N)$ operations, and it runs inside your phone's audio codec, every MRI scanner and most of numerical computing.
+
+A quantum computer can apply the same transform, the discrete Fourier transform, to the $N = 2^n$ amplitudes of an $n$-qubit state using only $O(n^2)$ gates. For $n = 30$ qubits that's about 500 gates to transform a billion amplitudes. The FFT would need about $3\times10^{10}$ operations.
+
+<Predict id="u9l5-hook">
+  <Q>Does this make quantum computers exponentially faster at signal processing, say for computing the spectrum of a recorded audio file?</Q>
+  <Opt>Yes: $O(n^2)$ vs. $O(n2^n)$ is an exponential speedup for any Fourier task</Opt>
+  <Opt correct>No: you can't load the data efficiently or read the transformed amplitudes out</Opt>
+  <Opt>No: the quantum Fourier transform is a different transform from the DFT</Opt>
+  <Explain>Same transform, but two walls. Encoding a billion arbitrary samples into amplitudes takes at least a billion operations. And measuring the output gives **one** random frequency index, not the list of a billion coefficients; reconstructing them would take an enormous number of runs. The QFT is a superb *subroutine* for states that already carry hidden periodic structure. That's what makes Shor's algorithm work.</Explain>
+</Predict>
+
+---
+
+## The DFT, quantum style
+
+The QFT on $n$ qubits ($N = 2^n$) is defined on basis states by
+$$
+\mathrm{QFT}\,|x\rangle = \frac{1}{\sqrt N}\sum_{y=0}^{N-1} e^{2\pi i\,xy/N}\,|y\rangle ,
+$$
+and extended by linearity. On a general state $\sum_x a_x|x\rangle$ it outputs $\sum_y b_y|y\rangle$ with $b_y = \frac{1}{\sqrt N}\sum_x a_x\,\omega^{xy}$, where $\omega = e^{2\pi i/N}$. That's exactly the unitary DFT matrix $F_{yx} = \omega^{xy}/\sqrt N$ applied to the amplitude vector. (Signal-processing texts usually put a minus sign in the exponent; that's only a convention.)
+
+Two quick sanity checks:
+
+- **One qubit:** $\omega = e^{i\pi} = -1$, so $\mathrm{QFT} = \frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix} = H$. The Hadamard gate *is* the one-qubit Fourier transform.
+- **Input $|0\rangle$:** every phase is $\omega^0 = 1$, giving the uniform superposition. "A spike in time is flat in frequency."
+
+<Quiz id="u9l5-qft1">
+  <Q>For $n = 2$ ($N = 4$, $\omega = i$), what is $\mathrm{QFT}|1\rangle$?</Q>
+  <Opt>$\frac12\big(|0\rangle + |1\rangle + |2\rangle + |3\rangle\big)$</Opt>
+  <Opt correct>$\frac12\big(|0\rangle + i|1\rangle - |2\rangle - i|3\rangle\big)$</Opt>
+  <Opt>$\frac12\big(|0\rangle - |1\rangle + |2\rangle - |3\rangle\big)$</Opt>
+  <Opt>$|3\rangle$</Opt>
+  <Explain>The coefficient of $|y\rangle$ is $\omega^{1\cdot y}/2 = i^y/2$: $1, i, -1, -i$. The phases wind once around the circle as $y$ runs from 0 to 3, a pure frequency-1 wave.</Explain>
+</Quiz>
+
+---
+
+## Clocks running at different speeds
+
+Here's the picture that makes the QFT feel inevitable. Write $y$ in binary, $y = y_0 2^{n-1} + y_1 2^{n-2} + \cdots + y_{n-1}$, where $y_0$ is the top qubit. Then the phase $e^{2\pi i xy/N}$ **factors** into one piece per output bit, and the whole output is a product state:
+$$
+\mathrm{QFT}|x\rangle = \bigotimes_{k=0}^{n-1} \frac{|0\rangle + e^{2\pi i\, x/2^{k+1}}|1\rangle}{\sqrt2}.
+$$
+There's no entanglement. Each output qubit sits on the equator of its Bloch sphere, at a longitude set by $x$:
+
+- the top qubit gets phase $x/2$ of a turn, so it **flips** every time $x$ increases by 1 (the fastest hand),
+- the next gets $x/4$ of a turn, a quarter turn per step,
+- …and the last gets $x/2^n$ of a turn (the slowest hand, like the hour hand of a clock).
+
+<QFTClocks />
+
+<Try>
+- Press **▶ count** with 3 qubits. The left clock (q0) ticks back and forth by half turns, q1 by quarter turns, and q2 creeps around in eighths. Together they encode $x$ like a binary odometer with **continuous** hands.
+- Look at the row of small clocks underneath. Those are the $N$ amplitudes of $\mathrm{QFT}|x\rangle$, and their phases wind around the circle $x$ times. Bigger $x$ means a higher frequency.
+- Set $x = 0$. All hands point at 12 o'clock and every amplitude is equal: the flat spectrum.
+</Try>
+
+<DeepDive title="Deriving the product formula">
+Start from $\frac{1}{\sqrt N}\sum_y e^{2\pi i x y/N}|y\rangle$ and substitute $y/N = \sum_{k=0}^{n-1} y_k 2^{-(k+1)}$. The exponential of a sum is a product:
+$$
+e^{2\pi i x y/N} = \prod_{k=0}^{n-1} e^{2\pi i\, x\, y_k / 2^{k+1}} .
+$$
+The sum over all $y$ is a sum over independent bits $y_0,\dots,y_{n-1}\in\{0,1\}$, so it factorizes:
+$$
+\frac{1}{\sqrt N}\sum_{y_0,\dots,y_{n-1}}\ \prod_k e^{2\pi i\, x\, y_k/2^{k+1}}|y_k\rangle = \bigotimes_k \frac{1}{\sqrt2}\Big(|0\rangle + e^{2\pi i\,x/2^{k+1}}|1\rangle\Big).
+$$
+Only the fractional part of $x/2^{k+1}$ matters, i.e. the last $k+1$ bits of $x$. In binary-fraction notation, the phase of output qubit $k$ is $0.x_{n-k-1}\cdots x_{n-1}$ (Nielsen & Chuang eq. 5.4).
+</DeepDive>
+
+---
+
+## The circuit: Hadamards, controlled phases, swaps
+
+The product formula tells you how to build it. Output qubit $k$ needs the phase $0.x_{n-k-1}x_{n-k}\cdots x_{n-1}$ (in binary). A Hadamard on input qubit $j$ produces $|0\rangle + e^{2\pi i\,0.x_j}|1\rangle$. Then **controlled phase rotations** $R_m = \mathrm{diag}(1, e^{2\pi i/2^m})$, controlled by each later qubit, add the remaining binary digits one at a time. At the end the qubits come out in reverse order, so a row of **swaps** fixes the order.
+
+For 3 qubits:
+
+```
+q0: ─H─R2─R3──────────×─
+       │  │           │
+q1: ───●──┼──H─R2─────┼─
+          │    │      │
+q2: ──────●────●──H───×─
+```
+
+Counting gates: $n$ Hadamards, $n(n-1)/2$ controlled phases and $\lfloor n/2\rfloor$ swaps. That's **$O(n^2)$ gates** for a transform on $2^n$ amplitudes. The FFT does $O(N\log N) = O(n2^n)$ work.
+
+Build the 2-qubit QFT yourself. You need $H$, one controlled phase of angle $\pi/2$ (choose $\pi/2$ in the angle bar when the CP tool is selected), another $H$, and a swap. Mind which qubit gets the first Hadamard.
+
+<CircuitLab n={2} gates={['H', 'CP', 'SWAP']} goal={{ kind: 'unitary', U: qftMatrix(2), label: 'implement the 2-qubit QFT (the 4×4 DFT matrix)' }} challengeId="u9l5-qft2" maxGates={6} showBloch={false} title="Challenge: build QFT on 2 qubits" />
+
+<Note title="Approximate QFT">
+The rotations $R_m$ for large $m$ are tiny: $R_{20}$ is a phase of about $6\times10^{-6}$ radians. Coppersmith (1994) showed you can drop every rotation with $m > O(\log n)$ and still get an excellent approximation, which cuts the cost to $O(n\log n)$ gates. Real implementations do this, and it matters because tiny rotations are expensive in error-corrected hardware.
+</Note>
+
+<NumQuiz id="u9l5-gates" answer={45} tol={0}>
+  <Q>How many **controlled-phase** gates are in the textbook QFT on $n = 10$ qubits?</Q>
+  <Explain>$n(n-1)/2 = 45$. Add 10 Hadamards and 5 swaps for 60 gates in total, to Fourier-transform $2^{10} = 1024$ amplitudes.</Explain>
+</NumQuiz>
+
+---
+
+## What the QFT is good for: finding periods
+
+Switch the widget to **Periodic input → peaks**. Feed in a "comb": equal amplitude on $x = x_0, x_0 + r, x_0 + 2r, \dots$, and zero elsewhere. The QFT concentrates all the probability on multiples of $N/r$:
+$$
+P(y) \ \text{is large only when}\ \ y \approx j\cdot\frac{N}{r}, \qquad j = 0,1,\dots,r-1 .
+$$
+The offset $x_0$ affects only the phases of the peaks, not where they are. So even if every run of an algorithm produces a comb with a *different random offset*, measuring after a QFT always samples the same peak positions. That's exactly the trick Simon's algorithm used with $H^{\otimes n}$. A measured $y$ tells you $y/N \approx j/r$, information about the **period** $r$.
+
+<Quiz id="u9l5-peaks">
+  <Q>$N = 16$ and the input comb has period $r = 4$. Which outcomes $y$ can you observe after the QFT?</Q>
+  <Opt>Only $y = 4$</Opt>
+  <Opt correct>$y \in \{0, 4, 8, 12\}$, each with probability ¼</Opt>
+  <Opt>$y \in \{0, 1, 2, 3\}$</Opt>
+  <Opt>Any $y$, with a peak at $y = 4$</Opt>
+  <Explain>$r$ divides $N$, so the peaks fall exactly on multiples of $N/r = 4$ and everything in between cancels. When $r$ doesn't divide $N$ (try $r = 3$ or $5$ in the widget) the peaks blur but still cluster near multiples of $N/r$.</Explain>
+</Quiz>
+
+---
+
+## The honest fine print
+
+<Warning title="The QFT is not a faster FFT">
+The QFT acts on **amplitudes**, which you can't read out. To use it you need (1) a state that already *has* the structure you want to detect, prepared efficiently by the algorithm itself rather than loaded from data, and (2) a question whose answer is a **few samples** from the output distribution, like "roughly where are the peaks?". Shor's algorithm satisfies both. "Speed up my audio FFT" satisfies neither.
+</Warning>
+
+<Plot
+  series={[
+    { f: (n) => Math.log10(n * 2 ** n), color: '#fc6255', label: 'FFT: n·2ⁿ operations' },
+    { f: (n) => Math.log10((n * (n + 1)) / 2 + n / 2), color: '#58c4dd', label: 'QFT: ~n²/2 gates' },
+  ]}
+  xRange={[1, 40]}
+  yRange={[0, 14]}
+  xLabel="n (qubits / log₂ N)"
+  yLabel="log₁₀(cost)"
+  height={220}
+/>
+
+<CSCorner>
+The QFT circuit *is* the FFT's divide-and-conquer recursion (the Cooley–Tukey "butterfly"), with one difference: in a quantum computer a single gate acts on all $2^n$ amplitudes simultaneously because of the tensor-product structure. The FFT must touch each of its $N$ numbers at every one of its $\log N$ levels, while the QFT needs only $O(n)$ gates per level. The price is that the output is a quantum state, not an array.
+</CSCorner>
+
+<History>
+Peter Shor's 1994 factoring paper used a Fourier transform over $\mathbb{Z}_q$. Don Coppersmith at IBM quickly showed how to build it efficiently for $q = 2^n$ from Hadamards and controlled rotations, the circuit above, and introduced the approximate QFT. Alexei Kitaev independently found a related approach in 1995 based on **phase estimation**, the subject of the next lesson.
+</History>
+
+---
+
+## Summary
+
+- $\mathrm{QFT}|x\rangle = \frac{1}{\sqrt N}\sum_y e^{2\pi i xy/N}|y\rangle$: the unitary DFT on amplitudes. On one qubit it's just $H$.
+- **Clocks:** the output is a product state. Output qubit $k$ has phase $x/2^{k+1}$ of a turn, so the top qubit is the fastest hand and the bottom qubit the slowest.
+- Circuit: Hadamards + controlled-$R_m$ + swaps, **$O(n^2)$ gates** ($O(n\log n)$ approximately), vs. $O(n2^n)$ for the FFT.
+- A periodic comb with period $r$ is transformed into peaks at multiples of $N/r$. The offset only changes phases. This is the engine of **period finding**.
+- You **can't read out** the amplitudes, so the QFT is a subroutine, not a faster FFT.

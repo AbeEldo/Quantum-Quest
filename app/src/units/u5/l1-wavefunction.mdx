@@ -1,0 +1,160 @@
+import { WavefunctionBuilder } from './widgets/WavefunctionBuilder';
+
+A qubit has two outcomes, so its state is two amplitudes. A spin-1 particle has three outcomes, so three amplitudes. Now take an electron in a wire and ask the most basic question there is: **where is it?**
+
+The possible answers are every point along the wire: $x = 0.3$, $x = 0.30001$, $x = \pi$. That's a continuum of outcomes. If each outcome needs its own amplitude, the state of a single electron is a list of *uncountably many* complex numbers.
+
+That list is a function, $\psi(x)$, called the **wavefunction**. This lesson shows how the familiar rules (amplitudes, the Born rule, inner products) carry over from $\mathbb{C}^2$ to functions, and how to *see* a complex-valued function.
+
+<Predict id="u5l1-exact-point">
+  <Q>An electron is equally likely to be found anywhere in a 1 nm wire. What is the probability of finding it at **exactly** $x = 0.5$ nm (to infinitely many decimal places)?</Q>
+  <Opt>$1/2$</Opt>
+  <Opt>About $10^{-9}$</Opt>
+  <Opt correct>Zero</Opt>
+  <Opt>It depends on the wavefunction's phase</Opt>
+  <Reveal>
+**Zero.** Split the wire into $N$ equal bins and each bin has probability $1/N$. Let $N\to\infty$ and the probability of any single point goes to zero. This is the same thing that happens with any continuous random variable in statistics. So we can't assign probabilities to points. We assign a **probability density**, and get probabilities by integrating it over intervals.
+  </Reveal>
+</Predict>
+
+---
+
+## From amplitudes to a density
+
+Chop space into $N$ little bins of width $\Delta x$ centred at $x_j$. Then the particle is a perfectly ordinary $N$-outcome quantum system:
+
+$$
+|\psi\rangle = \sum_{j=1}^{N} c_j\,|x_j\rangle, \qquad \sum_j |c_j|^2 = 1 .
+$$
+
+As the bins shrink, each $|c_j|^2$ shrinks in proportion to $\Delta x$. So the sensible thing to track is the amplitude *per square-root of length*, defined by
+
+$$
+c_j = \psi(x_j)\,\sqrt{\Delta x}.
+$$
+
+Then $\sum_j |c_j|^2 = \sum_j |\psi(x_j)|^2\,\Delta x$, which is a Riemann sum. In the limit it becomes an integral:
+
+<KeyIdea>
+**The wavefunction** $\psi(x)$ is a complex-valued function with
+
+$$
+\int_{-\infty}^{\infty} |\psi(x)|^2\,dx = 1 \qquad\text{(normalisation)}.
+$$
+
+**Born rule for position:** $|\psi(x)|^2$ is a **probability density**, so
+
+$$
+P(a \le x \le b) = \int_a^b |\psi(x)|^2\,dx .
+$$
+</KeyIdea>
+
+Watch the limit happen. With few sites you have a handful of amplitude clocks, just like a qudit. Add sites and every bar shrinks, but the bars divided by $\Delta x$ settle onto a smooth curve:
+
+<WavefunctionBuilder />
+
+<Try>
+- Start at $N = 4$ and step up to $256$. In plain probability mode the bars shrink toward zero, because each site is less and less likely.
+- Turn on **divide by Δx**. Now the bars converge to the white curve $|\psi(x)|^2$. That's the density.
+- Drag the yellow handles to choose an interval. The "sum of bins" and the integral agree better and better as $N$ grows.
+- The bar **colours** are the phases of the amplitudes. Increase the phase winding $k$ and the colours cycle across the packet.
+</Try>
+
+Notice the units: since $\int|\psi|^2dx$ is a pure number, $\psi$ has units of $1/\sqrt{\text{length}}$. That's a quick sanity check on any wavefunction you write down.
+
+<NumQuiz id="u5l1-tail" answer={0.0677} tol={0.002}>
+  <Q>A particle has wavefunction $\psi(x) = e^{-|x|}$ (in units where lengths are dimensionless). Check that it's normalised, then find the probability that $x > 1$.</Q>
+  <Hint>$\int_{-\infty}^\infty e^{-2|x|}dx = 2\cdot\frac12 = 1$. ✔ Now compute $\int_1^\infty e^{-2x}\,dx$.</Hint>
+  <Explain>$\int_1^\infty e^{-2x}dx = \frac{e^{-2}}{2} \approx 0.0677$. About a 7% chance of being found beyond $x = 1$.</Explain>
+</NumQuiz>
+
+---
+
+## Seeing a complex function
+
+$\psi(x)$ is complex, so at every point it has a **magnitude** and a **phase**. A graph of a complex function needs *three* dimensions: one for $x$ and two for the complex value. Switch the builder to **3D helix** to see it directly: $x$ runs along the axis, and at each point an arrow sticks out to $(\operatorname{Re}\psi, \operatorname{Im}\psi)$.
+
+<Try>
+- Choose **wave packet** with $k = 0$. The curve lies flat in one plane: a real, positive bump.
+- Increase $k$. The curve becomes a **helix** wrapped around a Gaussian envelope. The phase rotates as you move along $x$.
+- Rotate the view. From the side you see $\operatorname{Re}\psi$, a wiggly cosine-like curve. Rotate 90° and you see $\operatorname{Im}\psi$. Neither alone is "the" wavefunction. The helix is.
+- Turn on **auto-rotate** and watch the corkscrew turn.
+</Try>
+
+Three-dimensional pictures are hard to read at a glance, so this course uses a compact convention everywhere:
+
+<KeyIdea>
+**Phase as colour.** Draw $|\psi(x)|^2$ as a filled curve, and colour each slice by the phase $\arg\psi(x)$ using the same colour wheel as the amplitude clocks in earlier worlds. Height tells you *where* the particle is likely to be. Colour tells you the *phase*, which (you'll see next lesson) encodes *how it's moving*.
+</KeyIdea>
+
+The most important example is the **plane wave** $\psi(x) = e^{ikx}$. Its magnitude is $1$ everywhere, so $|\psi|^2$ is perfectly flat, and all the information is in the phase. The colours cycle through the rainbow with spatial period $2\pi/k$. Flip the sign, $e^{-ikx}$, and the helix twists the other way. The density is identical, but as you'll see next lesson, the two describe particles moving in **opposite directions**.
+
+<Warning>
+**$|\psi|^2$ is not the whole story.** Two wavefunctions with the same density can behave completely differently. $e^{ikx}$ and $e^{-ikx}$ move in opposite directions. Two humps with relative phase $0$ or $\pi$ will interfere differently when they meet. As in World 3, relative phase is physical: it's invisible in one measurement basis (position) but decisive in another (momentum).
+</Warning>
+
+<Quiz id="u5l1-same-density">
+  <Q>$\psi_1(x) = A\,e^{-x^2}$ and $\psi_2(x) = A\,e^{-x^2}e^{3ix}$. Which statement is true?</Q>
+  <Opt>They are the same state, since phases don't matter</Opt>
+  <Opt correct>They have the same position probabilities but are different states</Opt>
+  <Opt>$\psi_2$ is not normalisable</Opt>
+  <Opt>$\psi_2$ has a higher probability of being found at $x = 0$</Opt>
+  <Explain>$|\psi_2|^2 = |\psi_1|^2$ everywhere, so every position measurement agrees. But the factor $e^{3ix}$ is a *position-dependent* phase, not a global one, so it's physical. It gives $\psi_2$ an average momentum of $3\hbar$, as you'll see next lesson. Only a phase that's the same at every $x$ is unobservable.</Explain>
+</Quiz>
+
+---
+
+## Inner products and operators, continued
+
+Every piece of Dirac notation survives the jump from sums to integrals:
+
+| Discrete ($\mathbb{C}^N$) | Continuous (functions) |
+|---|---|
+| $\langle\phi\vert\psi\rangle = \sum_j \phi_j^*\psi_j$ | $\langle\phi\vert\psi\rangle = \int \phi^*(x)\,\psi(x)\,dx$ |
+| amplitude to find site $j$: $c_j$ | amplitude density at $x$: $\psi(x) = \langle x\vert\psi\rangle$ |
+| $\langle A\rangle = \langle\psi\vert\hat A\vert\psi\rangle$ | $\langle A\rangle = \int \psi^*(x)\,\hat A\,\psi(x)\,dx$ |
+
+Two operators matter most:
+
+- **Position** $\hat x$ just multiplies by $x$: $\hat x\,\psi(x) = x\,\psi(x)$. So $\langle x\rangle = \int x\,|\psi(x)|^2\,dx$, which is the ordinary mean of the density.
+- **Momentum** is a derivative: $\hat p = -i\hbar\,\dfrac{d}{dx}$. Test it on a plane wave: $\hat p\,e^{ikx} = \hbar k\,e^{ikx}$. The plane wave is a momentum eigenstate with eigenvalue $p = \hbar k$. That's de Broglie's $p = h/\lambda$ from World 1, now derived as an eigenvalue equation.
+
+Position and momentum don't commute. Apply both orders to any test function $f$:
+
+$$
+[\hat x,\hat p]f = x(-i\hbar f') - (-i\hbar)(xf)' = -i\hbar x f' + i\hbar(f + xf') = i\hbar f .
+$$
+
+So $[\hat x,\hat p] = i\hbar$, which is the commutator behind Heisenberg's relation from World 4. You'll explore it visually in the last lesson of this world.
+
+<CSCorner>
+A wavefunction is a vector with a continuum of components, an element of the Hilbert space $L^2(\mathbb{R})$ of square-integrable functions. Computers can't store a continuum, so every simulator does what our widget did: **sample** $\psi$ on a grid of $N$ points. The Schrödinger simulator in the next lesson uses $N = 1024$ complex numbers, which is a 1024-dimensional state vector. That's equivalent to 10 qubits' worth of amplitudes, used to describe *one* particle in *one* dimension. Three particles in 3D would need $1024^{9}$ amplitudes. This blow-up is why Feynman suggested building quantum computers to simulate quantum physics.
+</CSCorner>
+
+<DeepDive title="Position eigenstates and the Dirac delta">
+What are the eigenvectors of $\hat x$? A state with a perfectly definite position $x_0$ would be $\psi(x) = \delta(x - x_0)$, Dirac's "function" that is zero everywhere except $x_0$ and integrates to 1. It isn't square-integrable ($\int\delta^2 = \infty$), so it's not a physical state, only a useful idealisation. Plane waves $e^{ikx}$ have the same problem: $\int|e^{ikx}|^2dx = \infty$. Real particles are always **wave packets**, superpositions of many such idealised states. Physicists use the "kets" $|x\rangle$ and $|p\rangle$ freely, with orthonormality $\langle x|x'\rangle = \delta(x - x')$ replacing $\delta_{jk}$.
+</DeepDive>
+
+<Quiz id="u5l1-expect-symmetric">
+  <Q>A wavefunction satisfies $|\psi(-x)|^2 = |\psi(x)|^2$ (a symmetric density). What is $\langle x\rangle$?</Q>
+  <Opt correct>0</Opt>
+  <Opt>It depends on the phase of $\psi$</Opt>
+  <Opt>$\int |\psi|^2 dx = 1$</Opt>
+  <Opt>Undefined</Opt>
+  <Explain>$\langle x\rangle = \int x|\psi|^2dx$ integrates an odd function over a symmetric range, which gives 0. The phase affects momentum, but not the average position.</Explain>
+</Quiz>
+
+<History>
+**Schrödinger** first pictured $\psi$ as a real physical wave, with $e|\psi|^2$ the smeared-out charge density of the electron. It didn't work: for $n$ particles, $\psi$ lives in $3n$-dimensional configuration space, not ordinary space. In June 1926 **Max Born**, analysing scattering, proposed that $|\psi|^2$ gives *probabilities*. Schrödinger never fully accepted it; his famous cat (1935) was meant as a reductio ad absurdum.
+</History>
+
+---
+
+## Summary
+
+- A particle's position state is a **wavefunction** $\psi(x) = \langle x|\psi\rangle$, the continuum limit of amplitudes $c_j = \psi(x_j)\sqrt{\Delta x}$.
+- $|\psi(x)|^2$ is a **probability density**: $P(a\le x\le b) = \int_a^b|\psi|^2dx$, with $\int|\psi|^2dx = 1$.
+- $\psi$ is complex. We draw $|\psi|^2$ coloured by phase, or the full 3D helix.
+- Position-dependent phases are physical. Only a global phase is not.
+- $\hat x = x$, $\hat p = -i\hbar\,d/dx$, and $e^{ikx}$ is a momentum eigenstate with $p = \hbar k$.
+- $[\hat x,\hat p] = i\hbar$.

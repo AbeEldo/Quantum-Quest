@@ -1,0 +1,166 @@
+import { MachZehnder } from './widgets/MachZehnder';
+
+The double slit is the most famous quantum experiment, but it's messy: infinitely many landing spots, slit widths, envelopes, small-angle approximations. Physicists who want the essence of interference with nothing else attached reach for the **Mach–Zehnder interferometer**: **two paths, two detectors, one photon.** Every calculation fits on a napkin, and the whole thing is *literally* a one-qubit quantum computer.
+
+---
+
+## First, one beam splitter
+
+A **beam splitter** is a half-silvered mirror: it reflects half the light and lets half through. Send a classical laser beam in and you get two beams of equal intensity.
+
+<Predict id="u2l4-one-bs">
+  <Q>Now send in a **single photon**, with a detector on each output. What happens?</Q>
+  <Opt>Both detectors click, each registering half a photon</Opt>
+  <Opt correct>Exactly one detector clicks, at random, 50/50; never both at once</Opt>
+  <Opt>The photon always goes the same way, determined by its hidden polarization</Opt>
+  <Explain>Photons are indivisible. In 1986 Grangier, Roger and Aspect checked carefully with a true single-photon source: the two detectors essentially never fire together (an "anticorrelation"). Each photon goes one way or the other, apparently at random.</Explain>
+</Predict>
+
+So far a beam splitter looks like a fair coin flip. Here is the twist: chain **two** of them so that the two paths recombine, and the coin stops being random.
+
+---
+
+## The interferometer
+
+Here's the layout. A photon enters at bottom-left and hits **BS1**. The transmitted part travels along the **lower arm** (through an adjustable **phase shifter**, a slab of glass that delays the wave by phase $\varphi$); the reflected part travels up the **upper arm**. Two mirrors steer the arms together at **BS2**, which sends light to detector **D₁** (right) or **D₀** (top). The two arms have exactly equal length.
+
+<Predict id="u2l4-mz-balanced">
+  <Q>With $\varphi = 0$, single photons are sent in one at a time. Each beam splitter on its own is a 50/50 coin. What do the detectors record?</Q>
+  <Opt>50% D₀, 50% D₁, like two coin flips in a row</Opt>
+  <Opt>25% D₀, 75% D₁</Opt>
+  <Opt correct>100% at one detector, 0% at the other</Opt>
+  <Reveal>
+Fire photons and see:
+
+<MachZehnder />
+
+At $\varphi = 0$ **every** photon goes to D₁. D₀ stays perfectly dark. Two random coin flips in a row have produced a certain result. The colored blobs show the amplitude in each arm (size = magnitude, colour = phase), and the clocks on the right show the two paths' contributions at each detector: for D₀ they point in opposite directions and cancel.
+  </Reveal>
+</Predict>
+
+<Try>
+- Sweep the phase $\varphi$ from $0$ to $2\pi$. The photons smoothly shift from D₁ to D₀ and back.
+- Set $\varphi = \pi$. Now every photon goes to D₀. A *half-wavelength* delay in one arm swaps the outputs completely.
+- Set $\varphi = \pi/2$ and fire many photons: 50/50.
+</Try>
+
+---
+
+## Beam splitters are 2×2 unitary matrices
+
+Describe the light at a beam splitter by two **modes**: travelling **horizontally** and travelling **vertically**. A single photon is a superposition of these, so its state is a vector in $\mathbb{C}^2$.
+
+We use the standard **symmetric beam splitter** convention:
+
+<Definition term="Symmetric 50/50 beam splitter">
+Transmission amplitude $t = \tfrac{1}{\sqrt2}$, reflection amplitude $r = \tfrac{i}{\sqrt2}$. **Each reflection multiplies the amplitude by $i$**, a phase of $90°$. As a matrix acting on (horizontal, vertical):
+$$
+B = \frac{1}{\sqrt2}\begin{pmatrix} 1 & i \\ i & 1 \end{pmatrix}.
+$$
+</Definition>
+
+Why the $i$? Energy conservation. Whatever goes in must come out, for *every* input, so $B$ must be **unitary**: $B^\dagger B = I$. Check the off-diagonal entry: $\bar t\, r + \bar r\, t = \tfrac12(i + (-i)) = 0$. ✓ If both $t$ and $r$ were real and positive, the two output beams for two inputs couldn't be orthogonal, and energy wouldn't be conserved. (Some textbooks use $\tfrac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}$ instead, which puts a minus sign on one reflection. That's a different choice of phase reference; every *measurable* prediction is the same.)
+
+<Quiz id="u2l4-bs-unitary">
+  <Q>A photon enters BS1 travelling horizontally, state $\binom{1}{0}$. What is its state after BS1?</Q>
+  <Opt>$\binom{1}{0}$: it keeps going</Opt>
+  <Opt correct>$\frac{1}{\sqrt2}\binom{1}{i}$: equal amplitude in both arms, the reflected part with an extra phase $i$</Opt>
+  <Opt>$\frac{1}{2}\binom{1}{1}$</Opt>
+  <Opt why="That would give probabilities 1/4 + 1/4 — the photon has to be somewhere!">$\frac12\binom{1}{i}$</Opt>
+  <Explain>$B\binom10$ is the first column of $B$: $\tfrac{1}{\sqrt2}\binom{1}{i}$. Probabilities $\tfrac12 + \tfrac12 = 1$. ✓</Explain>
+</Quiz>
+
+---
+
+## Path sums: why D₀ is dark
+
+Use Feynman's recipe: for each detector, multiply the amplitudes along each path, then **add** the paths. (Both arms bounce off one mirror each, which multiplies both by the same phase, so we can ignore mirrors.)
+
+**To D₀ (top exit):**
+- upper arm: reflect at BS1, reflect at BS2: $\;\frac{i}{\sqrt2}\cdot\frac{i}{\sqrt2} = -\frac12$
+- lower arm: transmit, phase shifter, transmit: $\;\frac{1}{\sqrt2}\,e^{i\varphi}\,\frac{1}{\sqrt2} = \frac12 e^{i\varphi}$
+
+$$
+\psi_{D_0} = \tfrac12\left(e^{i\varphi} - 1\right), \qquad P(D_0) = \tfrac14\,|e^{i\varphi}-1|^2 = \sin^2\frac{\varphi}{2}.
+$$
+
+**To D₁ (right exit):**
+- upper arm: reflect, transmit: $\;\frac{i}{2}$
+- lower arm: transmit, phase, reflect: $\;\frac{i}{2}e^{i\varphi}$
+
+$$
+\psi_{D_1} = \tfrac{i}{2}\left(1 + e^{i\varphi}\right), \qquad P(D_1) = \cos^2\frac{\varphi}{2}.
+$$
+
+At $\varphi = 0$ the two routes to D₀ have amplitudes $-\tfrac12$ and $+\tfrac12$. They cancel exactly. The difference is that one route involves **two reflections** ($i\cdot i = -1$) and the other **none**. Both routes to D₁ involve exactly one reflection, so they agree and reinforce.
+
+<KeyIdea>
+The Mach–Zehnder output probabilities are $P(D_1) = \cos^2(\varphi/2)$ and $P(D_0) = \sin^2(\varphi/2)$. The photon's fate is decided by the **relative phase** between the two arms, something it can only "know" if it explores both.
+</KeyIdea>
+
+As a matrix product (reading right to left, the order things happen): BS1, then the phase shifter $\Phi = \mathrm{diag}(e^{i\varphi}, 1)$ on the lower (horizontal) arm, then the mirrors, which swap horizontal and vertical ($X = \begin{pmatrix}0&1\\1&0\end{pmatrix}$), then BS2:
+
+$$
+\binom{\psi_{D_1}}{\psi_{D_0}} = B\,X\,\Phi\,B\binom{1}{0} = \frac12\binom{i(1+e^{i\varphi})}{e^{i\varphi}-1}.
+$$
+
+<NumQuiz id="u2l4-phase-third" answer={0.25} tol={0.005}>
+  <Q>The phase shifter is set to $\varphi = \pi/3$. What is the probability that a photon is detected at D₀?</Q>
+  <Hint>$P(D_0) = \sin^2(\varphi/2)$.</Hint>
+  <Explain>$\sin^2(\pi/6) = (1/2)^2 = 1/4$. Equivalently $\tfrac14|e^{i\pi/3} - 1|^2 = \tfrac14\cdot 1 = \tfrac14$, since $e^{i\pi/3}$ and $1$ are unit vectors $60°$ apart, so their difference has length $1$.</Explain>
+</NumQuiz>
+
+---
+
+## Remove the second beam splitter
+
+What if we take BS2 out? Then the upper arm goes straight into D₁ and the lower arm straight into D₀. **A click now tells you which arm the photon took.**
+
+<Quiz id="u2l4-no-bs2">
+  <Q>With BS2 removed, how do the detector probabilities depend on the phase $\varphi$?</Q>
+  <Opt>$P(D_1) = \cos^2(\varphi/2)$, as before</Opt>
+  <Opt correct>They don't: 50/50 for every $\varphi$</Opt>
+  <Opt>All photons go to D₁</Opt>
+  <Explain>Each detector is now reached by **one** path only, so there's nothing to interfere with: $P(D_1) = |i/\sqrt2|^2 = \tfrac12$ and $P(D_0) = |e^{i\varphi}/\sqrt2|^2 = \tfrac12$. The phase only matters when two paths lead to the same detector. This is exactly Lesson 2's rule: which-path information destroys interference.</Explain>
+</Quiz>
+
+Go back to the interferometer above, turn off **second beam splitter**, and sweep $\varphi$. Nothing changes. Then try the opposite experiment: put an **absorber** in the lower arm.
+
+<MachZehnder allowBlock title="Interferometer with an optional absorber" />
+
+<Quiz id="u2l4-absorber">
+  <Q>With $\varphi = 0$, BS2 in place and the lower arm **blocked** by an absorber, what fraction of photons reaches D₀, the detector that was perfectly dark before?</Q>
+  <Opt>$0$: it's the dark port</Opt>
+  <Opt correct>$1/4$</Opt>
+  <Opt>$1/2$</Opt>
+  <Explain>Half the photons are absorbed in the lower arm. The other half took the upper arm, and at BS2 they split 50/50 since there is no second path to interfere with. So D₀ gets $\tfrac12\cdot\tfrac12 = \tfrac14$. A click at D₀ is therefore *proof* that something is blocking the lower arm, even though the photon that clicked never went there. Hold that thought for the next lesson.</Explain>
+</Quiz>
+
+<History>
+The interferometer was proposed by **Ludwig Zehnder** (1891) and refined by **Ludwig Mach** (1892), son of the physicist-philosopher Ernst Mach. In 1978 **John Wheeler** proposed his "delayed-choice" version: decide whether to insert BS2 *after* the photon has passed BS1. In 2007 Jacques and colleagues in Aspect's group did it with single photons and a 48 m interferometer, choosing at random whether BS2 was present while the photon was in flight. The photons gave interference when BS2 was in and which-path statistics when it was out. Nature doesn't care *when* you decide.
+</History>
+
+---
+
+## It's a quantum circuit
+
+Rename the two modes $|0\rangle$ and $|1\rangle$. Then the Mach–Zehnder is a one-qubit circuit: a beam splitter is (up to phases) a **Hadamard** gate, the phase shifter is a **phase gate**, and the detectors measure in the computational basis.
+
+<CircuitLab n={1} circuit="H 0; P(pi/3) 0; H 0" editable gates={['H', 'P', 'Z', 'S', 'T']} showAmplitudes stepper title="The interferometer as a circuit: H · P(φ) · H" />
+
+With Hadamards, $H\,P(\varphi)\,H|0\rangle = \tfrac12(1+e^{i\varphi})|0\rangle + \tfrac12(1-e^{i\varphi})|1\rangle$: the same $\cos^2(\varphi/2)$ and $\sin^2(\varphi/2)$, with the outputs labelled differently because the phase conventions differ.
+
+<CSCorner>
+"Split into a superposition, let each branch pick up a phase, recombine, and read out." That is the skeleton of most quantum algorithms. Deutsch–Jozsa, phase estimation, and the heart of Shor's algorithm are all, at their core, **interferometers**. The oracle writes the answer into a relative phase, and the final Hadamards convert that phase into a measurable bit, just as BS2 converts $\varphi$ into a D₀/D₁ click. When you meet these algorithms in World 9, picture this lesson's two arms.
+</CSCorner>
+
+---
+
+## Summary
+
+- A single photon at a 50/50 beam splitter goes one way or the other at random, never both.
+- **Symmetric beam splitter:** $B = \tfrac{1}{\sqrt2}\begin{pmatrix}1&i\\i&1\end{pmatrix}$. Transmission $1/\sqrt2$; reflection $i/\sqrt2$. It must be unitary, which forces the $90°$ phase on reflection.
+- In a balanced Mach–Zehnder, the two paths to D₀ have amplitudes $-\tfrac12$ and $+\tfrac12$ and cancel: **every photon goes to D₁**.
+- With phase $\varphi$ in one arm: $P(D_1) = \cos^2(\varphi/2)$, $P(D_0) = \sin^2(\varphi/2)$.
+- Remove BS2, or block an arm, and the which-path information kills the interference: D₀ starts clicking.
+- The Mach–Zehnder **is** the circuit $H \to P(\varphi) \to H \to$ measure, the skeleton of many quantum algorithms.

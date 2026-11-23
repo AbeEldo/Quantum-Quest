@@ -1,0 +1,120 @@
+import { FieldTimeline, RsaEstimates } from './widgets/FieldTimeline';
+
+This lesson is different from the others. Everything so far has been settled physics, true in 1995 and true in 2095. This lesson is a **snapshot**: the state of quantum computing as of **late 2026**, compiled from papers, preprints and announcements. Some of it will be outdated by the time you read it. The goal is less to memorise headlines than to learn **how to read them**.
+
+<Predict id="u11l6-headline">
+  <Q>A company press release says: "Our new processor achieves quantum advantage, performing in 5 minutes a calculation that would take a supercomputer $10^{25}$ years." What's the most accurate first reaction?</Q>
+  <Opt>Quantum computers can now break encryption and design drugs.</Opt>
+  <Opt>It's fake. Quantum advantage is impossible.</Opt>
+  <Opt correct>Ask what the task is, whether it's useful, whether it's peer-reviewed, and whether classical algorithms have had a chance to respond.</Opt>
+  <Opt>It must be about factoring, since that's the only thing quantum computers do.</Opt>
+  <Explain>That headline is essentially Google's December 2024 random-circuit-sampling claim on Willow. The task was deliberately chosen to be hard classically, not useful, and the history of such claims is one of real progress *and* repeated classical rebuttals.</Explain>
+</Predict>
+
+---
+
+## How to read a quantum headline
+
+Four questions sort out most announcements:
+
+1. **What exactly was shown?** Physical qubits or **logical** qubits? *Error-detected* or *error-corrected*? A memory (storing a state), or **logical gates**? A best-case test device, or a full system?
+2. **Who checked it?** A **peer-reviewed** paper, a **preprint** (public but unrefereed), or a **press release**? All three can be right, but they deserve different levels of trust.
+3. **Compared with what?** Advantage claims are races against the *best known* classical method, and classical methods keep improving. Has the classical-simulation community had time to respond?
+4. **Is the task useful?** Random-circuit sampling is a benchmark. Simulating a molecule or a material, or factoring a large number, is a use.
+
+<FieldTimeline />
+
+<Try>
+Filter by **Advantage claims** and read the "⚖" lines. Nearly every claim since 2019 drew a serious classical response. Then filter by **Error correction** and notice the trend: from barely-below-threshold in 2023 to Λ ≈ 2 in 2024, then to dozens of logical qubits on atoms and ions in 2025–26.
+</Try>
+
+---
+
+## Error correction: the field's centre of gravity
+
+The biggest story of 2023–2026 is that **error correction stopped being theoretical**.
+
+- **Superconducting:** Google's Willow showed the defining scaling behaviour (Lesson 4): Λ = 2.14, with a logical memory outliving its best physical qubit. Follow-ups in 2025–26 reported color codes, reinforcement-learning-tuned calibration and high-fidelity **magic states** (the ingredient for non-Clifford $T$ gates). IBM is betting on **qLDPC codes** and targets its fault-tolerant **Starling** system (200 logical qubits, $10^8$ gates) for **2029**.
+- **Neutral atoms:** Harvard/MIT/QuEra went from 48 error-*detected* logical qubits (2023) to a 448-atom demonstration of the components of a universal fault-tolerant architecture (*Nature*, 2025–26). Atom Computing and Microsoft entangled 24 logical qubits (2024), and other companies have announced similar demos.
+- **Trapped ions:** Quantinuum's 98-qubit **Helios** (2025) reported 48 error-corrected logical qubits at a 2:1 physical-to-logical encoding rate, plus larger error-detection experiments.
+
+<Warning>
+**"N logical qubits" is not a standard unit.** One group's "logical qubit" may be error-*detected* (errors flagged and the run thrown away), another's fully corrected for many rounds, and another's encoded in a small code with distance 2. Logical error rates per round, the number of correction cycles, and whether *logical gates* were performed matter far more than the headline count.
+</Warning>
+
+<Quiz id="u11l6-detect">
+  <Q>An experiment reports "94 logical qubits" using a code that **detects** but cannot **correct** errors. What does this mean in practice?</Q>
+  <Opt>The machine can run any algorithm on 94 fault-tolerant qubits.</Opt>
+  <Opt correct>Runs in which an error is detected are discarded (post-selection), which costs repetitions and doesn't scale to long computations.</Opt>
+  <Opt>The logical error rate is exactly zero.</Opt>
+  <Opt>It is the same as 94 error-corrected qubits, just with a different code.</Opt>
+  <Explain>Error-detecting codes (distance 2) can flag a single error but can't say which qubit to fix. Discarding flagged runs works for short circuits, but the fraction of surviving runs shrinks exponentially with circuit length. It's a valuable stepping stone, not fault tolerance.</Explain>
+</Quiz>
+
+---
+
+## Quantum advantage: claims and rebuttals
+
+The pattern since 2019 has been: a striking claim, then a classical counter-attack (better tensor-network contractions, GPU clusters, clever approximations) that shrinks or erases the gap, and then a bigger quantum experiment.
+
+- **2019 Google Sycamore** (random circuits): "10,000 years" was soon cut to days, then hours, by classical simulation.
+- **2020– USTC Jiuzhang** (boson sampling) and **Zuchongzhi** (random circuits): similar back-and-forth.
+- **2024 Willow** random-circuit sampling: "$10^{25}$ years." No classical match is known, but the task is not useful.
+- **2025 D-Wave** (Science): simulation of magnetic-material dynamics on an annealer, partly challenged by classical simulations within weeks.
+- **2025 Google "Quantum Echoes"** (Nature): a *verifiable* physics measurement claimed 13,000× faster than the best classical method.
+- **2026 IBM** declared that 2026 was the "year of advantage," with results logged on a public **Quantum Advantage Tracker** so classical teams can respond. One July 2026 claim was matched by a 256-GPU computation within weeks, which narrowed the claim but didn't refute it.
+
+The honest summary for late 2026: quantum processors now perform specific, carefully chosen tasks that are at least very hard to simulate classically. **Useful, unambiguous advantage for a practical problem is still being argued about.** Large-scale fault-tolerant applications (chemistry, materials, factoring) remain years away.
+
+<CSCorner>
+This is the same dynamic as benchmarks in ML or SAT solving: "beats the best known algorithm" is a moving target. Complexity theory gives *evidence* that tasks like random-circuit sampling are classically hard (World 9's BQP discussion), but no proof, since we can't even prove P ≠ NP. That's why the community increasingly values **verifiable** tasks, where a classical computer can at least check the answer, and **certified** randomness (a 2025 Nature paper by JPMorgan, Quantinuum and collaborators used a trapped-ion machine to generate randomness certified by classical verification).
+</CSCorner>
+
+---
+
+## Cryptography: harvest now, decrypt later
+
+Shor's algorithm (World 9) breaks RSA and elliptic-curve cryptography, the public-key systems that protect most of the internet. No quantum computer today comes close. But two facts make this urgent anyway:
+
+- **Harvest now, decrypt later.** An adversary can record encrypted traffic *today* and decrypt it once a large quantum computer exists. Secrets that must stay secret for 10–20 years (medical, diplomatic, industrial) are already at risk.
+- **Resource estimates keep falling.** Better algorithms and codes have cut the estimated cost of breaking RSA-2048 by orders of magnitude.
+
+<RsaEstimates />
+
+The response is **post-quantum cryptography (PQC)**: classical algorithms based on math problems (lattices, hashes, codes) that are believed hard even for quantum computers. In **August 2024** NIST published the first three standards: **FIPS 203 (ML-KEM)** for key exchange, and **FIPS 204 (ML-DSA)** and **FIPS 205 (SLH-DSA)** for signatures. In March 2025 it selected **HQC** as a backup key-exchange scheme. Browsers and messaging apps have already begun deploying hybrid post-quantum key exchange, and governments have set migration deadlines in the 2030s.
+
+<Warning>
+**"Quantum computers will make all encryption useless."** Shor's algorithm breaks *public-key* schemes built on factoring and discrete logs. Symmetric ciphers like AES are only weakened quadratically by Grover's algorithm (World 9), and doubling key lengths (AES-256) restores the margin. Post-quantum public-key algorithms are designed to resist known quantum attacks. And note the opposite misconception too: **quantum key distribution** (World 8) is a different tool, not a requirement for being "quantum-safe."
+</Warning>
+
+<NumQuiz id="u11l6-aes" answer={128} tol={0}>
+  <Q>Grover's algorithm reduces brute-force search over $2^k$ keys to about $2^{k/2}$ queries. Roughly how many bits of security does AES-256 retain against a Grover attack?</Q>
+  <Explain>$\sqrt{2^{256}} = 2^{128}$: about 128 bits, still far beyond reach. And Grover can't be parallelised efficiently, which makes the attack even less practical.</Explain>
+</NumQuiz>
+
+---
+
+## The Majorana controversy: a case study in evidence
+
+In February 2025 Microsoft announced **Majorana 1**, "the world's first quantum processor powered by topological qubits." The peer-reviewed *Nature* paper published the same day made a far narrower claim: a single-shot measurement of a nanowire's fermion **parity**. The journal attached an unusual editorial note that the results "do not represent evidence for the presence of Majorana zero modes." A Microsoft Majorana paper from 2018 had been **retracted** in 2021. In June 2026 *Nature* published a critical Comment arguing that the 2025 data analysis was flawed, along with Microsoft's reply. Microsoft announced a follow-up chip, "Majorana 2," in a preprint the same month.
+
+As of late 2026 there's **no independently verified topological qubit**. That may change, since the physics is sound in principle, but this is a textbook case of why the *paper* and the *press release* must be read separately.
+
+<Quiz id="u11l6-evidence">
+  <Q>Which of these is the strongest evidence for a hardware claim?</Q>
+  <Opt>A company press release with an impressive video</Opt>
+  <Opt>A preprint with no data released</Opt>
+  <Opt correct>A peer-reviewed paper with released data, independently reproduced by another group</Opt>
+  <Opt>A large number of qubits on the chip</Opt>
+  <Explain>Peer review is a filter, not a guarantee (the 2018 Majorana paper was peer-reviewed and later retracted). Independent reproduction is the gold standard. Preprints are valuable and fast, but unrefereed.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Read headlines with four questions: **what** exactly (physical/logical, detected/corrected, memory/gates), **who checked** (peer review / preprint / press release), **compared to what**, and **is it useful**.
+- **QEC is now experimental reality:** below-threshold surface codes (Google, Λ ≈ 2.1), dozens of logical qubits on neutral atoms and ions, and early magic-state and logical-gate work. Fault-tolerant roadmaps target ~2029 and beyond.
+- **Advantage claims** keep arriving and keep meeting classical rebuttals. Practical advantage is still debated.
+- **Crypto:** resource estimates for RSA-2048 have fallen from ~20 M qubits (2019) to < 1 M (2025), with lower claims under new assumptions. **NIST PQC standards (FIPS 203/204/205, Aug 2024)** are being deployed because of **harvest-now-decrypt-later**.
+- **Topological qubits** remain unproven, and the Majorana story is a lesson in weighing evidence.

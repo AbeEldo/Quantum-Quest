@@ -1,0 +1,198 @@
+import { BlackbodyExplorer, QuantumLadder } from './widgets/Blackbody';
+
+Turn on an electric stove and watch the coil. At first nothing seems to happen, though you can feel heat on your hand. Then it glows a dull red, then orange. A light-bulb filament, much hotter, glows yellow-white. The hottest stars glow blue-white.
+
+**Everything glows.** You are glowing right now, in infrared light your eyes can't see but a thermal camera can. The colour of the glow depends almost only on temperature, not on what the object is made of. Explaining that simple fact was one of the great unsolved problems of 1900, and the solution started quantum mechanics.
+
+<Predict id="u1l2-t4">
+  <Q>You heat an iron bar from 1000 K (dull red) to 2000 K (bright yellow-orange). By roughly what factor does the total power it radiates increase?</Q>
+  <Opt>2× (twice the temperature, twice the power)</Opt>
+  <Opt>4×</Opt>
+  <Opt correct>16×</Opt>
+  <Opt>Over 1000×</Opt>
+  <Reveal>
+**16×.** The total power radiated per square metre by an ideal glowing body is the **Stefan–Boltzmann law**,
+$$
+P/A = \sigma T^4, \qquad \sigma = 5.67\times10^{-8}\ \mathrm{W\,m^{-2}\,K^{-4}},
+$$
+so doubling $T$ multiplies the power by $2^4 = 16$. (Josef Stefan found the $T^4$ law from measurements in 1879; Ludwig Boltzmann derived it from thermodynamics in 1884.) The *visible* part grows even faster, because the spectrum also shifts toward shorter wavelengths, which is why a 2000 K bar looks so much brighter than 16 times a 1000 K one.
+  </Reveal>
+</Predict>
+
+---
+
+## Blackbodies
+
+A **blackbody** is an idealized object that absorbs all light that hits it. Kirchhoff showed in 1859–60 that a perfect absorber is also the perfect emitter, and that its glow depends **only on its temperature**. A good practical blackbody is a closed oven with a tiny hole: light entering the hole bounces around inside until it's absorbed, and the light leaking out of the hole is pure "cavity radiation" at the oven's temperature.
+
+The light from a blackbody is spread over a range of wavelengths, its **spectrum**. Explore it:
+
+<BlackbodyExplorer classical={false} />
+
+<Try>
+- Click **You (310 K)**. Your spectrum peaks near 10 µm, deep in the infrared. Essentially none of it is visible.
+- Slide up through the **Stove coil** and **Candle flame**. The peak moves to shorter wavelengths, and once the short-wavelength tail starts reaching into the visible band (the rainbow strip), the object begins to glow red.
+- At the **Sun** (5772 K) the peak sits right in the middle of the visible range. Over 40% of the Sun's blackbody power falls in the visible band; your eyes evolved to use it.
+- **Rigel** peaks in the ultraviolet. Its visible light is weighted toward blue, so it looks blue-white.
+</Try>
+
+Two regularities are visible in every curve:
+
+- **Wien's displacement law** (Wilhelm Wien, 1893): the peak wavelength is inversely proportional to temperature,
+$$
+\lambda_{\text{peak}} = \frac{b}{T}, \qquad b = 2.898\times10^{-3}\ \mathrm{m\,K}.
+$$
+- **Stefan–Boltzmann:** the total area under the curve, the total power, grows as $T^4$.
+
+<NumQuiz id="u1l2-human-peak" answer={9.35} tol={0.1}>
+  <Q>Your skin is at about 310 K. At what wavelength does its thermal glow peak, in micrometres (µm)?</Q>
+  <Hint>$\lambda_{\text{peak}} = 2.898\times10^{-3}\ \mathrm{m\,K} / 310\ \mathrm{K}$.</Hint>
+  <Explain>$2.898\times10^{-3}/310 = 9.35\times10^{-6}$ m $= 9.35$ µm. That's why thermal cameras for detecting people work in the 8–14 µm band.</Explain>
+</NumQuiz>
+
+---
+
+## The classical prediction: catastrophe
+
+By 1900, careful measurements of cavity radiation (by Lummer and Pringsheim, and by Rubens and Kurlbaum, in Berlin) had mapped these curves precisely. The theorists' job was to derive them from known physics. Here is how the best classical argument goes.
+
+**Step 1: count the modes.** Light inside a cavity forms standing waves, like the vibration modes of a drum. Short wavelengths fit in many more ways than long ones. Counting them, the number of modes per unit volume with wavelength between $\lambda$ and $\lambda + d\lambda$ is $\frac{8\pi}{\lambda^4}\,d\lambda$, growing rapidly as $\lambda$ shrinks.
+
+**Step 2: share out the energy.** A cornerstone of classical statistical mechanics, the **equipartition theorem**, says that in thermal equilibrium each mode of vibration holds the same average energy, $k_BT$, where $k_B = 1.381\times10^{-23}$ J/K is Boltzmann's constant.
+
+Multiply: the classical spectrum is the **Rayleigh–Jeans law**,
+
+$$
+B_\lambda^{\text{classical}}(\lambda, T) = \frac{2ck_BT}{\lambda^4}.
+$$
+
+Switch it on and compare with reality:
+
+<BlackbodyExplorer initialT={1500} />
+
+<Try>
+- At long wavelengths (the right side of the plot), the dashed classical curve hugs the true curve. The theory works there.
+- At short wavelengths it doesn't just miss; it **diverges**. As $\lambda\to0$, $1/\lambda^4\to\infty$. There are infinitely many short-wavelength modes, each demanding $k_BT$, so the total energy is infinite.
+</Try>
+
+Taken seriously, classical physics says every warm object should be blasting out unlimited ultraviolet and X-ray energy, and that a cavity could never reach equilibrium. Paul Ehrenfest later named this the **ultraviolet catastrophe** (1911).
+
+<History>
+Lord Rayleigh published the $\lambda^{-4}$ argument in June 1900 (James Jeans fixed a numerical factor in 1905, hence "Rayleigh–Jeans"). Rayleigh knew the law couldn't be right at short wavelengths and simply multiplied by an exponential cut-off by hand. Meanwhile Wien's 1896 formula fitted short wavelengths well but failed in the infrared, as the new Berlin measurements showed in 1900. Neither formula worked everywhere.
+</History>
+
+<Quiz id="u1l2-why-diverge">
+  <Q>What is the root cause of the ultraviolet catastrophe in the classical calculation?</Q>
+  <Opt>Hot objects emit X-rays, which classical physics ignores</Opt>
+  <Opt correct>Unlimited numbers of short-wavelength modes, each given the same average energy $k_BT$</Opt>
+  <Opt>Light travels too fast for equilibrium to be reached</Opt>
+  <Opt>The cavity walls absorb ultraviolet light</Opt>
+  <Explain>The mode count grows like $1/\lambda^4$ without limit, and equipartition gives every mode $k_BT$ regardless of its frequency. Infinitely many modes times a fixed energy each is infinite energy. One of those two assumptions has to go. Planck's fix attacks the second.</Explain>
+</Quiz>
+
+---
+
+## Planck's "act of desperation"
+
+In October 1900, Max Planck found a formula that fit the Berlin data perfectly at all wavelengths. Then he spent two intense months looking for a derivation. On **14 December 1900**, at a meeting of the German Physical Society in Berlin, he presented one. It rested on an assumption he found deeply distasteful:
+
+<KeyIdea>
+**Planck's hypothesis.** The material oscillators that emit and absorb radiation at frequency $f$ cannot have just any energy. Their energy comes in whole-number multiples of a basic lump,
+
+$$
+E = 0,\ hf,\ 2hf,\ 3hf,\ \dots \qquad\text{with}\qquad h = 6.626\times10^{-34}\ \mathrm{J\,s}.
+$$
+
+$h$ is now called **Planck's constant**. Since 2019 its value is fixed *exactly*, $h = 6.62607015\times10^{-34}$ J s, and it is used to define the kilogram.
+</KeyIdea>
+
+Why does this cure the catastrophe? At temperature $T$, the probability of finding an oscillator with energy $E$ is proportional to the **Boltzmann factor** $e^{-E/k_BT}$. If the lumps are small compared with $k_BT$ (low frequency), the oscillator can hold almost any energy, and the classical answer $k_BT$ comes out. But if a single lump $hf$ is much bigger than $k_BT$ (high frequency, short wavelength), even one quantum is unaffordable: the oscillator is almost always stuck at energy zero. **High-frequency modes freeze out.** See it:
+
+<QuantumLadder />
+
+<Try>
+- At 5000 K, slide the mode wavelength from long (infrared) to short (ultraviolet). Watch the ladder rungs spread apart and the occupation pile into the bottom rung.
+- At 100 µm the average energy is almost exactly $k_BT$: classical physics is fine there. At 200 nm it's a tiny fraction of $k_BT$.
+- Lower the temperature to 300 K: now even visible-light modes are completely frozen. That's why room-temperature objects don't glow visibly.
+</Try>
+
+Working out the average energy per mode, $\langle E\rangle = \dfrac{hf}{e^{hf/k_BT} - 1}$, and multiplying by the same mode count as before gives **Planck's law**:
+
+$$
+B_\lambda(\lambda, T) = \frac{2hc^2}{\lambda^5}\,\frac{1}{e^{hc/\lambda k_B T} - 1}.
+$$
+
+At long wavelengths it reduces to Rayleigh–Jeans; at short wavelengths the exponential kills the divergence. Wien's law and the $T^4$ law fall out of it, with $b$ and $\sigma$ expressed in terms of $h$, $c$ and $k_B$.
+
+<DeepDive title="Deriving ⟨E⟩ = hf / (e^{hf/kT} − 1)">
+Let $x = hf/k_BT$. Rung $n$ has energy $nhf$ and Boltzmann weight $e^{-nx}$. The normalizing sum is a geometric series, $Z = \sum_{n\ge0}e^{-nx} = \frac{1}{1-e^{-x}}$. The average energy is
+$$
+\langle E\rangle = \frac{\sum_n nhf\,e^{-nx}}{Z} = hf\,\frac{e^{-x}}{1-e^{-x}} = \frac{hf}{e^{x}-1}.
+$$
+For $x\ll1$, $e^x - 1\approx x$ and $\langle E\rangle\approx hf/x = k_BT$, the classical answer. For $x\gg1$, $\langle E\rangle\approx hf\,e^{-x}\to0$.
+</DeepDive>
+
+<History>
+Planck was a conservative, deeply classical physicist, and for years he hoped the quanta were a mathematical trick that could be removed later. In a 1931 letter to the American physicist Robert Wood, he called the step "an act of desperation", taken because "a theoretical interpretation had to be found at any cost". He received the 1918 Nobel Prize for the discovery of energy quanta. December 14, 1900 is often called the birthday of quantum theory.
+</History>
+
+---
+
+## How big is a quantum?
+
+Atomic-scale energies are measured in **electron-volts**: $1\ \mathrm{eV} = 1.602\times10^{-19}$ J, the energy an electron gains crossing 1 volt. In these units two combinations are worth memorizing:
+
+$$
+hc \approx 1240\ \mathrm{eV\cdot nm}, \qquad k_B T_{\text{room}} \approx \tfrac{1}{40}\ \mathrm{eV}\ (\text{at } 300\ \mathrm{K}).
+$$
+
+So a quantum of light at wavelength $\lambda$ carries $E = hf = hc/\lambda$:
+
+- red, 700 nm: $1240/700 \approx 1.8$ eV;
+- violet, 400 nm: $3.1$ eV;
+- ultraviolet, 200 nm: $6.2$ eV.
+
+Visible quanta are about **100 times** bigger than the thermal energy available at room temperature. No wonder they're frozen out.
+
+<NumQuiz id="u1l2-quantum-ev" answer={2} tol={0.02}>
+  <Q>What is the energy $hf$ of one quantum of orange light with wavelength 620 nm, in eV?</Q>
+  <Hint>$E = hc/\lambda$ with $hc\approx 1240$ eV nm.</Hint>
+  <Explain>$1240/620 = 2.0$ eV $\approx 3.2\times10^{-19}$ J. Tiny on human scales: a 1 W orange lamp emits about $3\times10^{18}$ such quanta per second. That's why light looks continuous.</Explain>
+</NumQuiz>
+
+<Warning>
+"Planck discovered photons." Not quite. Planck quantized the energy of the *material oscillators* in the cavity walls, and for years he believed light itself was a perfectly classical wave. The bold claim that **light itself** comes in lumps of $hf$ was made by Einstein in 1905, and most physicists (Planck included) resisted it for nearly two decades. That's the next lesson.
+</Warning>
+
+<CSCorner>
+The Boltzmann distribution $P(n) \propto e^{-E_n/k_BT}$ is exactly the **softmax** of $-E_n$ with temperature $k_BT$. At high temperature, softmax spreads probability evenly over many options (classical equipartition); as the temperature drops relative to the gaps between options, it collapses onto the lowest-energy option (the ground state, a frozen mode). The "temperature" knob in a language-model sampler is the same parameter doing the same job.
+</CSCorner>
+
+---
+
+## Blackbodies in the wild
+
+The most perfect blackbody spectrum ever measured isn't in a lab. It's the **cosmic microwave background**, the afterglow of the Big Bang, which fills the universe at a temperature of 2.725 K. In 1990 the FIRAS instrument on NASA's COBE satellite measured its spectrum and found it matches Planck's law so precisely that the error bars were smaller than the width of the plotted line. (John Mather shared the 2006 Nobel Prize for it.)
+
+Stars are approximately blackbodies too, which is why astronomers can read a star's surface temperature from its colour.
+
+<Quiz id="u1l2-star-colours">
+  <Q>Betelgeuse looks orange-red; Rigel looks blue-white. What can you conclude?</Q>
+  <Opt>Betelgeuse is closer to Earth</Opt>
+  <Opt correct>Rigel's surface is much hotter than Betelgeuse's</Opt>
+  <Opt>Betelgeuse emits no blue light at all</Opt>
+  <Opt>Rigel is made of different elements, which glow blue</Opt>
+  <Explain>For a blackbody, colour tracks temperature through Wien's law: a bluer peak means a hotter surface. Rigel is about 12 000 K; Betelgeuse about 3500 K. (Betelgeuse still emits *some* blue light; its spectrum is just weighted toward red.)</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Every object glows with a spectrum that, for an ideal **blackbody**, depends only on temperature.
+- **Wien:** $\lambda_{\text{peak}} = b/T$ with $b = 2.898\times10^{-3}$ m K. **Stefan–Boltzmann:** total power $\propto T^4$.
+- Classical physics (mode counting + equipartition) gives **Rayleigh–Jeans**, $B_\lambda = 2ck_BT/\lambda^4$, which diverges at short wavelengths: the **ultraviolet catastrophe**.
+- **Planck (14 Dec 1900):** oscillator energies come in multiples of $hf$, $h = 6.626\times10^{-34}$ J s. Modes with $hf\gg k_BT$ freeze out, and Planck's law fits the data perfectly.
+- $hc\approx1240$ eV nm. Visible quanta are 1.8–3.1 eV, about 100× room-temperature $k_BT\approx 1/40$ eV.
+
+<Watch title="Blackbody radiation (HyperPhysics)" by="C. R. Nave, Georgia State University" url="http://hyperphysics.phy-astr.gsu.edu/hbase/mod6.html" kind="article" note="Planck's law, Rayleigh–Jeans and Wien, with derivations" />

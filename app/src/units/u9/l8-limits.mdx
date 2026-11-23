@@ -1,0 +1,141 @@
+import { ComplexityMap } from './widgets/ComplexityMap';
+import { SpeedupCrossover } from './widgets/SpeedupCrossover';
+
+A typical headline: *"A quantum computer tries every possible answer at the same time, so it can crack problems that would take a normal computer longer than the age of the universe."*
+
+If that were true, the hardest problems in computer science would fall immediately. Schedule optimization, protein folding, the traveling salesman problem: each is "just" a search over exponentially many candidates, and a machine that checks all candidates at once would solve every **NP-complete** problem in polynomial time.
+
+<Predict id="u9l8-hook">
+  <Q>What do complexity theorists believe about quantum computers and NP-complete problems?</Q>
+  <Opt>It's proven that quantum computers solve NP-complete problems in polynomial time</Opt>
+  <Opt correct>It's widely believed they can't (NP ⊄ BQP), but it isn't proven</Opt>
+  <Opt>It's proven that they can't</Opt>
+  <Opt>Nobody has an opinion; there's no evidence either way</Opt>
+  <Explain>The consensus is that NP-complete problems are **not** in BQP, but this is a conjecture (proving it would imply P ≠ NP, among other things). The evidence includes the BBBV lower bound for black-box search, which you met with Grover. This lesson separates what's proven from what's believed, and the experiments from the hype.</Explain>
+</Predict>
+
+---
+
+## BQP, precisely
+
+<Definition term="BQP">
+**BQP** (bounded-error quantum polynomial time) is the class of decision problems solvable by a uniform family of polynomial-size quantum circuits that output the right answer with probability at least $2/3$ on every input.
+</Definition>
+
+It's the quantum analogue of **BPP**. The $2/3$ is arbitrary: repeat and take a majority vote to push the error down exponentially. Here's what's actually **known**:
+$$
+\mathsf{P} \subseteq \mathsf{BPP} \subseteq \mathsf{BQP} \subseteq \mathsf{PP} \subseteq \mathsf{PSPACE}.
+$$
+The left inclusions hold because quantum circuits can simulate classical randomized ones. The right inclusions hold because you can add up exponentially many amplitudes one path at a time, reusing space (Bernstein–Vazirani 1993; Adleman–DeMarrais–Huang 1997). So quantum computers can't solve anything a classical computer can't solve *eventually*. The question is purely about **efficiency**.
+
+And here's what's **unknown**: whether *any* of those inclusions is strict. Proving $\mathsf{BPP}\neq\mathsf{BQP}$ would prove $\mathsf{P}\neq\mathsf{PSPACE}$, far beyond current techniques. So all evidence that quantum computers are more powerful is **conditional** (factoring isn't in BPP, *if* our best algorithms are optimal) or **relative to oracles** (Simon, Raz–Tal 2018).
+
+<ComplexityMap />
+
+<Quiz id="u9l8-factoring-np">
+  <Q>Shor's algorithm puts factoring in BQP. Why doesn't that mean quantum computers can solve all of NP efficiently?</Q>
+  <Opt>Because Shor's algorithm only works for small numbers</Opt>
+  <Opt correct>Because factoring is not believed to be NP-complete: it's in NP ∩ coNP, so an efficient algorithm for it says nothing about SAT</Opt>
+  <Opt>Because BQP is contained in P</Opt>
+  <Opt>Because Shor's algorithm is randomized</Opt>
+  <Explain>Reductions go *from* NP-complete problems *to* the problem you solve. Nobody knows how to reduce SAT to factoring, and if factoring were NP-complete then NP = coNP, which is considered very unlikely. Factoring has special algebraic structure (periodicity) that quantum Fourier sampling exploits. Generic NP problems don't seem to.</Explain>
+</Quiz>
+
+---
+
+## The "trying all answers in parallel" myth
+
+<Warning title="Quantum computers do not try every answer at once">
+Yes, after querying a uniform superposition, the state is $\sum_x |x\rangle|f(x)\rangle$, "all answers at once". But measuring returns **one random** $(x, f(x))$. The $2^n$ answers are not accessible; they're amplitudes. Everything useful happens through **interference**: arranging for wrong answers' amplitudes to cancel and right answers' to add. That requires **structure** in the problem (periodicity for Shor, linearity for Bernstein–Vazirani). For a structureless search the best possible interference trick is Grover's, and it's only quadratically faster.
+</Warning>
+
+Scott Aaronson has kept a version of this warning on the masthead of his blog *Shtetl-Optimized* for years: *"If you take nothing else from this blog: quantum computers won't solve hard problems instantly by just trying all solutions in parallel."*
+
+<Quiz id="u9l8-parallel">
+  <Q>An SAT instance has $n = 100$ variables. What is the best known *generic* quantum speedup over brute force, and what does it amount to?</Q>
+  <Opt>Polynomial time, via evaluating all $2^{100}$ assignments in superposition</Opt>
+  <Opt correct>Grover-type search: about $2^{50}$ steps instead of $2^{100}$, still exponential</Opt>
+  <Opt>About 100 steps, via phase estimation</Opt>
+  <Opt>No speedup is possible at all</Opt>
+  <Explain>Grover gives $\sqrt{2^{100}} = 2^{50}$, a big reduction but still exponential. And BBBV shows that for black-box search that's optimal. (Clever SAT solvers exploit structure classically; quantum versions of those ideas get at best similar quadratic gains.)</Explain>
+</Quiz>
+
+---
+
+## Dequantization: when the classical side catches up
+
+Some claimed exponential quantum speedups have turned out to depend on an unfair comparison of **input models**.
+
+In 2016, Kerenidis and Prakash gave a quantum algorithm for **recommendation systems** (suggesting products from a user-preference matrix) that ran in time polylogarithmic in the matrix size. It looked like one of the best candidates for an exponential speedup with practical value. In 2018, **Ewin Tang**, then an 18-year-old undergraduate working with Scott Aaronson, found a *classical* algorithm with similar polylogarithmic scaling. The key was giving the classical algorithm the same kind of access the quantum one assumed: the ability to *sample* rows and entries with probability proportional to their squared norms.
+
+<KeyIdea>
+The quantum algorithm assumed its input arrived in a special data structure (QRAM-style state preparation). Give a classical algorithm "sample-and-query" access to the same data structure and it can often match the quantum one up to polynomial factors. This is called **dequantization**, and it has since erased the exponential speedups claimed for several quantum machine-learning tasks (low-rank regression, PCA, some clustering).
+</KeyIdea>
+
+<CSCorner>
+This is a lesson about **fair baselines**, familiar from algorithm engineering. A speedup claim is a comparison between two algorithms *with the same inputs and the same output requirements*. Many quantum proposals quietly assume (1) the data is already loaded into amplitudes, and (2) a quantum state is an acceptable output. Strip those assumptions away and the speedup often disappears. HHL for linear systems has the same fine print.
+</CSCorner>
+
+<Quiz id="u9l8-tang">
+  <Q>What did Tang's 2018 result show?</Q>
+  <Opt>That quantum computers can't run recommendation algorithms</Opt>
+  <Opt correct>That a classical algorithm, given comparable sampling access to the data, matches the quantum recommendation algorithm's polylogarithmic scaling, so the exponential speedup was an artifact of the input model</Opt>
+  <Opt>That BQP = BPP</Opt>
+  <Opt>That Shor's algorithm can be dequantized</Opt>
+  <Explain>Dequantization applies to algorithms whose speedup comes from assumed fast access to large classical data. Shor's algorithm has a short classical input (the number $N$) and no such assumption, so it isn't affected.</Explain>
+</Quiz>
+
+---
+
+## "Quantum supremacy" and its rebuttals
+
+If useful speedups are hard, can we at least show quantum devices doing *something* classically infeasible? That's the goal of **quantum advantage** (originally "supremacy") experiments. They use tasks chosen to be classically hard and natural for the hardware, usually **sampling** from the output distribution of a random circuit.
+
+| year | experiment | claim | what happened next |
+|---|---|---|---|
+| 2019 | Google *Sycamore*, 53 qubits, random circuit sampling | 200 s vs. "10,000 years" on a supercomputer | IBM argued ~2.5 days with better disk use. Pan, Chen & Zhang (2022) simulated it with tensor networks in ~15 hours on 512 GPUs, and later methods went faster still. |
+| 2020 | USTC *Jiuzhang*, photonic Gaussian boson sampling (up to 76 photons detected) | 200 s vs. ~2.5 billion years | Classical algorithms exploiting photon loss and noise have reproduced key statistics of such experiments. Larger successors (Jiuzhang 2.0, 3.0) followed. |
+| 2021–25 | USTC *Zuchongzhi* 2.x, then 3.0 (105 qubits, 83-qubit circuits in 2025); Google 70-qubit runs (2023); Quantinuum 56 trapped-ion qubits | progressively larger random-circuit sampling | No classical simulation of these is known as of 2026. Verifying them relies on extrapolated fidelity estimates. |
+| 2024 | Google *Willow*, 105 qubits | RCS in under 5 minutes vs. ~$10^{25}$ years on Frontier; also below-threshold error correction | The RCS task has no known use. The error-correction result was arguably the bigger milestone. |
+| 2025 | Google "Quantum Echoes" on Willow | an out-of-time-order correlator (a physics observable) ~13,000× faster than Frontier, and *verifiable* by rerunning on another device | Narrow and heavily error-mitigated, but the first claim on a quantity with physical meaning. Under classical scrutiny. |
+| 2026 | IBM & University of Chicago, encoded "hard circuit" sampling with certified fidelity | beyond leading classical methods | Within weeks a GPU-cluster team computed the published output amplitudes in ~37 minutes. Debate continues over what that refutes. |
+
+<Warning title="What these experiments do and don't show">
+They show that today's devices can produce outputs that are at least very costly to reproduce classically. That's a real scientific milestone, and evidence against the idea that quantum mechanics breaks down at scale. They do **not** show a useful speedup: none of these tasks has a known application. And "classically infeasible" is a **moving target**: classical algorithms improve too, and several claims have been knocked down or narrowed. In informal audience polls reported in 2026, fewer than half of researchers said they believed advantage had been achieved, even though no classical simulation is known for most experiments after 2019. Reasonable experts still disagree.
+</Warning>
+
+---
+
+## Where real advantage is expected
+
+Combine everything and an honest map emerges:
+
+- **Simulating quantum systems** (chemistry, materials, high-energy physics). This is the strongest case: it's BQP-complete, it's what Feynman proposed in 1982, and it has scientific and industrial value. Phase estimation (lesson 6) is the workhorse, but useful instances probably need error-corrected machines.
+- **Cryptanalysis** (Shor). An exponential speedup over known classical algorithms, but it needs large fault-tolerant machines. The world is already migrating away from RSA and ECC.
+- **Optimization and search.** Mostly **quadratic** speedups (Grover, amplitude amplification), plus heuristics like QAOA with no proven advantage. Error correction slows each quantum operation by orders of magnitude, which eats a quadratic speedup alive unless the problem is huge. Try it:
+
+<SpeedupCrossover />
+
+<Try>
+- With the defaults ($10^9$ classical checks/s vs. $10^3$ Grover steps/s), the quantum computer only wins on searches that take the classical machine **minutes** or more. That sounds fine until you raise the classical rate to a GPU cluster.
+- Set the classical rate to $10^{12}$ and the quantum rate to $10^2$. The crossover moves to problems that take **years**. This is the argument of Babbush et al. (2021): early fault-tolerant machines need **beyond-quadratic** speedups to matter.
+</Try>
+
+- **Machine learning.** Unclear. Many exponential claims dequantize. Advantages may exist for learning from *quantum* data (outputs of quantum experiments), which is an active research area.
+
+<NumQuiz id="u9l8-crossover" answer={40} tol={2}>
+  <Q>Using the widget's model (classical time $2^n/f_c$, Grover time $\frac{\pi}{4}2^{n/2}/f_q$), at roughly what problem size $n$ is the crossover for $f_c = 10^9$ and $f_q = 10^3$ per second?</Q>
+  <Hint>Set them equal: $2^{n/2} = \frac{\pi}{4}\cdot f_c/f_q$, then take $\log_2$ and double.</Hint>
+  <Explain>$2^{n/2} = 0.785\times10^6$, so $n/2 \approx 19.6$ and $n \approx 39$. Both machines then need about 10 minutes. Below that, classical wins.</Explain>
+</NumQuiz>
+
+---
+
+## Summary
+
+- **Known:** $\mathsf{P}\subseteq\mathsf{BPP}\subseteq\mathsf{BQP}\subseteq\mathsf{PP}\subseteq\mathsf{PSPACE}$. Quantum computers compute nothing uncomputable, and the question is only efficiency.
+- **Believed, not proven:** $\mathsf{BPP}\neq\mathsf{BQP}$ (factoring is the flagship) and $\mathsf{NP}\not\subseteq\mathsf{BQP}$ (no polynomial-time quantum algorithms for NP-complete problems).
+- "Trying all answers in parallel" is a **myth**: one measurement gives one answer. Speedups need structure and interference, and black-box search is limited to $\sqrt N$.
+- **Dequantization** (Tang 2018) showed that some exponential quantum-ML speedups came from unfair input assumptions.
+- **Advantage experiments** (2019–2026) produce outputs that are hard to reproduce classically, but none is useful yet, and the classical bar keeps moving.
+- Best bets for real advantage: **quantum simulation** and **cryptanalysis** (both likely need fault tolerance). Quadratic speedups need enormous problems to pay off.

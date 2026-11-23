@@ -1,0 +1,117 @@
+import { BB84Lab } from './widgets/BB84Lab';
+
+The **one-time pad** is provably unbreakable. XOR your message with a truly random key as long as the message, use the key once, and an eavesdropper learns nothing at all. Its weakness is logistics. Alice and Bob need the same long random key, and *sending* it is just as hard as sending the message securely.
+
+Today's internet gets around this with public-key cryptography (RSA, elliptic curves), whose security rests on the assumption that certain maths problems are hard. Shor's algorithm (World 9) breaks exactly those problems on a large enough quantum computer.
+
+**Quantum key distribution** (QKD) takes a different route. It grows a shared secret key whose security comes from the laws of physics rather than from unproven hardness assumptions. The first and most famous scheme is **BB84**.
+
+<Predict id="u8l3-eve-qber">
+  <Q>In BB84 (described below), Eve intercepts **every** photon, measures it in a randomly chosen basis, and sends Bob a fresh photon matching her result. After sifting, what fraction of Bob's key bits disagree with Alice's?</Q>
+  <Opt>0%: Eve resends exactly what she measured</Opt>
+  <Opt>12.5%</Opt>
+  <Opt correct>25%</Opt>
+  <Opt>50%</Opt>
+  <Explain>Half the time Eve guesses the right basis and causes no error. The other half she resends in the wrong basis, and then Bob's (correct-basis) measurement is a coin flip, wrong half the time. ½ × ½ = **25%**. Alice and Bob will notice that.</Explain>
+  <Reveal>
+That 25% is a smoking gun. In this lesson you'll run the protocol, watch Eve's footprints appear, and see how Alice and Bob turn a noisy, partly leaked key into a short, perfectly secret one.
+  </Reveal>
+</Predict>
+
+---
+
+## The protocol: two bases, randomly mixed
+
+Alice encodes bits in photon polarisation using **two bases**:
+
+| basis | bit 0 | bit 1 |
+|---|---|---|
+| rectilinear $+$ | $0°$ ($\lvert 0\rangle$) | $90°$ ($\lvert 1\rangle$) |
+| diagonal $\times$ | $45°$ ($\lvert +\rangle$) | $135°$ ($\lvert -\rangle$) |
+
+These are the Bloch sphere's $Z$ and $X$ axes, two *mutually unbiased* bases. Measure a $\times$ photon in the $+$ basis and the result is a pure coin flip that carries no information about its bit.
+
+1. **Send.** For each photon, Alice picks a random bit *and* a random basis, and sends the matching polarisation.
+2. **Measure.** Bob picks a random basis for each photon and records his result.
+3. **Sift.** Over a public (authenticated) channel they announce their **bases**, never the bits, and keep only the rounds where the bases matched. That's about half. With no eavesdropper and no noise, those bits agree perfectly.
+4. **Estimate errors.** They publicly compare a random sample of the sifted bits, which are then thrown away, to estimate the **quantum bit error rate (QBER)**.
+5. **Distil.** If the QBER is low enough, they correct the remaining errors and apply *privacy amplification* (below). Otherwise they abort.
+
+<BB84Lab challengeId="u8l3-lab" />
+
+<Try>
+- Send 16 photons with Eve off. Roughly half survive sifting, with zero errors.
+- Turn Eve on at 100% and send 2000 instantly. The QBER jumps to about **25%**. In the table, look for rounds where Eve's glyph differs from Alice's: those are her wrong-basis guesses.
+- Lower Eve's fraction to 40%. The QBER is about 10%, a quarter of the fraction she touches. She gets subtler, but she can't vanish.
+</Try>
+
+<Quiz id="u8l3-sift">
+  <Q>Why do Alice and Bob announce their *bases* publicly but never their *bits*?</Q>
+  <Opt>The bases are useless information, so it doesn't matter who hears them</Opt>
+  <Opt correct>Knowing the bases after the photons have been measured doesn't help Eve recover the bits she didn't measure correctly, but the bits are the key itself</Opt>
+  <Opt>To make Eve's job easier so they can catch her</Opt>
+  <Explain>The basis announcement comes *after* every photon has been detected. By then Eve has already had to commit to a measurement basis for each photon she intercepted. Learning the basis later can't undo a wrong guess. Her photon is gone, and she can't have cloned it.</Explain>
+</Quiz>
+
+---
+
+## Why Eve can't hide
+
+Eve's problem is the one from World 6: she can't **copy** a photon to measure later, and she can't **measure** it without guessing a basis. Wrong guesses disturb the state.
+
+For intercept-resend on a fraction $f$ of the photons:
+
+- She guesses right with probability $\tfrac12$ and causes no error, and she learns that bit once the bases are announced.
+- She guesses wrong with probability $\tfrac12$. She resends in the wrong basis, and Bob's result is random: an error with probability $\tfrac12$.
+
+$$
+\text{QBER} = f \cdot \tfrac12\cdot\tfrac12 = \frac{f}{4}, \qquad \text{Eve knows a fraction } \frac f2 \text{ of the sifted key for certain.}
+$$
+
+<NumQuiz id="u8l3-half" answer={0.125} tol={0.002}>
+  <Q>Eve intercepts and resends half of all photons ($f = 0.5$). What QBER do Alice and Bob see (no other noise)?</Q>
+  <Explain>$f/4 = 0.125$, or 12.5%. Cleverer attacks (other measurement bases, entangling probes) trade information for disturbance differently, but every attack that gains information about the key **must** cause some disturbance. That's the information-disturbance principle behind QKD security.</Explain>
+</NumQuiz>
+
+**How many bits must they check?** If Eve attacks every photon, each checked bit reveals her with probability ¼. The chance she survives $k$ checks is $(3/4)^k$:
+
+$$
+(3/4)^{20} \approx 0.3\%, \qquad (3/4)^{50} \approx 6\times 10^{-7}.
+$$
+
+<NumQuiz id="u8l3-escape" answer={0.0563} tol={0.002}>
+  <Q>Eve intercepts every photon. Alice and Bob compare 10 sifted bits. What is the probability that **none** of the 10 show an error?</Q>
+  <Explain>$(3/4)^{10} \approx 0.056$. So 10 bits isn't enough to be confident. Real systems check thousands, and their security proofs track statistical fluctuations carefully.</Explain>
+</NumQuiz>
+
+---
+
+## From noisy key to secret key
+
+Real channels have noise too, a few percent from misaligned optics and detector dark counts, and Alice and Bob must conservatively blame **all** errors on Eve. Two classical post-processing steps follow.
+
+- **Error correction (information reconciliation):** exchange parity information over the public channel (protocols like *Cascade*, or LDPC codes) until their keys match. Every parity bit revealed counts as leaked to Eve.
+- **Privacy amplification:** Eve may know some bits of the key, or partial information about many. Alice and Bob apply a **random hash function** that compresses $n$ bits into $m < n$ bits. If Eve knew about $t$ bits' worth of information, choosing $m$ a bit less than $n - t$ leaves her with essentially *zero* information about the output. The less she knew, the more key survives.
+
+With an ideal single-photon source, BB84 can still produce a secret key as long as the QBER stays below about **11%** (Shor–Preskill security proof, 2000). Above that, they abort and try again.
+
+<CSCorner>
+Privacy amplification uses **2-universal hash families**, for example multiplying the key by a random binary matrix, and its guarantee is the **leftover hash lemma**. If Eve's min-entropy about the key is $k$ bits, hashing to $k - 2\log(1/\varepsilon)$ bits gives output within $\varepsilon$ of uniform from her point of view. It's the same tool used for randomness extractors in complexity theory. The classical channel must also be **authenticated** (e.g. Wegman–Carter MACs with a small pre-shared key), or Eve simply impersonates Bob to Alice and Alice to Bob. So QKD is really *key expansion*: a short shared secret grows into a long one.
+</CSCorner>
+
+<Warning>
+"QKD is unhackable." The *protocol* is provably secure under its assumptions, but real *devices* deviate from those assumptions. Practical attacks have exploited lasers that sometimes emit two photons (the **photon-number-splitting** attack, countered by "decoy states") and **detector blinding**: in 2010, researchers showed they could control commercial QKD detectors with bright light and copy the key without raising the QBER. The fixes are better engineering, *measurement-device-independent* QKD, and ultimately the device-independent protocols of the next lesson. Many security agencies currently recommend post-quantum (classical) cryptography over QKD for most uses.
+</Warning>
+
+<History>
+The idea began with **Stephen Wiesner**, who around 1970 proposed "conjugate coding", quantum money that can't be counterfeited because it's encoded in two incompatible bases. His paper was rejected and only published in 1983. **Charles Bennett** (IBM) and **Gilles Brassard** (Montréal) turned it into BB84, presented at a conference in Bangalore in 1984. Their first working prototype (1989) sent photons across about 32 cm of open air on a lab bench. Brassard later joked that it was secure against any eavesdropper who happened to be deaf, because the power supplies hummed differently depending on the bit being sent.
+</History>
+
+---
+
+## Summary
+
+- **BB84:** random bits in random bases ($+$: 0°/90°, $\times$: 45°/135°). Bob measures in random bases. They publicly sift to matching bases (≈50% kept), then sacrifice a sample to estimate the QBER.
+- **Eavesdropping causes errors**, because Eve can't clone photons and must guess bases. Intercept-resend on a fraction $f$ gives QBER $= f/4$ (25% for full interception), and she survives $k$ checks with probability $(3/4)^k$.
+- **Post-processing:** error correction, then privacy amplification (universal hashing) squeezes out Eve's partial information. A key is possible below ≈11% QBER (ideal BB84).
+- Needs an authenticated classical channel. Real-device loopholes exist (photon-number splitting, detector blinding).

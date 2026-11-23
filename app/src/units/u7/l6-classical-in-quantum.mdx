@@ -1,0 +1,133 @@
+import { GarbageDemo } from './widgets/GarbageDemo';
+import { stateGoal, XOR_AND } from './lib/goals';
+
+Your laptop destroys information billions of times a second. Every AND gate takes two bits in and puts one bit out, and the lost bit doesn't simply vanish. In 1961 Rolf Landauer at IBM argued that **erasing information has an unavoidable energy cost**. Wiping one bit at temperature $T$ must dump at least
+
+$$
+E_{\min} = k_B T \ln 2
+$$
+
+of heat into the environment. A quantum computer has a stricter rule still: its gates are unitary, so they can't erase anything at all. Yet algorithms like Shor's and Grover's must evaluate ordinary classical functions, such as modular arithmetic or "is this the password?". This lesson shows how to run classical logic inside a reversible machine, and the trap that catches everyone the first time.
+
+<NumQuiz id="u7l6-landauer" answer={2.87} tol={0.06}>
+  <Q>Compute Landauer's bound at room temperature, $T = 300$ K, with $k_B = 1.381\times10^{-23}$ J/K. Give your answer in **zeptojoules** ($10^{-21}$ J).</Q>
+  <Hint>$k_BT \approx 4.14\times10^{-21}$ J, and $\ln 2 \approx 0.693$.</Hint>
+  <Explain>$1.381\times10^{-23}\times300\times0.693 \approx 2.87\times10^{-21}$ J, or about 2.9 zJ per erased bit. Today's transistors dissipate many orders of magnitude more than this per operation, so the bound isn't what limits your laptop. It is a real law of physics, though: in 2012 Bérut and colleagues measured it by erasing a "bit" stored in a tiny bead held in a laser trap.</Explain>
+</NumQuiz>
+
+---
+
+## Reversible logic
+
+A gate is **logically reversible** if you can always reconstruct its inputs from its outputs, which means it is a *permutation* of bit strings. Only reversible classical gates can appear in a quantum circuit, where they become permutation matrices.
+
+| Gate | Reversible? | Why |
+|---|---|---|
+| NOT | yes | it is its own inverse |
+| AND, OR, NAND, XOR (2 in → 1 out) | **no** | an output of 0 from AND could come from three different inputs |
+| CNOT: $(a,b)\to(a, a\oplus b)$ | yes | XOR, but keeping $a$ |
+| Toffoli: $(a,b,c)\to(a,b,c\oplus ab)$ | yes | AND, but keeping $a, b$ |
+| Fredkin: controlled-SWAP | yes | it only rearranges bits |
+
+**Toffoli does everything.** With $c = 0$ it computes AND, with $c = 1$ it computes NAND, and with $a = 1$ it copies $b$ into $c$ (FANOUT). NAND plus FANOUT is universal, so *any* classical circuit can be rebuilt from Toffolis. Each gate needs one fresh **ancilla** bit to hold its output, plus a few constant 1s.
+
+<Quiz id="u7l6-reversible">
+  <Q>Which of these maps on bit strings could be implemented **directly** as a quantum gate, with no extra qubits? (Select all that apply.)</Q>
+  <Opt correct>$(a, b) \to (b, a)$</Opt>
+  <Opt>$(a, b) \to (a \land b,\ a \lor b)$</Opt>
+  <Opt correct>$(a, b, c) \to (a,\ b \oplus a,\ c \oplus a)$</Opt>
+  <Opt>$(a, b) \to (a, a)$</Opt>
+  <Explain>Swap and the "double CNOT" are permutations of the bit strings, so they are reversible. $(a\land b, a\lor b)$ sends both $01$ and $10$ to $(0, 1)$, so it is not invertible. $(a, a)$ forgets $b$ entirely. (It is also not what a CNOT does: CNOT computes $(a, a\oplus b)$, which only "copies" $a$ when $b = 0$. No-cloning stays safe.)</Explain>
+</Quiz>
+
+---
+
+## Computing a function into a register
+
+Most functions aren't invertible: $f(x) = x_0\land x_1$ maps three inputs to 0. The standard way to make *any* $f$ reversible is to keep the input and **XOR** the answer into a separate register:
+
+$$
+U_f\,|x\rangle|y\rangle = |x\rangle\,|y \oplus f(x)\rangle .
+$$
+
+This map is always a permutation, whatever $f$ is, and it is its own inverse: applying it twice XORs $f(x)$ in and then out again. With $y = 0$ you get $|x\rangle|f(x)\rangle$. With $y$ in $|-\rangle$ you get the phase oracle from Lesson 7.4. Every "oracle" in World 9 has this form.
+
+Building $U_f$ from Toffolis usually needs intermediate results. To compute $a\land b\land c$ you first need $a\land b$ somewhere. Those intermediate bits are **scratch** space, and when the computation ends they're still lying around, holding values that depend on $x$. Programmers call them **garbage**.
+
+<Quiz id="u7l6-uf">
+  <Q>Why does $U_f|x\rangle|y\rangle = |x\rangle|y\oplus f(x)\rangle$ define a unitary even when $f$ is not invertible, e.g. $f \equiv 0$?</Q>
+  <Opt>It doesn't: $U_f$ is only unitary for bijective $f$</Opt>
+  <Opt correct>Because the input $x$ is kept, $(x, y)$ can always be recovered from $(x, y\oplus f(x))$ by XOR-ing $f(x)$ again</Opt>
+  <Opt>Because quantum gates may discard the input after use</Opt>
+  <Opt>Because $f$ is evaluated in superposition, which makes it invertible</Opt>
+  <Explain>$U_f$ maps distinct pairs $(x, y)$ to distinct pairs, so it is a permutation of basis states and therefore unitary, and in fact its own inverse. For $f\equiv 0$ it is simply the identity.</Explain>
+</Quiz>
+
+---
+
+## Why garbage ruins everything
+
+Classically, garbage is just wasted memory. Quantumly it is a disaster, and the reason links straight back to the double slit.
+
+<Predict id="u7l6-garbage">
+  <Q>A phase oracle is built as "compute $f(x)$ into a scratch qubit, apply $Z$ to it to get $(-1)^{f(x)}$", and then the scratch qubit is simply **left as it is**. The oracle sits between Hadamard layers, as in Deutsch's algorithm. What happens to the interference?</Q>
+  <Opt>Nothing: the phases are all there, so the algorithm works</Opt>
+  <Opt correct>It is (partly or wholly) destroyed: the scratch qubit is entangled with $x$ and records which input each branch had</Opt>
+  <Opt>The scratch qubit's phase doubles the effect, so it works better</Opt>
+  <Opt>The computer crashes because the gates are no longer unitary</Opt>
+  <Reveal>
+The scratch qubit now holds $f(x)$, so the state is $\sum_x (-1)^{f(x)}|x\rangle|f(x)\rangle$, which is entangled. Branches with different $f(x)$ are marked by *orthogonal* scratch states, so they can never interfere again. It is the which-path detector of World 2: if *anything* records which path a particle took, the fringes vanish, even if nobody ever looks at the record.
+  </Reveal>
+</Predict>
+
+Explore it. The widget runs Hadamards, a phase oracle and Hadamards again on two input qubits, with the scratch qubit either cleaned up or left dirty.
+
+<GarbageDemo />
+
+<Try>
+- **$f = x_0\oplus x_1$:** with uncomputation, the outcome is $|11\rangle$ every time, which is perfect interference. With garbage it becomes a 50/50 coin, and the x register's purity drops to $1/2$.
+- **$f = x_0$:** the garbage qubit is literally a copy of $x_0$, a which-path detector, so $x_0$ stops interfering.
+- **$f = 1$ (constant):** garbage is harmless here. It's $|1\rangle$ for every $x$, carries no information about $x$, and factors out.
+</Try>
+
+The cure is due to Charles Bennett (1973): **compute, copy, uncompute.**
+
+1. **Compute** $f(x)$ along with any scratch values: $|x\rangle|0\rangle|0\rangle \to |x\rangle|\text{scratch}(x)\rangle|f(x)\rangle$.
+2. **Use** the answer: CNOT it into an output register, or apply a phase to it.
+3. **Uncompute**: run step 1's gates in reverse order. Every scratch qubit returns to $|0\rangle$, and *only* the intended effect remains.
+
+Because the scratch register returns to the *same* state $|0\rangle$ for every $x$, it factors out of the superposition. Nothing in it remembers $x$, and interference survives.
+
+<Warning title="'Just reset the garbage qubit to 0'">
+Resetting a qubit in an unknown state means measuring it, or letting the environment absorb it, and then flipping it if needed. Either way, the information about $x$ leaks out into the environment, and the x register is just as decohered as before. Erasing information is *not* the same as uncomputing it. Only running the computation backwards removes the correlation coherently. Landauer's lesson returns in quantum form: you can't simply throw information away.
+</Warning>
+
+---
+
+## Challenge: compute without leaving a trace
+
+Qubits a, b, c hold all eight inputs in superposition, and the bottom qubit is the output. Compute $f = (a\oplus b)\land c$ into the output, and leave **a, b, c exactly as they were**. There's no scratch qubit. Can you borrow one of the input wires temporarily?
+
+<CircuitLab title="Challenge: (a ⊕ b) ∧ c, cleanly" n={4} gates={['CNOT', 'CCX', 'X']} initialState={XOR_AND.initial} goal={stateGoal(XOR_AND.target, 'Σ |abc⟩|(a⊕b)∧c⟩ with inputs unchanged')} challengeId="u7l6-xor-and" maxGates={5} qubitLabels={['a', 'b', 'c', 'out']} columns={5} />
+
+<Note title="Hint">
+CNOT $a\to b$ turns $b$ into $a\oplus b$ **in place**. Use it, then undo it. Undoing a temporary modification of an input is uncomputation too.
+</Note>
+
+<CSCorner title="Reversible computing and the pebble game">
+Bennett showed that any classical computation can be made reversible with only a polynomial overhead in time. The naive "keep every intermediate value" approach costs memory proportional to the running time. His **pebble game** trades time for space: checkpoint some intermediate states, uncompute the rest, and recompute when needed. Quantum compilers (for Shor's modular exponentiation, for example) face exactly the same space–time trade-off, because every ancilla must come back clean. In the classical world, "adiabatic" and reversible CMOS circuits are actively researched as a way to compute below Landauer's bound per operation, in principle.
+</CSCorner>
+
+<History>
+Landauer's 1961 paper made "information is physical" a slogan. Twelve years later his IBM colleague Charles Bennett showed that computation itself needs no erasure, and his compute–copy–uncompute construction is the one quantum programmers still use. Edward Fredkin and Tommaso Toffoli's "conservative logic" (1982) and Richard Feynman's "Quantum Mechanical Computers" (1985) then carried reversible circuits into the quantum era.
+</History>
+
+---
+
+## Summary
+
+- **Landauer:** erasing a bit costs at least $k_BT\ln2 \approx 2.9$ zJ at room temperature. Unitary gates can't erase, so quantum circuits are reversible by construction.
+- Reversible gates are permutations of bit strings. **Toffoli** gives AND ($c=0$), NAND ($c=1$) and FANOUT ($a=1$), so it can embed any classical circuit, using ancillas.
+- Standard oracle form: $U_f|x\rangle|y\rangle = |x\rangle|y\oplus f(x)\rangle$. It is unitary for every $f$ and its own inverse.
+- Leftover scratch values (**garbage**) entangle with the input and act as which-path detectors that **destroy interference**.
+- **Compute → copy/use → uncompute** (Bennett) returns the scratch qubits to $|0\rangle$, so they factor out and interference survives. Measuring or resetting garbage does *not* fix the problem.

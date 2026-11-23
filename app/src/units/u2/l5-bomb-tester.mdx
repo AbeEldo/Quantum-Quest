@@ -1,0 +1,133 @@
+import { MachZehnder } from './widgets/MachZehnder';
+import { ZenoBombLab } from './widgets/ZenoBombLab';
+
+Here is a puzzle posed by Avshalom **Elitzur** and Lev **Vaidman** in 1993.
+
+A factory makes bombs with a fiendishly sensitive trigger: a tiny mirror attached to a detector so delicate that **a single photon** bouncing off it sets the bomb off. Some bombs are **duds**: the trigger mirror is jammed and photons pass by with no effect. The only way to tell whether a bomb is live is to check whether its trigger responds to light.
+
+You want a box of bombs **certified live**. Classically you're stuck: to learn whether the trigger works, you must poke it, and poking a live one blows it up. Every certified bomb is a destroyed bomb.
+
+<Predict id="u2l5-possible">
+  <Q>Is it possible, even in principle, to find out that a bomb is live **without** setting it off?</Q>
+  <Opt>No: to learn anything about the trigger, a photon must hit it</Opt>
+  <Opt correct>Yes, at least some of the time</Opt>
+  <Explain>Quantum mechanics says yes. With the trick below you can certify some live bombs with *no* photon ever touching them. With a cleverer trick you can certify nearly *all* of them.</Explain>
+</Predict>
+
+---
+
+## The Elitzur–Vaidman bomb tester
+
+Take last lesson's balanced Mach–Zehnder interferometer ($\varphi = 0$), where every photon goes to D₁ and D₀ is dark. Now put the bomb in the lower arm, so its trigger mirror sits in the beam.
+
+- **Dud:** the photon passes the jammed mirror untouched. Both paths are open and indistinguishable, so they interfere as usual and **D₁ always clicks**.
+- **Live bomb:** the trigger is a which-path detector. If the photon goes down the lower arm, the bomb absorbs it and explodes. Either way, the paths are no longer indistinguishable.
+
+<MachZehnder bomb showPhase={false} allowRemoveBS2={false} title="Elitzur–Vaidman bomb tester" />
+
+<Try>
+- With **bomb is live** off (a dud), auto-fire: every photon goes to D₁.
+- Turn the bomb live and fire photons one at a time. Watch the two amplitude blobs: when the lower blob reaches the trigger, either the bomb explodes or the lower blob *vanishes* and the upper blob carries all of the amplitude.
+- Count the outcomes over many photons. What fractions do you get?
+</Try>
+
+<Quiz id="u2l5-ev-probs">
+  <Q>For a **live** bomb in the balanced interferometer, which outcome probabilities are correct?</Q>
+  <Opt>Explode 50%, D₁ 50%, D₀ 0%</Opt>
+  <Opt correct>Explode 50%, D₁ 25%, D₀ 25%</Opt>
+  <Opt>Explode 25%, D₁ 50%, D₀ 25%</Opt>
+  <Opt>Explode 100%</Opt>
+  <Explain>BS1 sends amplitude $1/\sqrt2$ down each arm, so the bomb finds the photon with probability $\tfrac12$: boom. Otherwise the photon is in the upper arm, and BS2 splits it 50/50 because there's no second path to interfere with: $\tfrac12\cdot\tfrac12 = \tfrac14$ each for D₁ and D₀.</Explain>
+</Quiz>
+
+---
+
+## A click in the dark
+
+Focus on the **D₀ clicks**. For a dud, D₀ *never* clicks: destructive interference keeps it dark. So a D₀ click proves the bomb is live. And the bomb **did not explode**, so the photon was not absorbed by it. The photon that reached D₀ came along the *upper* arm, nowhere near the bomb.
+
+<KeyIdea>
+An **interaction-free measurement**: you learn that an object is there because it *could have* absorbed the photon, even though in this run it didn't. The mere possibility of absorption removes one path from the interference, and that changes where the photon goes.
+</KeyIdea>
+
+<Warning>
+"The photon must have sneaked down the bomb arm and interacted very gently." No. In the D₀ events no energy was deposited in the bomb, which would have set it off. What changed is the set of *amplitudes* that can interfere at BS2. Physicists argue about how to *describe* this in words (it's a classic arena for interpretations of quantum mechanics), but the experimental predictions are unambiguous and have been confirmed.
+</Warning>
+
+What about the D₁ clicks? They're **inconclusive**: duds always give D₁, and live bombs give it 25% of the time. So you just test those bombs again. Each round, a live bomb is either certified (prob. $\tfrac14$), exploded ($\tfrac12$), or sent back for another try ($\tfrac14$).
+
+<NumQuiz id="u2l5-one-third" answer={0.3333} tol={0.01}>
+  <Q>You keep retesting every live bomb that gives D₁ until it either explodes or gives D₀. What fraction of live bombs ends up **certified without exploding**?</Q>
+  <Hint>Only the "final" outcomes matter: D₀ (prob. 1/4) vs explode (prob. 1/2) on each round. What is the chance D₀ comes before an explosion?</Hint>
+  <Explain>$\dfrac{1/4}{1/4 + 1/2} = \dfrac13$. With 50/50 beam splitters, one third of live bombs can be saved. Elitzur and Vaidman noted that by using unequal beam splitters you can push this toward (but never above) one half.</Explain>
+</NumQuiz>
+
+---
+
+## Doing better: the quantum Zeno effect
+
+Recall the end of the polarization lesson: many polarizers in small steps can rotate light from $H$ to $V$ with almost no loss, because each tiny measurement almost certainly says "yes". Turn that idea around. **Frequent measurement can freeze a quantum system's evolution.** This is the **quantum Zeno effect** (named by Misra and Sudarshan in 1977, after Zeno's paradox of the arrow that can never move, because at each instant it is where it is).
+
+Here's the upgraded bomb tester, proposed by Kwiat, Weinfurter, Herzog, Zeilinger and Kasevich in 1995:
+
+1. A horizontally polarized photon is trapped in a loop for $N$ round trips.
+2. Each round trip, a **rotator** turns its polarization by a small angle $\Delta = 90°/N$.
+3. A polarizing beam splitter then sends the **vertical** component of the light along a path past the bomb, and the horizontal component along a path that avoids it. The two paths recombine before the next round.
+
+**Dud:** nothing interrupts the rotation. After $N$ steps of $90°/N$ the photon is fully **vertical**, and a detector says "V". Dud identified.
+
+**Live bomb:** each round trip, the bomb effectively *measures* "is the photon vertical?". The photon is at angle $\Delta$, so
+
+$$
+P(\text{boom this round}) = \sin^2\Delta, \qquad P(\text{survive, reset to } H) = \cos^2\Delta .
+$$
+
+After a "no", the photon is back to exactly $H$. The rotation never gets a chance to build up. Surviving all $N$ rounds and exiting **horizontal**, which proves the bomb is live, has probability
+
+$$
+P_N = \cos^{2N}\!\left(\frac{\pi}{2N}\right) \;\approx\; 1 - \frac{\pi^2}{4N} \;\xrightarrow{N\to\infty}\; 1 .
+$$
+
+<ZenoBombLab />
+
+<Try>
+- Set $N = 1$. The rotator turns the photon all the way to $V$ in one go, and a live bomb always explodes.
+- Set $N = 2$: $\cos^4 45° = 25\%$. Now try $N = 10$ and $N = 30$.
+- Switch the bomb to **dud** and send a photon: the polarization sweeps smoothly to $V$.
+- Use **Test 1000 bombs** to check the predicted success rate against simulated statistics.
+</Try>
+
+<NumQuiz id="u2l5-zeno-five" answer={0.605} tol={0.01}>
+  <Q>With $N = 5$ cycles (an $18°$ rotation per cycle), what is the probability that a live bomb is certified without exploding?</Q>
+  <Hint>$P_5 = \cos^{10}(18°)$, and $\cos 18° \approx 0.9511$.</Hint>
+  <Explain>$0.9511^{10} \approx 0.605$. Already much better than the $1/3$ of the basic scheme, and with $N = 20$ it reaches about $88\%$.</Explain>
+</NumQuiz>
+
+<Quiz id="u2l5-why-zeno">
+  <Q>Why does increasing $N$ make the live bomb **less** likely to explode, even though the photon gets "looked at" by the bomb more often?</Q>
+  <Opt>Each pass the photon has less energy</Opt>
+  <Opt correct>The explosion chance per pass falls like $\sin^2(\pi/2N) \approx (\pi/2N)^2$, quadratically, while the number of passes only grows linearly, so the total risk $\approx \pi^2/4N$ shrinks</Opt>
+  <Opt>With more passes the bomb's detector gets tired</Opt>
+  <Opt>It doesn't; the explosion probability is independent of $N$</Opt>
+  <Explain>This quadratic-versus-linear race is the essence of the Zeno effect. For small times (or angles), quantum amplitudes change *linearly* but probabilities change *quadratically*, so frequent resets win.</Explain>
+</Quiz>
+
+<History>
+**Elitzur & Vaidman** published the bomb puzzle in *Foundations of Physics* in **1993**. In **1995** Paul **Kwiat**, Harald Weinfurter, Thomas Herzog, Anton **Zeilinger** and Mark Kasevich demonstrated interaction-free measurement with single photons in Innsbruck and proposed the Zeno-enhanced scheme. In **1999** Kwiat and colleagues used the Zeno version to reach efficiencies of up to **73%**, beating the 50% ceiling of the original design. The idea has since been used for "interaction-free imaging" and even counterfactual quantum computation (Hosten et al., 2006), where the result of a computation is learned without the computer having run.
+</History>
+
+<CSCorner>
+The Zeno effect is a reminder that in quantum mechanics **measurement is an operation**, not passive observation. Repeatedly measuring "are you still in state $|0\rangle$?" can pin a qubit in place against a slow drift. Variants of this idea show up in quantum error correction (World 11), where frequent syndrome measurements stop small errors from accumulating, and in "quantum interrogation" schemes for probing light-sensitive samples with fewer absorbed photons.
+
+You can play with these trade-offs in the **Bomb Tester** game for this world.
+</CSCorner>
+
+---
+
+## Summary
+
+- **Elitzur–Vaidman (1993):** a live bomb in one arm of a balanced Mach–Zehnder acts as a which-path detector. Outcomes: explode $\tfrac12$, bright port $\tfrac14$ (inconclusive), **dark port $\tfrac14$** (certified live, *not* exploded).
+- A dark-port click is an **interaction-free measurement**: the bomb's *potential* to absorb changes the interference, even though it absorbs nothing.
+- Retesting inconclusive bombs certifies $\tfrac13$ of live bombs with 50/50 splitters.
+- **Quantum Zeno:** with $N$ small rotations of $90°/N$, each interrupted by the bomb's implicit measurement, $P(\text{certified}) = \cos^{2N}(\pi/2N) \to 1$. (Kwiat et al. proposed it in 1995 and reached 73% in 1999.)
+- Small-angle amplitudes grow linearly and probabilities quadratically, so **frequent measurement freezes evolution**.

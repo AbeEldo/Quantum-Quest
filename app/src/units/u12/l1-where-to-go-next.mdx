@@ -1,0 +1,95 @@
+import { CourseRecap } from './widgets/CourseRecap';
+
+You started this course with a hot piece of metal glowing the "wrong" colour. You're finishing it able to read a *Nature* paper on surface-code thresholds, and to tell which parts of a press release to believe.
+
+Before the final experiment, look back at the road. Then look forward: what to learn, what to build, and where the open problems are.
+
+---
+
+## The whole arc in one picture
+
+<CourseRecap />
+
+<Quiz id="u12l1-thread">
+  <Q>Which single idea runs through the double-slit experiment, Grover's algorithm **and** the surface code?</Q>
+  <Opt>Particles are tiny billiard balls.</Opt>
+  <Opt correct>Amplitudes add and can cancel, so you design (or prevent) interference by controlling phases and which-path information.</Opt>
+  <Opt>Quantum computers try every answer in parallel.</Opt>
+  <Opt>Measurement never disturbs a system.</Opt>
+  <Explain>Interference is the engine: fringes appear when paths are indistinguishable (World 2), Grover rotates amplitude toward the answer (World 9), and error correction works by never letting the environment, or our own syndrome measurement, learn which logical state we hold (Worlds 10–11).</Explain>
+</Quiz>
+
+<Warning>
+**"Now I know quantum computing, so quantum computers will soon do everything faster."** You now know enough to see why that's false. The known exponential speedups are for structured problems (factoring, discrete logs, simulating quantum systems). Grover gives only a square root. Most everyday computing gets no speedup at all, and every useful application needs fault tolerance, which costs hundreds to thousands of physical qubits per logical qubit.
+</Warning>
+
+---
+
+## Write real code on real qubits
+
+You've been using a simulator written for this course. The same circuits run on industrial software, and several companies let you submit them to **real hardware for free** (small jobs, with queues):
+
+- **Qiskit** (IBM, Python): the most widely used SDK. The IBM Quantum Platform offers free monthly time on real superconducting processors.
+- **Cirq** (Google) and **Stim** (a blazing-fast stabilizer simulator, plus **PyMatching** for decoding). If you liked World 11, Stim + PyMatching let you reproduce the threshold plot for millions of shots in minutes.
+- **PennyLane** (Xanadu): quantum machine learning and differentiable circuits.
+- Cloud access to ions, atoms and superconductors: **Amazon Braket**, **Azure Quantum**, and the vendors' own portals.
+
+<Try>
+A good first project: build the Bell-state and teleportation circuits from Worlds 6 and 8 in Qiskit, run them on a real device, and compare the measured histogram with the ideal one. You will *see* World 10's noise in your own data. Then add the 3-qubit repetition code from World 11 and check whether it helps on that hardware.
+</Try>
+
+<CSCorner>
+Quantum software is a young field with very CS-shaped problems. **Compilers** map circuits to hardware with limited connectivity (routing is NP-hard in general). **Verification** checks that two circuits are equivalent. **Decoders** are real-time, latency-critical graph algorithms. **Resource estimation** works out how many qubits and how much time an algorithm really needs. **Classical simulation** with tensor networks and stabilizer methods is the benchmark every advantage claim must beat. Every one of these is an active research area that welcomes computer scientists.
+</CSCorner>
+
+---
+
+## Read next
+
+**Books and notes**
+
+- **Nielsen & Chuang**, *Quantum Computation and Quantum Information*: the standard reference. Chapters 8–10 deepen Worlds 10–11.
+- **John Preskill's Ph219 lecture notes** (Caltech, free online): especially chapter 7 on error correction.
+- **Scott Aaronson**, *Quantum Computing Since Democritus*: complexity theory, with jokes. His blog *Shtetl-Optimized* is the best running commentary on advantage claims.
+- **N. David Mermin**, *Quantum Computer Science*: a short, elegant book for computer scientists.
+- **Quantum Country** (Matuschak & Nielsen): an essay with built-in spaced repetition, the inspiration for this course's flashcards.
+- The **Error Correction Zoo** website: every code you've heard of, and hundreds more.
+
+**Courses:** MIT OCW 8.04/8.05 (quantum physics), IBM's Qiskit courses, Umesh Vazirani's quantum computing lectures, and John Watrous's notes on quantum information theory.
+
+**Video:** 3Blue1Brown's quantum computing and Grover videos, and the talks from the yearly **QIP** and **APS March Meeting** conferences (many are free online).
+
+---
+
+## Where the open problems are
+
+<History>
+In 1981, at a conference at MIT, **Richard Feynman** argued that nature isn't classical, "and if you want to make a simulation of nature, you'd better make it quantum mechanical." Forty-plus years later, the field he helped start employs tens of thousands of people. Every major advance in this course, from Shor's algorithm to the threshold theorem to the surface-code experiments, came from someone asking whether a "known" limitation was real.
+</History>
+
+A few frontiers where newcomers are making a difference:
+
+- **Better codes:** qLDPC codes that need 10× fewer qubits than the surface code, codes matched to biased noise (cat qubits), and faster logical gates via lattice surgery and magic-state cultivation.
+- **Decoding:** real-time decoders on FPGAs and ASICs, neural decoders, and decoders for correlated noise.
+- **Algorithms:** useful quantum simulation for chemistry and materials, provable speedups beyond Shor and Grover, and dequantisation (classical algorithms that erase claimed speedups).
+- **Complexity:** what can noisy, non-error-corrected devices provably do? Which "advantage" tasks are really hard?
+- **Hardware engineering:** materials, fabrication, cryogenics, control electronics and photonic links. Careers here span physics, EE and CS.
+- **Cryptography migration:** moving the world's infrastructure to post-quantum cryptography is a decade-long software-engineering project happening *now*.
+
+<Quiz id="u12l1-next">
+  <Q>You want to reproduce a surface-code threshold plot with millions of noisy shots, on a laptop, this weekend. Which tools fit best?</Q>
+  <Opt>A dense state-vector simulator with 49 qubits</Opt>
+  <Opt correct>A stabilizer simulator (e.g. Stim) plus a matching decoder (e.g. PyMatching)</Opt>
+  <Opt>A real quantum computer with 49 physical qubits</Opt>
+  <Opt>A density-matrix simulator</Opt>
+  <Explain>Surface-code circuits are Clifford circuits with Pauli noise, which the Gottesman–Knill theorem says are efficiently simulable classically. A dense 49-qubit state vector would need $2^{49}$ amplitudes (petabytes), and a density matrix is worse.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- The thread of the course: **amplitudes interfere** → qubits as **vectors on a sphere** → **entanglement** as a resource → **circuits and algorithms** that choreograph interference → **noise** that measures your qubits for you → **error correction** that fights back by measuring only harmless questions.
+- To keep going, run real circuits (**Qiskit, Cirq, PennyLane, Stim**), read **Nielsen & Chuang**, **Preskill**, **Aaronson** and **Mermin**, and follow the **arXiv** and conference talks, with healthy skepticism toward headlines.
+- Open problems need computer scientists: codes, decoders, compilers, verification, algorithms, complexity, and post-quantum migration.
+- One experiment left. Good luck.

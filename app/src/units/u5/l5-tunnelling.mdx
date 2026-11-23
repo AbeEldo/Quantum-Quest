@@ -1,0 +1,132 @@
+import { SchrodingerSim } from './widgets/SchrodingerSim';
+import { TransmissionExplorer } from './widgets/TransmissionExplorer';
+
+Roll a ball at a hill. If it has less kinetic energy than the hill's height in potential energy, it rolls partway up, stops, and rolls back. Every time, with certainty. That's energy conservation, and nothing in classical physics gets around it.
+
+Now fire an electron at an energy barrier taller than its energy.
+
+<Predict id="u5l5-tunnel">
+  <Q>An electron with energy $E$ hits a thin barrier of height $V_0 = 1.5E$. What happens?</Q>
+  <Opt>It always reflects, just like the ball</Opt>
+  <Opt correct>It usually reflects, but sometimes appears on the far side</Opt>
+  <Opt>It always passes through, because electrons are waves</Opt>
+  <Opt>It gets stuck inside the barrier</Opt>
+  <Reveal>
+Sometimes it **appears on the other side**, even though it never had enough energy to climb over. This is **quantum tunnelling**. For thin barriers it's common. For thick ones it's exponentially rare, but never exactly zero. It powers radioactive decay, nuclear fusion in the Sun, the scanning tunnelling microscope, flash memory, and the Josephson junctions inside superconducting qubits.
+  </Reveal>
+</Predict>
+
+---
+
+## Watch it happen
+
+Here's a packet with mean energy $\langle E\rangle \approx 1.3$ (the dashed yellow line) heading for a barrier of height $V_0 = 2$ and width $a = 1$, in units $\hbar = m = 1$:
+
+<SchrodingerSim title="Tunnelling through a barrier" preset="barrier" presets={['barrier', 'step']} V0={2} width={1} x0={-25} sigma={4} k0={1.6} readouts={['t', 'T', 'E']} speed={8} />
+
+<Try>
+- Press play. When the packet hits the barrier it **splits**: most of it reflects, but a smaller packet emerges on the far side and keeps going. The readout tracks how much probability ends up on each side, about 29% transmitted here.
+- Before the split, look at the colourful fringes on the left. The incoming and reflected waves interfere, making a standing-wave pattern.
+- Make the barrier **twice as wide** ($a = 2$) and reset. Transmission collapses to a few percent. Width matters *exponentially*.
+- Lower $V_0$ below the packet's energy (try 1.0). Now classically everything would pass, but some of the packet still **reflects**. Quantum waves reflect off *any* abrupt change in potential, even downward steps.
+- Try the **step** potential: a cliff that never comes back down.
+</Try>
+
+Remember what the transmitted packet means. It's not a fraction of an electron. Each electron is detected **either** on the left **or** on the right, with these probabilities. Repeat the experiment many times and about 29% of the electrons tunnel.
+
+---
+
+## Inside the forbidden zone
+
+Why is tunnelling possible? Look at the Schrödinger equation inside the barrier, where $V_0 > E$:
+
+$$
+-\frac{\hbar^2}{2m}\psi'' + V_0\psi = E\psi \quad\Longrightarrow\quad \psi'' = \kappa^2\psi, \qquad \kappa = \frac{\sqrt{2m(V_0 - E)}}{\hbar}.
+$$
+
+Outside the barrier, $\psi'' = -k^2\psi$ gives oscillations. Inside, the sign flips and the solutions are **real exponentials**, $e^{\pm\kappa x}$. The wavefunction doesn't stop at the wall. It **decays** into the barrier with a characteristic length $1/\kappa$. If the barrier is thin compared with $1/\kappa$, there's still some wavefunction left at the far edge, and it reconnects to an outgoing wave.
+
+You already saw this in the harmonic oscillator: every bound state leaked a little beyond its classical turning points. Tunnelling is that leakage connecting to free space on the other side.
+
+Matching $\psi$ and $\psi'$ at both edges gives the exact transmission probability:
+
+$$
+T = \left[1 + \frac{V_0^2\sinh^2(\kappa a)}{4E(V_0 - E)}\right]^{-1} \;\approx\; 16\,\frac{E}{V_0}\Big(1 - \frac{E}{V_0}\Big)\,e^{-2\kappa a} \quad (\kappa a \gg 1).
+$$
+
+<KeyIdea>
+**Tunnelling probability falls exponentially** with the barrier width and with the square root of the energy deficit: $T \sim e^{-2\kappa a}$ with $\kappa = \sqrt{2m(V_0-E)}/\hbar$. Small changes in width or height cause enormous changes in $T$. Heavy particles (large $m$) tunnel far less than light ones.
+</KeyIdea>
+
+<TransmissionExplorer />
+
+<Try>
+- In the right-hand plot, $\log_{10}T$ vs width is a **straight line** for thick barriers: the signature of exponential decay. The pink dashed approximation hugs it once $a \gtrsim 1/\kappa$.
+- In the left plot, drag $E$ above the barrier top ($E/V_0 > 1$). $T$ doesn't jump to 1. It *oscillates*, touching 1 only at special energies.
+</Try>
+
+<NumQuiz id="u5l5-exact-T" answer={0.0139} tol={0.0008}>
+  <Q>Using the exact formula (with $\hbar = m = 1$), compute $T$ for $E = 1$, $V_0 = 2$, $a = 2$.</Q>
+  <Hint>$\kappa = \sqrt{2(2-1)} = \sqrt2$. Then $\sinh^2(2\sqrt2) \approx 71.1$ and $V_0^2/(4E(V_0-E)) = 1$.</Hint>
+  <Explain>$T = 1/(1 + 71.1) \approx 0.0139$, about 1.4%. Check it in the calculator. For comparison, at $a = 1$ it's about 21%.</Explain>
+</NumQuiz>
+
+---
+
+## Over the top, and resonances
+
+When $E > V_0$, the wave inside oscillates with a shorter wavelength, and partial reflections from the two edges interfere. When the barrier width holds a whole number of half-wavelengths ($k'a = n\pi$), the two reflections cancel exactly and $T = 1$. This is perfect transparency. It's the **Ramsauer–Townsend effect**: in the 1920s, slow electrons were seen to pass through argon and xenon atoms almost as if they weren't there.
+
+The same interference trick works *below* the barrier top with **two** barriers. The gap between them acts like a box with a quasi-bound level. When the incoming energy matches that level, waves bouncing between the barriers add up, and the pair becomes transparent even though each barrier alone mostly reflects. This is **resonant tunnelling**.
+
+<SchrodingerSim title="Resonant tunnelling: two barriers beat one" preset="double" presets={['barrier', 'double']} V0={3} width={0.5} gap={1.29} x0={-45} sigma={8} k0={1.414} xRange={[-90, 70]} N={2048} dt={0.02} readouts={['t', 'T', 'E']} speed={10} />
+
+<Try>
+- With the double barrier at gap 1.29, about **80%** of the packet gets through. Switch to the single **barrier** (same height and width): only about **40%**. Adding a second wall *increased* transmission!
+- Nudge the gap to 2.0 and reset: transmission drops sharply. The resonance is a narrow target, and you'll hunt for such targets in the **Tunnel Vision** game.
+- A packet has a spread of energies, so only part of it hits the resonance exactly. That's why it's 80% and not 100%.
+</Try>
+
+<Quiz id="u5l5-resonant">
+  <Q>Why can two barriers transmit better than one?</Q>
+  <Opt>The second barrier pushes the particle forward</Opt>
+  <Opt>Two barriers average out to a lower barrier</Opt>
+  <Opt correct>Waves reflecting back and forth between the barriers interfere constructively at certain energies, cancelling the overall reflection</Opt>
+  <Opt>They can't. Each extra barrier multiplies the transmission by less than 1</Opt>
+  <Explain>Transmission amplitudes add with phases, not probabilities. At a resonance the multiply-reflected paths add in phase in the forward direction and cancel in the backward direction, just as in the Mach–Zehnder interferometer, where interference sent every photon to one detector. "Multiply the probabilities" is the classical reasoning that fails here.</Explain>
+</Quiz>
+
+---
+
+## Tunnelling in the real world
+
+**Alpha decay.** In 1928 **George Gamow**, and independently **Ronald Gurney and Edward Condon**, explained radioactive alpha decay as tunnelling. An alpha particle rattles around inside the nucleus, hitting the Coulomb barrier about $10^{21}$ times per second, and each hit has a tiny tunnelling probability. Because $T$ is exponential in the barrier, small energy differences give astronomically different lifetimes. Uranium-238 emits alpha particles of about 4.2 MeV and has a half-life of 4.5 billion years. Polonium-212 emits about 8.8 MeV alphas and has a half-life of 0.3 microseconds. Twice the energy, more than $10^{23}$ times shorter-lived.
+
+**The Sun.** Protons in the Sun's core (about 15 million K) don't have nearly enough thermal energy to overcome their mutual electric repulsion. Fusion happens only because they *tunnel* through the Coulomb barrier. No tunnelling, no sunlight.
+
+**The scanning tunnelling microscope.** In 1981 **Gerd Binnig and Heinrich Rohrer** at IBM Zürich brought a sharp metal tip within a nanometre of a surface and measured the electrons tunnelling across the vacuum gap (Nobel 1986). The current falls off exponentially with distance, so tiny height changes produce huge current changes, and the STM can image individual atoms.
+
+<NumQuiz id="u5l5-stm" answer={7.7} tol={0.4}>
+  <Q>In an STM the barrier is the metal's work function, $V_0 - E \approx 4$ eV. The current scales as $e^{-2\kappa d}$. By what factor does the current drop when the tip moves 1 Å (0.1 nm) farther away? ($m_e = 9.109\times10^{-31}$ kg, $\hbar = 1.055\times10^{-34}$ J·s, 1 eV $= 1.602\times10^{-19}$ J)</Q>
+  <Hint>$\kappa = \sqrt{2m(4\text{ eV})}/\hbar \approx 1.02\times10^{10}\ \text{m}^{-1}$. Compute $e^{2\kappa\cdot 10^{-10}\,\text{m}}$.</Hint>
+  <Explain>$2\kappa d \approx 2.05$, so the current falls by $e^{2.05} \approx 7.7$. Roughly an order of magnitude per ångström, which is why an STM can resolve height differences far smaller than an atom.</Explain>
+</NumQuiz>
+
+**Flash memory.** Every SSD and USB stick stores bits as charge trapped on a "floating gate", an island of conductor wrapped in an insulating oxide layer less than about 10 nanometres thick. To write or erase, a strong voltage tilts the barrier so electrons tunnel through it (**Fowler–Nordheim tunnelling**). Without the voltage, the barrier holds the charge for years.
+
+**Josephson junctions.** Cooper pairs tunnelling through the insulating layer of a Josephson junction produce the $-E_J\cos\varphi$ energy behind the transmon qubit from the last lesson. **Leo Esaki**'s 1957 tunnel diode, the first electronic device to exploit tunnelling, shared the 1973 Nobel Prize with Ivar Giaever and Brian Josephson.
+
+<Warning>
+**Tunnelling isn't "borrowing energy" from the uncertainty principle.** A popular story says the particle briefly borrows energy $\Delta E$ for a time $\hbar/\Delta E$ to hop over the barrier. That's not what the mathematics says. Energy is conserved throughout: the transmitted particle has exactly the energy it came in with. The wavefunction simply doesn't vanish in the classically forbidden region, so there's a nonzero amplitude on the far side. (If you *measured* the particle inside the barrier, you would find it there, but the measurement itself would supply the energy.)
+</Warning>
+
+---
+
+## Summary
+
+- Quantum particles can cross barriers higher than their energy: **tunnelling**.
+- Inside a barrier, $\psi$ decays as $e^{-\kappa x}$ with $\kappa = \sqrt{2m(V_0-E)}/\hbar$, so $T \sim e^{-2\kappa a}$, exponentially sensitive to width, height and mass.
+- Exact rectangular barrier: $T = [1 + V_0^2\sinh^2(\kappa a)/4E(V_0-E)]^{-1}$.
+- Above a barrier, waves still reflect, except at resonances with $T = 1$ (Ramsauer–Townsend).
+- Two barriers can be transparent at resonant energies: **resonant tunnelling**. Amplitudes add, not probabilities.
+- Applications: alpha decay (Gamow 1928), fusion in the Sun, the STM (1981), flash memory, tunnel diodes and Josephson junctions.

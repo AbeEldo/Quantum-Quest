@@ -1,0 +1,103 @@
+import { PlatformComparison } from './widgets/PlatformComparison';
+
+A bit is easy to build: anything with two stable states that you can switch and read will do, whether a transistor, a magnetic domain or a pit on a disc. A **qubit** is much harder. It needs two levels that you can
+
+1. prepare reliably,
+2. rotate *coherently* (precise unitaries, not just flips),
+3. entangle with other qubits,
+4. read out on demand,
+
+while being **isolated** from everything else in the universe, which would otherwise decohere it (World 10). Control and isolation pull in opposite directions, and every hardware platform is a different compromise between them.
+
+<Predict id="u11l5-fastest">
+  <Q>Which platform has the **fastest** two-qubit gates, roughly a thousand times faster than the slowest?</Q>
+  <Opt correct>Superconducting circuits</Opt>
+  <Opt>Trapped ions</Opt>
+  <Opt>Neutral atoms</Opt>
+  <Opt>They're all about the same</Opt>
+  <Explain>Superconducting gates take tens of nanoseconds. Trapped-ion gates take tens to hundreds of *micro*seconds. But ions keep their coherence about $10^4$ times longer. Speed vs coherence is the central tradeoff in hardware. Explore it below.</Explain>
+</Predict>
+
+---
+
+## The scorecard
+
+In 2000, **David DiVincenzo** listed the criteria a quantum-computing technology must meet: scalable, well-characterised qubits; initialisation to a simple state; coherence times much longer than gate times; a universal gate set; and qubit-specific measurement. (Two more criteria cover sending qubits between machines.) Today's platforms all meet the list on a small scale. The race is about meeting it at the scale of **millions** of qubits, with errors far enough below threshold that error correction pays off.
+
+<PlatformComparison />
+
+<Try>
+- Switch the metric to **gate error**. Ions lead, superconductors and atoms follow, and spins are just above 99%.
+- Switch to **coherence ÷ gate time**. The huge gaps in raw speed and raw coherence mostly cancel out, leaving every major platform at roughly $10^3$–$10^5$ operations per coherence time.
+- Click each platform to read how its qubit is made, controlled and measured.
+</Try>
+
+---
+
+## Superconducting circuits
+
+A **transmon** is a tiny circuit, a capacitor shunting a **Josephson junction** (two superconductors separated by a nanometre-thin insulator). Cooled to about 10 mK, the circuit behaves like a single quantum oscillator. The junction makes it *anharmonic*, so the 0→1 transition has a different frequency from 1→2 and can be addressed on its own (you met this in World 5). Microwave pulses rotate it, and a coupled resonator reads it out.
+
+Superconducting qubits are **fast** and are made with lithography, like computer chips. Google and IBM have bet on them, and nearly all surface-code experiments so far, including Willow, used them. The costs are refrigerators, enormous wiring harnesses, coherence of only tens to hundreds of microseconds, and fixed nearest-neighbour coupling. IBM's roadmap leans on new **qLDPC codes** (its "bivariate bicycle" codes), which need some longer-range couplers but promise roughly 10× fewer physical qubits per logical qubit than the surface code.
+
+## Trapped ions
+
+An ion, say ytterbium or barium with one electron removed, floats in vacuum, held by oscillating electric fields. The qubit is two hyperfine levels of the ion. These are perfectly identical from ion to ion, because nature makes every atom the same. Laser or microwave pulses drive gates, and **two-qubit gates** push the ions' shared vibration so that their internal states pick up a state-dependent phase. Readout is beautifully simple: under a probe laser, $|1\rangle$ fluoresces and $|0\rangle$ stays dark.
+
+Ions hold the fidelity records. Quantinuum's 98-qubit **Helios** (launched November 2025) reports 99.92% average two-qubit fidelity, and IonQ announced 99.99% on R&D prototypes in late 2025. Any ion can interact with any other. The weaknesses are speed and scale: gates take microseconds, ions have to be **shuttled** between zones, and growing past a few hundred ions likely needs 2D traps or photonic links between traps.
+
+## Neutral atoms
+
+Laser "tweezers" (tightly focused beams) each hold one neutral atom. Hundreds or thousands of them can be arranged into arbitrary patterns in a single vacuum cell. Gates use **Rydberg states**: an atom excited so far that its electron orbits hundreds of nanometres out, where it interacts strongly with its neighbours. The killer feature is that **tweezers can move atoms mid-computation**, so the connectivity is whatever you need, and whole blocks of logical qubits can be operated in parallel.
+
+Neutral atoms went from curiosity to QEC front-runner in about five years. Harvard/MIT/QuEra ran 48 logical qubits in 2023, and in 2025 published a full fault-tolerant architecture using up to 448 atoms. Caltech trapped an array of 6,100 atoms. The main problems are slow cycles (moving and imaging take milliseconds), atoms that get lost and must be replaced, and two-qubit fidelities that are only now passing 99.5%.
+
+## Photonics
+
+Photons almost never decohere, and they travel along fibres at the speed of light. But they also barely interact with each other, which makes two-qubit gates hard. Photonic quantum computing therefore uses **measurement-based** schemes: create small entangled resource states, "fuse" them together with probabilistic measurements, and build up computation from the outcomes. The dominant error is **photon loss**. PsiQuantum (manufacturing with GlobalFoundries) and Xanadu are building toward fault-tolerant machines in chip foundries, and USTC's Jiuzhang ran boson-sampling advantage experiments.
+
+## Spin qubits
+
+An electron confined in a silicon **quantum dot**, a tiny region defined by gate electrodes, carries a spin: up or down is $|0\rangle$ or $|1\rangle$. Gates use magnetic or electric resonance, and the **exchange interaction** between neighbouring dots entangles them. The appeal is that this is the transistor industry's own material. Devices are about 100 nm across, so in principle *billions* fit on a chip, and they can run at around 1 K instead of 10 mK. In isotopically purified ²⁸Si, coherence reaches milliseconds. Two-qubit fidelities passed 99% in 2022, but devices still have only a dozen or so qubits.
+
+## Topological qubits
+
+The most ambitious idea is to store a qubit in **non-local** degrees of freedom, so that no local disturbance can flip it, giving error protection by physics rather than software. The leading proposal uses **Majorana zero modes** at the ends of superconductor–semiconductor nanowires. Microsoft announced the "Majorana 1" chip in February 2025 alongside a *Nature* paper on parity measurements. The journal's editors noted, however, that the paper did **not** establish the presence of Majorana modes, and the claims remain disputed (more in Lesson 6).
+
+<Warning>
+**"Qubit count is the scoreboard."** IBM built a 1,121-qubit chip in 2023, yet smaller machines with better qubits run deeper, more useful circuits. What matters for fault tolerance is the combination of error rates, speed, connectivity and how many *logical* qubits, at what logical error rate, you can run. And beware company press releases that quote *best* figures from small test devices next to *system* figures from competitors.
+</Warning>
+
+<Quiz id="u11l5-match">
+  <Q>"Its qubits are identical atoms held by lasers. Connectivity is reconfigured by physically moving qubits, and two-qubit gates use highly excited Rydberg states." Which platform is this?</Q>
+  <Opt>Trapped ions</Opt>
+  <Opt correct>Neutral atoms</Opt>
+  <Opt>Spin qubits</Opt>
+  <Opt>Superconducting circuits</Opt>
+  <Explain>Optical tweezers + Rydberg interactions + atom shuttling is the neutral-atom recipe. Ions also move, but they're charged, held by electric fields, and entangled through shared motion.</Explain>
+</Quiz>
+
+<CSCorner>
+Choosing a qubit platform is like choosing between CPUs, GPUs and FPGAs: no single metric decides. A fault-tolerant machine's real figure of merit is closer to **time-to-solution** = (number of logical operations) × (logical cycle time) × (overheads), subject to logical errors staying below about $1/(\text{number of operations})$. Superconductors have microsecond QEC cycles. Ions and atoms have millisecond cycles but better connectivity, which allows more efficient codes. Resource-estimate papers routinely find that a "slower" platform can need far fewer qubits for the same task but take days instead of hours.
+</CSCorner>
+
+<Quiz id="u11l5-ratio">
+  <Q>A platform has 2-qubit gates of 200 µs and coherence of 2 s. Another has 50 ns gates and 200 µs coherence. Which can perform more gates within one coherence time?</Q>
+  <Opt>The first, by a factor of about 10</Opt>
+  <Opt>The second, by a factor of about 10</Opt>
+  <Opt correct>They're about equal, ~10⁴ each</Opt>
+  <Opt>Impossible to say without qubit counts</Opt>
+  <Explain>$2\,\text{s}/200\,\mu\text{s} = 10^4$ and $200\,\mu\text{s}/50\,\text{ns} = 4\times10^3$. Both are around $10^4$: roughly ion-like vs superconductor-like numbers. Raw speed and raw coherence trade off against each other.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Every qubit platform balances **control** (gates, readout) against **isolation** (coherence). DiVincenzo's criteria list what's needed.
+- **Superconducting:** fast (ns) gates, lithographic chips, 10 mK. Leader in surface-code QEC (Google, IBM).
+- **Trapped ions:** identical qubits, highest fidelities (99.9%+), all-to-all connectivity, slow (µs–ms) gates.
+- **Neutral atoms:** thousands of atoms in tweezers, reconfigurable connectivity, rapid logical-qubit progress, slow cycles and atom loss.
+- **Photonics:** little decoherence, but loss and probabilistic gates. Measurement-based architectures.
+- **Spins in silicon:** tiny and CMOS-compatible, still small-scale. **Topological:** potentially self-protecting, but unproven.
+- All numbers are approximate and change quickly. Compare like with like, and look at logical-level results.

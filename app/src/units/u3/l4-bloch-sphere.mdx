@@ -1,0 +1,173 @@
+import { BlochAnglesExplorer } from './widgets/BlochAnglesExplorer';
+
+Every qubit state is a pair of complex numbers,
+
+$$
+|\psi\rangle = \alpha|0\rangle + \beta|1\rangle, \qquad |\alpha|^2 + |\beta|^2 = 1 .
+$$
+
+Two complex numbers means **four real numbers**. That sounds like a lot to keep in your head. But this lesson will show that only **two** of those four numbers matter physically, and that every possible qubit state is simply a **point on the surface of a sphere**.
+
+That sphere, named after the physicist Felix Bloch, is the single most useful picture in quantum computing. Once you can see it, gates become rotations, and much of what follows becomes geometric intuition instead of algebra.
+
+---
+
+## Throwing away what doesn't matter
+
+Start with the four real numbers. Write each amplitude in polar form, $\alpha = r_0 e^{i\phi_0}$ and $\beta = r_1 e^{i\phi_1}$.
+
+**Constraint 1 — normalisation.** Since $r_0^2 + r_1^2 = 1$, the two magnitudes lie on a quarter circle. We can write them using a single angle: $r_0 = \cos(\theta/2)$, $r_1 = \sin(\theta/2)$ with $0 \le \theta \le \pi$. (Why $\theta/2$ and not $\theta$? Hold that thought — it is the punchline of this lesson.)
+
+**Constraint 2 — global phase is invisible.** Multiplying the whole state by $e^{i\gamma}$ changes no measurement probability, ever: $|e^{i\gamma}\alpha|^2 = |\alpha|^2$. In the previous lesson you saw that $|+\rangle$ and $|-\rangle$, which differ only by a sign on $|1\rangle$, are genuinely different states; that *relative* phase matters. But a *global* phase multiplying the whole state does not (the next lesson looks at this closely). So we can choose $\gamma$ to make $\alpha$ real and non-negative, leaving only the relative phase $\phi = \phi_1 - \phi_0$.
+
+<KeyIdea>
+Every qubit state can be written (up to an unobservable global phase) as
+
+$$
+|\psi\rangle = \cos\frac{\theta}{2}\,|0\rangle + e^{i\phi}\sin\frac{\theta}{2}\,|1\rangle
+$$
+
+with $\theta \in [0, \pi]$ and $\phi \in [0, 2\pi)$. Two angles — exactly the latitude/longitude of a point on a sphere.
+</KeyIdea>
+
+<Quiz id="u3l4-count">
+  <Q>Of the four real numbers describing $(\alpha, \beta)$, which two are removed by physical arguments?</Q>
+  <Opt>The two phases $\phi_0$ and $\phi_1$</Opt>
+  <Opt correct>One by normalisation, one because global phase is unobservable</Opt>
+  <Opt>Both magnitudes $r_0, r_1$</Opt>
+  <Opt>None — all four are needed</Opt>
+  <Explain>Normalisation ties $r_0$ and $r_1$ together (leaving $\theta$), and global phase means only the *difference* of phases (leaving $\phi$) matters. 4 − 2 = 2 real parameters.</Explain>
+</Quiz>
+
+---
+
+## The map: angles to points
+
+Interpret $\theta$ as the polar angle measured down from the north pole and $\phi$ as the azimuthal angle around the equator. The point on the unit sphere is
+
+$$
+\vec r = (\sin\theta\cos\phi,\ \sin\theta\sin\phi,\ \cos\theta).
+$$
+
+This vector is called the **Bloch vector**. Play with the two angles and watch both the point on the sphere and the amplitudes:
+
+<BlochAnglesExplorer />
+
+<Try>
+- Set $\theta = 0$. You get $|0\rangle$ at the **north pole**. Set $\theta = \pi$: $|1\rangle$ at the **south pole**.
+- Set $\theta = \pi/2$ and sweep $\phi$ all the way around. The *probabilities* never change (50/50!), but the state travels around the whole equator. That is relative phase, made visible.
+</Try>
+
+The six "compass points" of the sphere get special names because they show up constantly:
+
+| State | Amplitudes | Where |
+|---|---|---|
+| $\lvert 0\rangle$ | $(1, 0)$ | north pole, $+z$ |
+| $\lvert 1\rangle$ | $(0, 1)$ | south pole, $-z$ |
+| $\lvert +\rangle$ | $\tfrac{1}{\sqrt2}(1, 1)$ | $+x$ |
+| $\lvert -\rangle$ | $\tfrac{1}{\sqrt2}(1, -1)$ | $-x$ |
+| $\lvert +i\rangle$ | $\tfrac{1}{\sqrt2}(1, i)$ | $+y$ |
+| $\lvert -i\rangle$ | $\tfrac{1}{\sqrt2}(1, -i)$ | $-y$ |
+
+<Quiz id="u3l4-where-minus-i">
+  <Q>Where on the Bloch sphere is the state $\frac{1}{\sqrt2}\left(|0\rangle - i|1\rangle\right)$?</Q>
+  <Opt>North pole</Opt>
+  <Opt>On the equator at $-x$</Opt>
+  <Opt correct>On the equator at $-y$</Opt>
+  <Opt>On the equator at $+y$</Opt>
+  <Explain>Equal magnitudes put it on the equator ($\theta = \pi/2$). The relative phase is $-i = e^{i\cdot 3\pi/2}$, so $\phi = 3\pi/2$, which points along $-y$.</Explain>
+</Quiz>
+
+---
+
+## The punchline: why half-angles?
+
+Here is something that should bother you. $|0\rangle$ and $|1\rangle$ are **orthogonal** vectors — as different as two states can possibly be, since measuring one never gives the other. Yet on the Bloch sphere they sit at the north and south poles, separated by $180°$, not $90°$.
+
+That's the job of $\theta/2$: an angle $\theta$ **on the sphere** corresponds to an angle $\theta/2$ **between state vectors** in $\mathbb{C}^2$. Opposite points on the sphere are orthogonal states.
+
+<Predict id="u3l4-orthogonal">
+  <Q>A state sits on the equator at $+x$ (that's $|+\rangle$). Which state is orthogonal to it — the one you can perfectly distinguish it from?</Q>
+  <Opt>$|0\rangle$, at the north pole (90° away on the sphere)</Opt>
+  <Opt correct>$|-\rangle$, at $-x$ (antipodal)</Opt>
+  <Opt>$|+i\rangle$, at $+y$ (90° away on the sphere)</Opt>
+  <Reveal>
+Check it: $\langle + | - \rangle = \tfrac12(1\cdot 1 + 1\cdot(-1)) = 0$. ✔ Meanwhile $\langle +|0\rangle = 1/\sqrt2 \neq 0$ — those two are *not* orthogonal, even though they look perpendicular on the sphere.
+
+**Antipodal points on the Bloch sphere are orthogonal states.** This is why a measurement "along the $x$ axis" has exactly two outcomes, $|+\rangle$ and $|-\rangle$, at opposite ends of that axis.
+  </Reveal>
+</Predict>
+
+There's a nice formula for how likely you are to find one state when you look for another. If the two Bloch vectors are separated by an angle $\Theta$ on the sphere,
+
+$$
+|\langle \psi | \chi \rangle|^2 = \cos^2\frac{\Theta}{2} = \frac{1 + \vec r_\psi \cdot \vec r_\chi}{2}.
+$$
+
+<NumQuiz id="u3l4-prob-zero" answer={0.5} tol={0.01}>
+  <Q>A qubit is in $|+i\rangle$. You measure in the standard basis $\{|0\rangle, |1\rangle\}$. What's the probability of getting $0$?</Q>
+  <Hint>The Bloch vectors of $|+i\rangle$ and $|0\rangle$ are $(0,1,0)$ and $(0,0,1)$. Use the dot-product formula.</Hint>
+  <Explain>$\vec r_\psi\cdot\vec r_0 = 0$, so the probability is $(1 + 0)/2 = 1/2$. Every state on the equator gives a 50/50 result when measured along $z$.</Explain>
+</NumQuiz>
+
+<CSCorner>
+The Bloch sphere is to a qubit what the interval $[0,1]$ is to a probabilistic bit. A random bit is fully described by one number $p$. A qubit needs two angles. The extra dimension (the longitude $\phi$) is *phase*, the resource classical randomness doesn't have, and it is what lets quantum algorithms make wrong answers cancel.
+</CSCorner>
+
+---
+
+## Gates are rotations
+
+Here is why the Bloch sphere matters so much for quantum computing: **every single-qubit gate acts as a rotation of the sphere.** (Unitary 2×2 matrices, up to global phase, correspond exactly to 3D rotations.)
+
+| Gate | Rotation |
+|---|---|
+| $X$ | $180°$ about the $x$-axis |
+| $Y$ | $180°$ about the $y$-axis |
+| $Z$ | $180°$ about the $z$-axis |
+| $H$ | $180°$ about the diagonal axis $(x+z)/\sqrt2$ |
+| $S$ | $90°$ about $z$ |
+| $T$ | $45°$ about $z$ |
+
+Press the gate buttons and watch the state move. The orange line shows the rotation axis.
+
+<BlochPlayground title="Gates as rotations" gates={['X', 'Y', 'Z', 'H', 'S', 'T']} />
+
+<Try>
+- Apply $H$ to $|0\rangle$. You land on $|+\rangle$. Apply $H$ again: back to $|0\rangle$. (Two half-turns about the same axis make a full turn.)
+- From $|+\rangle$, press $S$ repeatedly. Watch the state march around the equator: $|+\rangle \to |+i\rangle \to |-\rangle \to |-i\rangle \to |+\rangle$.
+- Starting from $|0\rangle$, press $Z$. Nothing visible happens — the north pole sits *on* the $z$ axis. $Z|0\rangle = |0\rangle$.
+</Try>
+
+<Quiz id="u3l4-z-on-plus">
+  <Q>What does the $Z$ gate do to $|+\rangle$?</Q>
+  <Opt>Nothing — $Z$ only affects $|1\rangle$</Opt>
+  <Opt correct>Sends it to $|-\rangle$ (half a turn around the equator)</Opt>
+  <Opt>Sends it to $|1\rangle$</Opt>
+  <Opt>Sends it to $|+i\rangle$</Opt>
+  <Explain>$Z$ is a 180° rotation about $z$, which takes $+x$ to $-x$. Algebraically, $Z\tfrac{1}{\sqrt2}(|0\rangle+|1\rangle) = \tfrac{1}{\sqrt2}(|0\rangle-|1\rangle) = |-\rangle$. A "phase flip" is invisible in the $z$ basis but completely changes the state.</Explain>
+</Quiz>
+
+---
+
+## Challenge: navigate the sphere
+
+Time to use your rotation intuition. Steer the qubit from $|0\rangle$ to the green target using the gates provided. Par is shown — can you match it?
+
+<BlochPlayground title="Challenge 1 — reach |−i⟩" gates={['H', 'S', 'X', 'Z']} target={[Math.PI / 2, 3 * Math.PI / 2]} challengeId="u3l4-c1" par={3} />
+
+<BlochPlayground title="Challenge 2 — reach the 'T-state' (θ=π/2, φ=π/4)" gates={['H', 'T', 'S', 'X']} target={[Math.PI / 2, Math.PI / 4]} challengeId="u3l4-c2" par={2} />
+
+<Note title="Why you can't reach everything with these buttons">
+With only $H$ and $T$, you can never land *exactly* on every point of the sphere, because there are infinitely many points and only countably many finite gate sequences. But you can get **arbitrarily close** to any point. That idea, called universality, comes back in World 7.
+</Note>
+
+---
+
+## Summary
+
+- A qubit state has 2 physical real parameters, $\theta$ and $\phi$, so it's a point on a sphere.
+- North/south poles are $|0\rangle$/$|1\rangle$. The equator holds the equal superpositions, and longitude is the relative phase.
+- **Antipodal points are orthogonal.** That's the job of the half-angle $\theta/2$.
+- $P(\text{find } \chi \mid \text{have } \psi) = \frac{1 + \vec r_\psi\cdot\vec r_\chi}{2}$.
+- Single-qubit gates are rotations: $X, Y, Z$ are half-turns, $H$ is a half-turn about the diagonal, and $S, T$ are quarter and eighth turns about $z$.

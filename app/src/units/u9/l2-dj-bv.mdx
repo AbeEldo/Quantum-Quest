@@ -1,0 +1,164 @@
+import { InterferenceLedger } from './widgets/InterferenceLedger';
+import { c } from '../../engine/complex';
+
+Scale Deutsch's problem up. The box now takes an $n$-bit input, $f:\{0,1\}^n \to \{0,1\}$, and you are **promised** that $f$ is either
+
+- **constant**: the same output on all $2^n$ inputs, or
+- **balanced**: 0 on exactly half the inputs and 1 on the other half.
+
+Which is it? Classically, if the first $2^{n-1}$ answers you see are all 0, the function could still be balanced (the 1s might all be in the half you haven't looked at). To be **certain** you need $2^{n-1} + 1$ queries in the worst case. For $n = 50$ that's more than $5\times 10^{14}$.
+
+<Predict id="u9l2-hook">
+  <Q>How many quantum queries does it take to decide constant vs. balanced with certainty, for $n = 50$?</Q>
+  <Opt correct>1</Opt>
+  <Opt>50</Opt>
+  <Opt>About $2^{25}$, a square root of the classical cost</Opt>
+  <Opt>About $2^{49}$; quantum doesn't help with certainty</Opt>
+  <Explain>One. The Deutsch–Jozsa algorithm uses a single query, no matter how big $n$ is. To see why, we need one new tool: the Hadamard transform on $n$ qubits.</Explain>
+</Predict>
+
+---
+
+## The Hadamard transform is a Fourier transform
+
+On one qubit, $H|0\rangle = \tfrac{1}{\sqrt2}(|0\rangle + |1\rangle)$ and $H|1\rangle = \tfrac{1}{\sqrt2}(|0\rangle - |1\rangle)$. Both cases fit one formula:
+$$
+H|b\rangle = \frac{1}{\sqrt2}\sum_{c\in\{0,1\}} (-1)^{bc}\,|c\rangle .
+$$
+Apply $H$ to each of $n$ qubits in $|x\rangle = |x_1 x_2\cdots x_n\rangle$ and multiply out. The signs combine into $(-1)^{x_1y_1 + \cdots + x_ny_n}$:
+
+<KeyIdea>
+$$
+H^{\otimes n}|x\rangle = \frac{1}{\sqrt{2^n}}\sum_{y\in\{0,1\}^n} (-1)^{x\cdot y}\,|y\rangle, \qquad x\cdot y = x_1y_1\oplus x_2y_2\oplus\cdots\oplus x_ny_n .
+$$
+</KeyIdea>
+
+This is the **Fourier transform over the group** $\mathbb{Z}_2^n$ (bit strings under XOR). The functions $\chi_y(x) = (-1)^{x\cdot y}$ play the role that $e^{2\pi i k x/N}$ plays in the ordinary Fourier transform. Each $\chi_y$ is a "frequency" that checks the parity of the bits of $x$ selected by $y$. $H^{\otimes n}$ re-expresses a state in that frequency basis. It is its own inverse, because $H^2 = I$.
+
+<CSCorner>
+Classically this is the **Walsh–Hadamard transform**, familiar from coding theory (Reed–Muller codes), from Boolean function analysis (Fourier coefficients $\hat f(y)$ of a Boolean function), and from learning parities. The fast Walsh–Hadamard transform costs $O(N\log N)$ for $N = 2^n$ values. On a quantum computer it costs $n$ gates. The catch, as always, is that the result lives in amplitudes you can't read directly.
+</CSCorner>
+
+<NumQuiz id="u9l2-h3-amp" answer={-0.3536} tol={0.002}>
+  <Q>What is the amplitude of $|011\rangle$ in $H^{\otimes 3}|110\rangle$? (A decimal is fine.)</Q>
+  <Hint>Compute $x\cdot y$ for $x = 110$, $y = 011$: AND the bits position by position, then take the parity.</Hint>
+  <Explain>$110\cdot011 = (1\cdot0)\oplus(1\cdot1)\oplus(0\cdot1) = 1$, so the amplitude is $(-1)^1/\sqrt8 = -1/(2\sqrt2) \approx -0.354$.</Explain>
+</NumQuiz>
+
+---
+
+## Deutsch–Jozsa: one query, total interference
+
+The circuit is Deutsch's, widened. Prepare $|0\rangle^{\otimes n}|1\rangle$, apply $H$ everywhere, query once (the $|-\rangle$ ancilla turns it into a phase oracle), apply $H^{\otimes n}$ to the input register, and measure.
+
+After the query the input register holds
+$$
+\frac{1}{\sqrt{2^n}}\sum_x (-1)^{f(x)}|x\rangle .
+$$
+After the final $H^{\otimes n}$, the amplitude of the all-zeros outcome $y = 0\cdots0$ (where $x\cdot y = 0$ for every $x$) is
+$$
+\alpha_{0\cdots 0} = \frac{1}{2^n}\sum_x (-1)^{f(x)} = \begin{cases} \pm 1 & f \text{ constant}\\ 0 & f\text{ balanced.}\end{cases}
+$$
+**Constant: you see $0\cdots0$ with certainty. Balanced: you never see it.** One query.
+
+The ledger below makes this concrete for $n = 3$. Each of the 8 inputs contributes a $\pm1$ arrow to each output's amplitude, and the arrows add tip to tail.
+
+<InterferenceLedger />
+
+<Try>
+- Choose **Deutsch–Jozsa → constant 0**, then audit output $000$: eight arrows all point right, so the sum is 8 and the probability is 100%. Audit any other output: the arrows cancel exactly.
+- Choose **random balanced** and audit $000$: four $+1$s and four $-1$s, sum 0. The probability has spread over the *other* outputs.
+- In **Build any f**, make a function that is neither constant nor balanced (say, a single 1). Now $000$ shows up with some intermediate probability. The promise is what makes the answer certain.
+</Try>
+
+<Quiz id="u9l2-dj-read">
+  <Q>You run Deutsch–Jozsa on a promised function with $n = 4$ and measure $0100$. What do you conclude?</Q>
+  <Opt>Constant</Opt>
+  <Opt correct>Balanced</Opt>
+  <Opt>Nothing: you need to run it again</Opt>
+  <Opt>$f(0100) = 1$</Opt>
+  <Explain>For a constant function the outcome is $0000$ with probability 1. Any other outcome is impossible for a constant $f$, so $f$ must be balanced. (Which non-zero string you got carries information about $f$'s Fourier spectrum, not about any single value of $f$.)</Explain>
+</Quiz>
+
+---
+
+## The fine print: randomness
+
+<Warning title="DJ's exponential separation is against *exact* classical algorithms only">
+Allow the classical algorithm to be **randomized** and to err with a small probability, and the gap collapses. Query $k$ random inputs. If you ever see two different outputs, answer "balanced" (always right). If all $k$ agree, answer "constant". The only mistake is a balanced function that happens to give $k$ equal answers, which has probability at most $2\cdot 2^{-k}$. With $k = 20$ queries, independent of $n$, the error is below $2\times10^{-6}$.
+
+So Deutsch–Jozsa separates quantum from **deterministic** computation (in complexity terms, roughly EQP vs. P relative to an oracle). It gives no evidence that quantum beats **BPP**, the class that models practical classical computing.
+</Warning>
+
+<NumQuiz id="u9l2-random-error" answer={0.001953} tol={0.0001}>
+  <Q>A classical algorithm queries 10 uniformly random inputs (with replacement) of a **balanced** function. What's the probability that all 10 answers agree, fooling it into saying "constant"?</Q>
+  <Hint>Each answer is independently 0 or 1 with probability ½. All agree = all 0 or all 1.</Hint>
+  <Explain>$2\cdot(1/2)^{10} = 1/512 \approx 0.00195$. Ten queries already give 99.8% confidence, for any $n$.</Explain>
+</NumQuiz>
+
+---
+
+## Bernstein–Vazirani: learning a secret string in one shot
+
+Here's a problem where randomness *doesn't* rescue the classical side. The oracle hides an $n$-bit **secret** $s$ and computes
+$$
+f(x) = s\cdot x \pmod 2 .
+$$
+Find $s$.
+
+**Classically**, each query returns one bit, and you need $n$ bits of information, so you need at least $n$ queries, even with randomness. ($n$ is also enough: query $x = 100\cdots0$ to get $s_1$, then $010\cdots0$ to get $s_2$, and so on.)
+
+**Quantumly**, run the identical Deutsch–Jozsa circuit. After the query the input register is
+$$
+\frac{1}{\sqrt{2^n}}\sum_x (-1)^{s\cdot x}|x\rangle = H^{\otimes n}|s\rangle,
+$$
+which is exactly the Hadamard transform of $|s\rangle$. Since $H^{\otimes n}$ is its own inverse, the final layer of Hadamards returns $|s\rangle$. **Measure and read off all $n$ bits of the secret from one query.**
+
+Go back to the ledger, choose **Bernstein–Vazirani**, and set any secret. The output bars show a single spike at $y = s$. Audit $y = s$: every arrow agrees. Audit any $y \neq s$: perfect cancellation, because $(-1)^{(s\oplus y)\cdot x}$ sums to zero whenever $s\oplus y \neq 0$.
+
+<Quiz id="u9l2-bv-why-zero">
+  <Q>Why does every output $y \neq s$ have amplitude exactly zero in Bernstein–Vazirani?</Q>
+  <Opt>Because the oracle is only queried once</Opt>
+  <Opt correct>Because the amplitude is $\frac{1}{2^n}\sum_x(-1)^{(s\oplus y)\cdot x}$, and for any non-zero string $z = s\oplus y$, exactly half of all $x$ have $z\cdot x = 1$</Opt>
+  <Opt>Because measurement collapses the other outputs</Opt>
+  <Opt>Because the ancilla absorbs those amplitudes</Opt>
+  <Explain>Pick any position $i$ where $z_i = 1$. Flipping bit $i$ of $x$ flips the parity $z\cdot x$, which pairs every $x$ having $z\cdot x = 0$ with one having $z\cdot x = 1$. The $+1$s and $-1$s cancel exactly. This "characters are orthogonal" fact is the engine behind every Fourier-based quantum algorithm.</Explain>
+</Quiz>
+
+---
+
+## Challenge: build Bernstein–Vazirani
+
+Four qubits: q0–q2 hold the input and q3 is the ancilla. The oracle for the secret $s = 101$ is pre-placed in columns 3–4: CNOTs from q0 and q2 into the ancilla compute $x_0 \oplus x_2 = s\cdot x$. Add the gates around it so that the input register ends up holding $|101\rangle$ (with the ancilla left in $|-\rangle$).
+
+<CircuitLab n={4} circuit="; ; CNOT 0 3; CNOT 2 3" gates={['H', 'X', 'CNOT']} goal={{ kind: 'state', amps: [c(0), c(0), c(0), c(0), c(0), c(0), c(0), c(0), c(0), c(0), c(Math.SQRT1_2), c(-Math.SQRT1_2), c(0), c(0), c(0), c(0)], label: 'input = |101⟩, ancilla = |−⟩' }} challengeId="u9l2-bv-build" maxGates={12} showBloch={false} title="Challenge: Bernstein–Vazirani with secret 101" />
+
+<Note title="What the oracle 'looks like'">
+Inside, the BV oracle for secret $s$ is just a CNOT from each input qubit with $s_i = 1$ onto the ancilla. With the ancilla in $|-\rangle$, each CNOT kicks a $Z$ back onto its control (the CNOT-direction identity from World 7). So the "query" is really $Z^{s_1}\otimes\cdots\otimes Z^{s_n}$ sandwiched between Hadamard layers, and $HZH = X$ turns it into $X^{s_1}\otimes\cdots\otimes X^{s_n}$, which writes $s$ onto $|0\cdots0\rangle$. The black box was never that mysterious. That's a good reminder of why white-box problems are harder to speed up.
+</Note>
+
+---
+
+## Why these toy problems mattered
+
+<History>
+**Deutsch and Jozsa** (1992) gave the first problem with an exponential quantum–classical gap, against exact deterministic algorithms. **Ethan Bernstein and Umesh Vazirani** (1993, Berkeley) did much more: they defined the class **BQP**, built the quantum Turing machine theory properly, proved $\mathsf{BQP}\subseteq\mathsf{PSPACE}$, and introduced *recursive* Fourier sampling, a nested version of the secret-string problem. Recursive Fourier sampling gave the first **superpolynomial** quantum speedup over *randomized* classical algorithms relative to an oracle ($n$ vs. $n^{\Omega(\log n)}$ queries). That set the stage for Simon, and then Shor.
+</History>
+
+<Warning title='The "quantum parallelism" myth'>
+"The computer evaluated $f$ on all $2^n$ inputs at once, so it knows everything about $f$." No. After one query, $n$ qubits can yield at most $n$ classical bits when measured (Holevo's bound). BV extracts exactly $n$ bits, the secret, and that's the maximum possible. What the algorithm exploits is **structure**: $f$ is linear, so its Hadamard transform is concentrated on one point. For a function without such structure, one query reveals essentially nothing.
+</Warning>
+
+<CSCorner>
+BV is exactly **learning a linear function over GF(2)** from membership queries. A classical learner needs $n$ queries (one per unknown coefficient), and the quantum learner needs 1. A standard *classical* trick, querying random $x$ and solving the linear system, also needs about $n$ queries. The quantum advantage here is a factor of $n$, which is real but modest. The exponential separations of the next lesson need a hidden structure that classical sampling can't find efficiently.
+</CSCorner>
+
+---
+
+## Summary
+
+- $H^{\otimes n}|x\rangle = 2^{-n/2}\sum_y (-1)^{x\cdot y}|y\rangle$: the **Hadamard transform is the Fourier transform over** $\mathbb{Z}_2^n$, and it's its own inverse.
+- **Deutsch–Jozsa:** the amplitude of $0\cdots0$ is $\frac{1}{2^n}\sum_x(-1)^{f(x)}$, which is $\pm1$ for constant $f$ and $0$ for balanced. One query vs. $2^{n-1}+1$ deterministic queries.
+- The DJ gap **disappears against randomized classical algorithms**: $k$ random queries err with probability at most $2^{1-k}$.
+- **Bernstein–Vazirani:** $f(x) = s\cdot x$. Phase-query $H^{\otimes n}|0\rangle$ and you get $H^{\otimes n}|s\rangle$, so the final Hadamards reveal $s$. One query vs. $n$ classical (even randomized).
+- Interference does the work. Outputs whose $\pm1$ contributions cancel never appear, and the promise or structure of $f$ makes the cancellation total.

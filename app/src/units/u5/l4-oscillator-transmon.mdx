@@ -1,0 +1,153 @@
+import { LevelsLab } from './widgets/LevelsLab';
+import { SchrodingerSim } from './widgets/SchrodingerSim';
+
+Look closely at almost any stable system (a pendulum, a molecule's bond, a guitar string, an electrical circuit) and near its resting point it behaves like a **spring**. That's just Taylor's theorem: near a minimum, any smooth potential looks like a parabola,
+
+$$
+V(x) \approx V(x_0) + \tfrac12 V''(x_0)\,(x - x_0)^2 + \ldots
+$$
+
+So the **harmonic oscillator** is arguably the most important system in all of physics. It's also the starting point for the superconducting qubits inside IBM's and Google's quantum processors. Those qubits are electrical oscillators, but with a crucial twist.
+
+<Predict id="u5l4-lc-qubit">
+  <Q>A superconducting LC circuit (an inductor plus a capacitor), cooled to near absolute zero, behaves as a quantum harmonic oscillator. Could you use its two lowest energy levels as a qubit?</Q>
+  <Opt>Yes: just use levels 0 and 1 and ignore the rest</Opt>
+  <Opt correct>Not directly: a pulse that drives 0 → 1 would also drive 1 → 2, 2 → 3, …</Opt>
+  <Opt>No: electrical circuits can't be quantum</Opt>
+  <Opt>No: an oscillator has only one energy level</Opt>
+  <Reveal>
+**Not directly.** As you'll see, the oscillator's levels are **perfectly evenly spaced**. A microwave pulse tuned to the $0\to1$ frequency is equally resonant with $1\to2$, $2\to3$ and so on, so the state leaks up the ladder. The fix, the subject of this lesson, is to make the oscillator slightly *non-linear* so the spacings differ.
+  </Reveal>
+</Predict>
+
+---
+
+## The quantum harmonic oscillator
+
+The Hamiltonian is kinetic energy plus a parabolic potential,
+
+$$
+\hat H = \frac{\hat p^2}{2m} + \frac12 m\omega^2\hat x^2 .
+$$
+
+Solving $\hat H\psi = E\psi$ is a classic exercise (see the DeepDive below), and the answer is beautifully simple:
+
+<KeyIdea>
+$$
+E_n = \hbar\omega\left(n + \tfrac12\right), \qquad n = 0, 1, 2, \ldots
+$$
+
+The levels are **equally spaced** by $\hbar\omega$, and there's a **zero-point energy** $\tfrac12\hbar\omega$. The ground state is a Gaussian, $\psi_0(x) \propto e^{-m\omega x^2/2\hbar}$, which is a minimum-uncertainty state with $\Delta x\,\Delta p = \hbar/2$ exactly. The $n$th excited state is a Hermite polynomial times that Gaussian, with $n$ nodes.
+</KeyIdea>
+
+Planck's 1900 guess that oscillators exchange energy in lumps of $hf$ (World 1) was exactly this ladder, apart from the extra $\tfrac12$, which he didn't know about.
+
+The lab below computes energy levels **numerically** for any 1D potential. It discretises $\hat H$ on a grid and finds the eigenvalues of the resulting tridiagonal matrix. Start with the harmonic well:
+
+<LevelsLab potentials={['harmonic', 'quartic']} />
+
+<Try>
+- On the harmonic well, read the spacings on the right: $1.000, 1.000, 1.000, \ldots$ (in units of $\hbar\omega$). The anharmonicity $\alpha$ is zero, and the pink "second photon" arrow lands exactly on $|2\rangle$.
+- Look at the wavefunctions: the ground state is a Gaussian bump, and each step up adds one node. The colours (phase $0$ or $\pi$) show the sign. Each wavefunction leaks slightly beyond the yellow line into the classically forbidden region. Keep that in mind for the tunnelling lesson.
+- Switch to the **stiffened** potential $\tfrac12x^2 + \lambda x^4$. The walls get steeper as you go up, so the levels spread apart: $\alpha > 0$.
+</Try>
+
+<DeepDive title="The ladder operators (the slick solution)">
+Define $\hat a = \sqrt{\frac{m\omega}{2\hbar}}\left(\hat x + \frac{i}{m\omega}\hat p\right)$ and its adjoint $\hat a^\dagger$. Using $[\hat x,\hat p] = i\hbar$, you can check that $[\hat a,\hat a^\dagger] = 1$ and
+
+$$
+\hat H = \hbar\omega\left(\hat a^\dagger\hat a + \tfrac12\right).
+$$
+
+Then $\hat a^\dagger$ raises the energy by exactly $\hbar\omega$ and $\hat a$ lowers it, so the spectrum is a ladder with rungs $\hbar\omega$ apart. The ladder must have a bottom rung $|0\rangle$ with $\hat a|0\rangle = 0$, which is a first-order ODE whose solution is the Gaussian. Every rung follows as $|n\rangle \propto (\hat a^\dagger)^n|0\rangle$. In a microwave resonator, $\hat a^\dagger$ literally adds one photon.
+</DeepDive>
+
+---
+
+## Watch a quantum spring
+
+Here's the exact time evolution in a harmonic well ($\omega = 0.25$, period $2\pi/\omega \approx 25$). The packet starts displaced and at rest, with width $\sigma = 1.41$, exactly the ground-state width $\sqrt{\hbar/2m\omega}$.
+
+<SchrodingerSim title="Harmonic oscillator — coherent and squeezed states" preset="harmonic" omega={0.25} xRange={[-40, 40]} x0={-15} sigma={1.41} k0={0} speed={6} readouts={['t', 'x', 'dx', 'dp', 'E']} showMomentum />
+
+<Try>
+- Press play. The packet swings back and forth like a classical mass on a spring, **without spreading**. This is a **coherent state**, the most classical-looking quantum state. Δx stays at 1.41 and Δp at 0.35.
+- Watch the momentum panel: momentum oscillates too, a quarter-cycle out of step with position, just like a classical oscillator.
+- Now set $\sigma = 0.7$ and reset. The packet still swings, but its width **breathes**: narrow at the ends of each swing, wide as it rushes through the middle. That's a **squeezed state**. Squeezed light is used in the LIGO gravitational-wave detectors to push noise below the standard quantum limit.
+</Try>
+
+---
+
+## Anharmonicity: turning an oscillator into a qubit
+
+Back to the qubit problem. A drive at frequency $\omega_{01} = (E_1 - E_0)/\hbar$ couples $|0\rangle\leftrightarrow|1\rangle$. But the matrix elements of $\hat x$ also connect $|1\rangle\leftrightarrow|2\rangle$, and if $E_2 - E_1 = E_1 - E_0$, that transition is *exactly* on resonance too. Pulse a harmonic oscillator and you don't get Rabi flopping between two levels. You get a **coherent state** climbing the whole ladder.
+
+What we need is **anharmonicity**:
+
+$$
+\alpha = (E_2 - E_1) - (E_1 - E_0) \neq 0 .
+$$
+
+If $|\alpha|$ is much bigger than the Rabi frequency $\Omega$, then from World 4's Rabi formula the $1\to2$ transition is far off resonance: its maximum excitation is about $\Omega^2/\alpha^2$, which is tiny. The bottom two levels then act as an isolated **qubit**.
+
+<Quiz id="u5l4-anharm">
+  <Q>A qubit has anharmonicity $\alpha/2\pi = -200$ MHz. Why can't you make its single-qubit gates arbitrarily fast?</Q>
+  <Opt>Faster pulses need more power than the fridge can handle</Opt>
+  <Opt correct>A very short pulse has a broad frequency spectrum that reaches the 1→2 transition, causing leakage to $|2\rangle$</Opt>
+  <Opt>The speed of light limits the pulse</Opt>
+  <Opt>Gates can be arbitrarily fast; anharmonicity doesn't matter</Opt>
+  <Explain>A pulse of duration $\tau$ spans frequencies of width about $1/\tau$. It must stay well inside the $|\alpha|$ window, so $\tau \gg 1/|\alpha| \approx 1$ ns, and in practice gates take about 20–50 ns. Engineers also *shape* pulses (the DRAG technique, Motzoi *et al.* 2009) to suppress leakage further.</Explain>
+</Quiz>
+
+---
+
+## The Josephson junction and the transmon
+
+How do you make a non-linear *circuit*? Use a **Josephson junction**: two superconductors separated by an insulating layer a nanometre or so thick. Pairs of electrons (**Cooper pairs**) tunnel through it, and the junction's energy depends on the superconducting phase difference $\varphi$ across it as
+
+$$
+U(\varphi) = -E_J\cos\varphi .
+$$
+
+The junction acts like an inductor whose inductance changes with current, a **non-linear inductor**. Shunt it with a capacitor and you get the **transmon** (Koch *et al.*, 2007), whose Hamiltonian is
+
+$$
+\hat H = 4E_C\,\hat n^2 - E_J\cos\hat\varphi .
+$$
+
+Here $\hat n$ counts Cooper pairs that have crossed the junction and $E_C = e^2/2C$ is the charging energy. Compare with the oscillator: $\hat\varphi$ plays the role of position, $\hat n$ plays the role of momentum, and $[\hat\varphi, \hat n] = i$. It is literally a particle in a cosine-shaped potential. Near the bottom the cosine looks like a parabola, so it's *almost* a harmonic oscillator. Higher up, the cosine is **softer** than a parabola, so the levels crowd together and $\alpha < 0$.
+
+<LevelsLab potentials={['transmon', 'harmonic']} />
+
+<Try>
+- At $E_J/E_C = 50$ (typical), $E_1 - E_0 \approx 19\,E_C$ and $\alpha \approx -E_C$. That's about a 5% difference in spacing, plenty to isolate the qubit.
+- The panel converts to real units: with $E_C/h \approx 250$ MHz you get $f_{01} \approx 4.7$ GHz and $\alpha/h \approx -250$ MHz, right in the range of real devices.
+- Lower $E_J/E_C$ toward 5: the anharmonicity grows, but the wavefunction spreads across the whole well. (In real devices that makes the qubit sensitive to stray electric charges. Koch's insight was that large $E_J/E_C$ suppresses this charge noise **exponentially**, while the anharmonicity only falls slowly, as a power law.)
+- Compare with the harmonic well: the transmon is a slightly flawed oscillator, and the flaw is the whole point.
+</Try>
+
+Real transmons have $f_{01}$ of roughly 4–7 GHz and anharmonicities of about $-100$ to $-300$ MHz. They run inside dilution refrigerators at about 10–20 millikelvin. Why so cold?
+
+<NumQuiz id="u5l4-cold" answer={12} tol={0.6}>
+  <Q>For a qubit to sit in $|0\rangle$, thermal energy must be small compared with $hf_{01}$. Compute the ratio $hf/k_BT$ for $f = 5$ GHz at $T = 20$ mK. ($h = 6.626\times10^{-34}$ J·s, $k_B = 1.381\times10^{-23}$ J/K)</Q>
+  <Hint>$hf = 3.31\times10^{-24}$ J and $k_BT = 2.76\times10^{-25}$ J.</Hint>
+  <Explain>$hf/k_BT \approx 12$. The thermal population of $|1\rangle$ is then about $e^{-12} \approx 6\times10^{-6}$. At room temperature the ratio would be about $0.0008$, and the qubit would be hopelessly scrambled.</Explain>
+</NumQuiz>
+
+<CSCorner>
+A transmon is engineered, not found. Its "atom" is a lithographically printed aluminium circuit about a millimetre across, containing billions of electrons, yet it has a clean quantised spectrum that designers pick by choosing $E_J$ (junction area) and $E_C$ (capacitor size). Think of it as hardware description for Hamiltonians: you choose the potential you want, and fabrication gives you the energy levels. The price is that no two transmons are identical, so every qubit must be individually calibrated. That's the frequency-finding Rabi experiment from World 4.
+</CSCorner>
+
+<History>
+**Brian Josephson** predicted Cooper-pair tunnelling in 1962 as a 22-year-old Cambridge PhD student (Nobel 1973). In 1984–85, **John Clarke, Michel Devoret and John Martinis** at Berkeley showed that a whole Josephson circuit behaves as a single quantum particle: it has quantised energy levels and tunnels out of a potential well. That work won the **2025 Nobel Prize in Physics**. In 1999 **Yasunobu Nakamura**, Yuri Pashkin and Jaw-Shen Tsai at NEC observed coherent oscillations in a superconducting "Cooper-pair box", the first superconducting qubit. Its successor, the transmon, was designed at Yale in 2007 and is still the workhorse of IBM's and Google's processors.
+</History>
+
+---
+
+## Summary
+
+- Near any minimum, physics is a harmonic oscillator: $E_n = \hbar\omega(n + \tfrac12)$, equally spaced, with zero-point energy $\tfrac12\hbar\omega$. The ground state is a minimum-uncertainty Gaussian.
+- Coherent states swing like classical masses without spreading. Squeezed states breathe.
+- Equal spacing makes a plain oscillator a poor qubit, because drives leak up the ladder. You need **anharmonicity** $\alpha = (E_2-E_1)-(E_1-E_0)$ with $|\alpha| \gg \Omega$.
+- A **Josephson junction** ($-E_J\cos\varphi$) is a non-linear inductor. The **transmon** $\hat H = 4E_C\hat n^2 - E_J\cos\hat\varphi$ has $\hbar\omega_{01} \approx \sqrt{8E_JE_C} - E_C$ and $\alpha \approx -E_C$.
+- Typical transmons: $f_{01}$ of about 4–7 GHz, $\alpha/2\pi$ of about $-100$ to $-300$ MHz, operated at about 10–20 mK.

@@ -1,0 +1,235 @@
+import { EnsembleLab } from './widgets/EnsembleLab';
+import { BlochBallMixer } from './widgets/BlochBallMixer';
+import { ReducedStateExplorer } from './widgets/ReducedStateExplorer';
+
+Two labs mail you qubits, one per second, in sealed boxes.
+
+- **Lab A** prepares every qubit in $|+\rangle = \tfrac{1}{\sqrt2}(|0\rangle + |1\rangle)$.
+- **Lab B** flips a fair coin for each qubit and prepares $|0\rangle$ on heads, $|1\rangle$ on tails. It doesn't tell you the coin results.
+
+Measure a qubit from either lab in the standard basis and you get $0$ half the time and $1$ half the time. So far the two labs look the same. But one of them is sending you *superpositions* and the other is sending you *ordinary randomness*. Are those physically different things? Or is "superposition" just a fancy word for "we don't know which"?
+
+<Predict id="u10l1-labs">
+  <Q>Is there **any** measurement that tells Lab A's qubits apart from Lab B's, given enough of them?</Q>
+  <Opt>No. Both give 50/50 results, so they are the same physical situation.</Opt>
+  <Opt correct>Yes. Measuring in a different basis separates them.</Opt>
+  <Opt>Only if you measure the same qubit many times.</Opt>
+  <Explain>Measuring along $x$ instead of $z$ splits them cleanly. Try it below.</Explain>
+  <Reveal>
+Use the lab below. Fire 100 qubits from each box and measure along $Z$, then along $X$. Box C is a third lab that flips a coin between $|+\rangle$ and $|-\rangle$.
+
+<EnsembleLab hideRho />
+
+Measured along $X$, Box A gives $|+\rangle$ **every single time**. Box B gives 50/50. A superposition is not "secretly one or the other": it has a definite property (being $|+\rangle$) that a coin-flip mixture lacks.
+
+Now compare Box B with Box C. They agree in **every** basis. That is not a coincidence, and it is the subject of this lesson.
+  </Reveal>
+</Predict>
+
+---
+
+## Two kinds of uncertainty
+
+Quantum mechanics so far has used one object: the state vector $|\psi\rangle$. A state vector already contains quantum randomness. Measuring $|+\rangle$ along $z$ gives a random result. But the box mixture has an extra layer of uncertainty on top: *we don't know which state vector we have*. Real experiments are full of this kind of ignorance. A qubit in a slightly warm fridge, a laser whose phase jitters, or a gate whose angle is off by a random amount all leave you with a probabilistic mixture of state vectors.
+
+The tool that handles both layers at once is the **density matrix** (or density operator).
+
+<Definition term="Density matrix">
+If a system is in state $|\psi_i\rangle$ with probability $p_i$ (an **ensemble** $\{p_i, |\psi_i\rangle\}$), its density matrix is
+
+$$
+\rho = \sum_i p_i\, |\psi_i\rangle\langle\psi_i| .
+$$
+
+Each $|\psi_i\rangle\langle\psi_i|$ is the outer product of a column vector with its conjugate transpose, a $d\times d$ matrix.
+</Definition>
+
+Let's compute the three boxes. For Box A, a single pure state:
+
+$$
+\rho_A = |+\rangle\langle +| = \frac12\begin{pmatrix}1\\1\end{pmatrix}\begin{pmatrix}1 & 1\end{pmatrix} = \begin{pmatrix}\tfrac12 & \tfrac12 \\ \tfrac12 & \tfrac12\end{pmatrix}.
+$$
+
+For Box B:
+
+$$
+\rho_B = \tfrac12|0\rangle\langle 0| + \tfrac12|1\rangle\langle 1| = \begin{pmatrix}\tfrac12 & 0 \\ 0 & \tfrac12\end{pmatrix} = \frac{I}{2}.
+$$
+
+For Box C, $\tfrac12|+\rangle\langle+| + \tfrac12|-\rangle\langle-|$. The off-diagonal $\pm\tfrac12$ entries cancel, and you get $I/2$ **again**.
+
+**How to read a density matrix:**
+
+- The **diagonal** entries $\rho_{00}, \rho_{11}$ are the **populations**, the probabilities of finding $0$ or $1$. Boxes A and B agree here, which is why a $Z$ measurement can't separate them.
+- The **off-diagonal** entries $\rho_{01} = \rho_{10}^*$ are the **coherences**. They record the definite phase relationship between $|0\rangle$ and $|1\rangle$, and interference needs them. Box A has them. Boxes B and C don't.
+
+The Born rule becomes a trace. For a measurement outcome with projector $\Pi_m$ (e.g. $\Pi_+ = |+\rangle\langle+|$):
+
+$$
+P(m) = \operatorname{Tr}(\Pi_m \rho) = \langle m|\rho|m\rangle .
+$$
+
+You can check that this is just the average of $|\langle m|\psi_i\rangle|^2$ over the ensemble, weighted by the $p_i$.
+
+<NumQuiz id="u10l1-pplus" answer={0.5} tol={0.01}>
+  <Q>A qubit has density matrix $\rho = \begin{pmatrix} 0.75 & 0 \\ 0 & 0.25\end{pmatrix}$. What is the probability of the outcome $|+\rangle$ when measuring along $x$?</Q>
+  <Hint>$\langle +|\rho|+\rangle = \tfrac12(\rho_{00} + \rho_{01} + \rho_{10} + \rho_{11})$.</Hint>
+  <Explain>$\tfrac12(0.75 + 0 + 0 + 0.25) = 0.5$. Without coherences, an $X$ measurement is always 50/50, however lopsided the populations are.</Explain>
+</NumQuiz>
+
+<Warning>
+**"Different recipes, same ρ" means "same physics."** Box B ($|0\rangle$ or $|1\rangle$) and Box C ($|+\rangle$ or $|-\rangle$) are prepared in completely different ways, yet no experiment can *ever* tell them apart, because every probability depends only on $\rho$. The density matrix isn't a summary that throws information away. Everything else (which recipe was used) is physically unobservable once the coin results are lost.
+</Warning>
+
+---
+
+## The rules a density matrix obeys
+
+Any $\rho$ built from an ensemble automatically satisfies three properties, and conversely any matrix with these properties is a valid density matrix:
+
+1. **Hermitian**: $\rho = \rho^\dagger$ (so the populations are real).
+2. **Unit trace**: $\operatorname{Tr}\rho = \sum_i p_i = 1$ (probabilities add up).
+3. **Positive semidefinite**: $\langle \phi|\rho|\phi\rangle \ge 0$ for every $|\phi\rangle$ (no negative probabilities).
+
+How do we tell a pure state from a mixture? A pure state is a projector, so $\rho^2 = \rho$. A useful single number is the **purity**:
+
+$$
+\gamma = \operatorname{Tr}(\rho^2), \qquad \frac1d \le \gamma \le 1 .
+$$
+
+$\gamma = 1$ exactly for pure states. The minimum $1/d$ is reached by the **maximally mixed state** $I/d$, which is total ignorance. For Box A, $\operatorname{Tr}\rho_A^2 = 4\cdot\tfrac14 = 1$. For Box B, $\tfrac14 + \tfrac14 = \tfrac12$.
+
+<CSCorner>
+A density matrix generalises a **probability vector**. If $\rho$ is diagonal, it *is* a probability distribution over basis states, $\operatorname{diag}(p_0, p_1, \dots)$, which is exactly how a randomised classical algorithm's memory is described. The off-diagonal coherences are the genuinely quantum part. In World 9 you watched algorithms exploit them for interference.
+
+Purity is a cousin of **collision probability**: for a diagonal $\rho$, $\operatorname{Tr}\rho^2 = \sum_i p_i^2$ is the chance that two independent samples agree. The analogy has limits, though. A classical distribution has one natural basis, while $\rho$ looks diagonal only in its own eigenbasis.
+</CSCorner>
+
+<Quiz id="u10l1-valid">
+  <Q>Which of these is a valid density matrix of a **mixed** (not pure) qubit state?</Q>
+  <Opt why="Trace is 1.2, not 1.">$\begin{pmatrix} 0.6 & 0 \\ 0 & 0.6 \end{pmatrix}$</Opt>
+  <Opt why="This is |0⟩⟨0|, a pure state (purity 1).">$\begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix}$</Opt>
+  <Opt correct>$\begin{pmatrix} 0.5 & 0.3 \\ 0.3 & 0.5 \end{pmatrix}$</Opt>
+  <Opt why="Its eigenvalues are 1.2 and −0.2, and a negative eigenvalue means a negative probability.">$\begin{pmatrix} 0.5 & 0.7 \\ 0.7 & 0.5 \end{pmatrix}$</Opt>
+  <Explain>The correct matrix has trace 1, is Hermitian, and has eigenvalues $0.8$ and $0.2$ (both non-negative). Its purity is $0.25+0.09+0.09+0.25 = 0.68 \lt 1$: partly coherent, partly mixed.</Explain>
+</Quiz>
+
+---
+
+## The Bloch ball
+
+Every $2\times 2$ density matrix can be written in terms of the Pauli matrices:
+
+$$
+\rho = \frac{1}{2}\left(I + r_x X + r_y Y + r_z Z\right) = \frac12\begin{pmatrix} 1 + r_z & r_x - i r_y \\ r_x + i r_y & 1 - r_z \end{pmatrix}, \qquad |\vec r| \le 1 .
+$$
+
+The vector $\vec r = (r_x, r_y, r_z)$ is the familiar **Bloch vector**, with $r_k = \operatorname{Tr}(\rho\,\sigma_k)$ the expectation value of each Pauli. Pure states have $|\vec r| = 1$ and sit on the surface. Mixed states have $|\vec r| \lt 1$ and fill the **inside**. The sphere you know from World 3 is really the skin of a solid **Bloch ball**.
+
+Two facts make the ball easy to use:
+
+- **Mixing is averaging.** $\rho = \sum p_i \rho_i$ means $\vec r = \sum_i p_i \vec r_i$: the mixture's Bloch vector is the weighted centre of mass of its ingredients.
+- **Length measures purity.** $\operatorname{Tr}\rho^2 = \tfrac12(1 + |\vec r|^2)$, and the eigenvalues of $\rho$ are $\tfrac12(1 \pm |\vec r|)$.
+
+<BlochBallMixer />
+
+<Try>
+- Load "½|0⟩ + ½|1⟩" and then "½|+⟩ + ½|−⟩". Both land at the **centre**. Many ensembles, one ρ.
+- Load the three "trine" states, spaced 120° apart around the equator. Their centre of mass is also the origin. Three states that aren't even orthogonal still average to $I/2$.
+- Start from "¾|0⟩ + ¼|1⟩" and rotate state 2 toward state 1. The green vector grows as the ingredients agree more.
+</Try>
+
+<Quiz id="u10l1-center">
+  <Q>A mixed qubit has Bloch vector $\vec r = (0, 0, 0.6)$. What is its purity $\operatorname{Tr}\rho^2$?</Q>
+  <Opt>0.6</Opt>
+  <Opt correct>0.68</Opt>
+  <Opt>0.36</Opt>
+  <Opt>0.8</Opt>
+  <Explain>$\tfrac12(1 + 0.6^2) = \tfrac12 \cdot 1.36 = 0.68$. Its eigenvalues are $0.8$ and $0.2$, and $0.8^2 + 0.2^2 = 0.68$ agrees.</Explain>
+</Quiz>
+
+---
+
+## Where mixedness really comes from: entanglement
+
+Coin flips aren't the only way to get a mixed state. In World 6 you met the Bell state $|\Phi^+\rangle = \tfrac{1}{\sqrt2}(|00\rangle + |11\rangle)$ and noticed something odd: each qubit on its own had **no Bloch vector at all**. Its arrow shrank to zero. Now we can say exactly what each half's state *is*.
+
+If Alice only has access to qubit A, every prediction she can make about measurements on A comes from the **reduced density matrix**
+
+$$
+\rho_A = \operatorname{Tr}_B\, \rho_{AB},
+$$
+
+the **partial trace** over Bob's qubit. In practice: write $\rho_{AB}$ as a $4\times4$ matrix in $2\times 2$ blocks and replace each block by its trace. For $|\Phi^+\rangle$:
+
+$$
+\rho_{AB} = \frac12\begin{pmatrix} 1&0&0&1\\0&0&0&0\\0&0&0&0\\1&0&0&1\end{pmatrix}
+\;\xrightarrow{\ \operatorname{Tr}_B\ }\;
+\rho_A = \frac12\begin{pmatrix} 1 + 0 & 0 + 0 \\ 0 + 0 & 0 + 1\end{pmatrix} = \frac{I}{2}.
+$$
+
+**Half of a maximally entangled pair is maximally mixed.** The pair as a whole is perfectly pure, with purity 1, yet each half is as random as a fair coin. All the information sits in the *correlations*, none of it in the parts.
+
+<ReducedStateExplorer />
+
+<Predict id="u10l1-bob">
+  <Q>Set up the Bell state. Now Bob, light-years away, measures his qubit along $Z$ and keeps the result secret. What happens to Alice's reduced state $\rho_A$?</Q>
+  <Opt>It collapses to $|0\rangle$ or $|1\rangle$, so ρ_A becomes pure.</Opt>
+  <Opt correct>Nothing. ρ_A stays exactly $I/2$.</Opt>
+  <Opt>It becomes $|+\rangle\langle+|$.</Opt>
+  <Explain>Try it with "measures Z" and "measures X" in the widget.</Explain>
+  <Reveal>
+From Bob's point of view Alice's qubit is now $|0\rangle$ or $|1\rangle$, each with probability ½. That is *still* $\rho_A = I/2$. In general, nothing Bob does locally can change $\rho_A$, and since every statistic Alice can measure depends only on $\rho_A$, she can never detect what Bob did. This is the precise form of the **no-signalling theorem** you met in World 6: entanglement produces correlations, not messages.
+  </Reveal>
+</Predict>
+
+<History>
+The density matrix was introduced independently in 1927 by **John von Neumann**, who was putting quantum mechanics on rigorous mathematical footing, and by **Lev Landau**, who needed to describe one part of a larger system. Those are exactly the two routes to a mixed state in this lesson: ignorance and entanglement. **Felix Bloch**'s 1946 equations for nuclear magnetisation in NMR made the "vector inside a ball" picture a working tool. We'll use them next lesson.
+</History>
+
+---
+
+## Proper and improper mixtures
+
+We now have two very different stories that produce the *same* matrix $I/2$:
+
+| Story | Why the qubit looks random | Is the bigger picture pure? |
+|---|---|---|
+| Lab B's coin flip | someone knows the coin, you don't | the qubit was in a definite pure state each time |
+| Half of a Bell pair | the qubit is entangled with another system | yes: the *pair* is pure, but the half has no state of its own |
+
+Philosophers call these **proper** and **improper** mixtures. For predicting experiments on the qubit alone they are identical. Hold on to the second story, though. When the "other system" is not a friendly lab partner but the **environment** (stray photons, phonons in the chip, fluctuating magnetic fields), it becomes the mechanism behind **decoherence**. Your qubit gets entangled with the outside world, its reduced state slides into the interior of the Bloch ball, and its coherences leak away into correlations nobody can track. That is the next lesson.
+
+<DeepDive title="The partial trace, properly">
+For a two-part system with bases $\{|i\rangle_A\}$ and $\{|j\rangle_B\}$, the partial trace over B is
+
+$$
+\operatorname{Tr}_B\,\rho_{AB} = \sum_j \left(I\otimes \langle j|_B\right)\rho_{AB}\left(I\otimes |j\rangle_B\right).
+$$
+
+It is the unique linear map satisfying $\operatorname{Tr}\!\left[(M_A\otimes I)\rho_{AB}\right] = \operatorname{Tr}\left[M_A\, \rho_A\right]$ for every observable $M_A$. In words, it reproduces every measurement statistic on A.
+
+**No-signalling in one line.** If Bob applies any unitary $U_B$, or any measurement whose result he keeps, the new joint state is $\sum_k (I\otimes K_k)\rho_{AB}(I\otimes K_k^\dagger)$ with $\sum_k K_k^\dagger K_k = I$. Taking $\operatorname{Tr}_B$ and using cyclicity inside the trace over B gives $\operatorname{Tr}_B[(I\otimes \sum_k K_k^\dagger K_k)\rho_{AB}] = \rho_A$. Unchanged.
+
+**Purification.** The reverse also works: *every* mixed state $\rho_A = \sum_i \lambda_i |i\rangle\langle i|$ is the reduced state of some pure state $\sum_i \sqrt{\lambda_i}\,|i\rangle_A|i\rangle_R$ on a larger system. So in principle every mixed state can be read as "entangled with something you aren't looking at."
+</DeepDive>
+
+<Quiz id="u10l1-improper">
+  <Q>A two-qubit state is $\tfrac{1}{\sqrt2}(|01\rangle - |10\rangle)$. Which statements are true? (Select all that apply.)</Q>
+  <Opt correct>The two-qubit state is pure: $\operatorname{Tr}\rho_{AB}^2 = 1$.</Opt>
+  <Opt correct>Each qubit's reduced state is $I/2$, at the centre of the Bloch ball.</Opt>
+  <Opt why="ρ_A is the same for every possible local action of Bob, which is the no-signalling theorem.">If Bob measures along $X$, Alice's reduced state changes to $|+\rangle$ or $|-\rangle$, which she can detect.</Opt>
+  <Opt why="Reduced states can be mixed even when the global state is pure. That is the signature of entanglement.">Since the parts are mixed, the whole must be mixed too.</Opt>
+  <Explain>This singlet state is a pure, maximally entangled state. Its halves are maximally mixed, an "improper" mixture, and nothing Bob does changes $\rho_A$.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- A **density matrix** $\rho = \sum_i p_i|\psi_i\rangle\langle\psi_i|$ describes quantum states *and* classical ignorance about them. Probabilities are $P(m) = \operatorname{Tr}(\Pi_m\rho)$.
+- **Diagonal = populations, off-diagonal = coherences.** A superposition like $|+\rangle$ has coherences. A 50/50 coin mixture doesn't, and an $X$ measurement tells them apart.
+- Different ensembles with the same $\rho$ are **physically indistinguishable**.
+- Valid ρ: Hermitian, trace 1, positive semidefinite. **Purity** $\operatorname{Tr}\rho^2$ runs from $1/d$ (maximally mixed) to $1$ (pure).
+- For a qubit, $\rho = \tfrac12(I + \vec r\cdot\vec\sigma)$. Pure states lie on the surface of the **Bloch ball** and mixed states inside. Mixing averages Bloch vectors, and $\operatorname{Tr}\rho^2 = \tfrac12(1+|\vec r|^2)$.
+- The **reduced density matrix** $\rho_A = \operatorname{Tr}_B\rho_{AB}$ describes part of an entangled system. Half of a Bell pair is exactly $I/2$, and nothing done to the other half changes it.

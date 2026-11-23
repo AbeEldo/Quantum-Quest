@@ -1,0 +1,237 @@
+import { ComplexPlayground } from './widgets/ComplexPlayground';
+import { EulerSeries } from './widgets/EulerSeries';
+
+Open any quantum mechanics textbook to the most important equation in it, the Schrödinger equation, and the very first symbol you meet is this:
+
+$$
+i\hbar\,\frac{\partial \psi}{\partial t} = \hat H \psi .
+$$
+
+That $i$ is $\sqrt{-1}$. It is not a convenience that could be removed with clever bookkeeping. Quantum states are built out of **complex numbers**, and the strange behaviour you will meet later in this course (interference, phase, entanglement, quantum speed-ups) is in large part the behaviour of complex numbers.
+
+The good news: complex numbers are much friendlier than their name. The whole subject collapses into one picture. **Multiplying by a complex number means rotating and scaling.** This lesson builds that picture until it feels obvious.
+
+<Predict id="u0l1-ii">
+  <Q>Suppose "multiply by $i$" means "rotate a quarter-turn (90°) anticlockwise". Start with the number $1$ and multiply by $i$ twice. Where do you land?</Q>
+  <Opt>At $1$ again: two quarter-turns cancel</Opt>
+  <Opt correct>At $-1$: two quarter-turns make a half-turn</Opt>
+  <Opt>At $2i$: the rotations add up along the imaginary axis</Opt>
+  <Opt>Nowhere: $i \cdot i$ is undefined</Opt>
+  <Reveal>
+Two quarter-turns are a half-turn, and a half-turn takes $1$ to $-1$. So $i \cdot i = i^2 = -1$. The "impossible" equation $i^2 = -1$ is just the statement that **two 90° rotations make a 180° rotation**. Hold onto that geometric image: the rest of the lesson is that idea, made precise.
+  </Reveal>
+</Predict>
+
+---
+
+## The complex plane
+
+A complex number $z = a + bi$ has a **real part** $a = \mathrm{Re}\,z$ and an **imaginary part** $b = \mathrm{Im}\,z$. Since it is just a pair of real numbers, draw it as a point (or an arrow from the origin) in a plane: real part across, imaginary part up. This is the **complex plane**.
+
+<Definition term="modulus, argument, conjugate">
+For $z = a + bi$:
+
+- the **modulus** (length) is $|z| = \sqrt{a^2 + b^2}$;
+- the **argument** (angle from the positive real axis) is $\arg z = \operatorname{atan2}(b, a)$;
+- the **complex conjugate** is $\bar z = a - bi$ (physicists often write $z^*$), the mirror image in the real axis.
+</Definition>
+
+Adding complex numbers is exactly adding 2D vectors: put the arrows tip to tail. So far nothing is new. Switch the playground below to **z + w** and then **conjugate z̄** and drag the arrows around.
+
+<ComplexPlayground mode="add" />
+
+<Try>
+- In **z + w** mode, make $|z+w|$ as large as possible for fixed lengths. (Point them the same way.) Then as small as possible. (Point them opposite.) Adding arrows can *cancel*: that is the seed of interference, the topic of the next lesson.
+- In **conjugate** mode, watch the yellow dot on the real axis. It sits at $z\bar z$. Can you ever make it negative?
+</Try>
+
+The last experiment shows a fact we will use constantly:
+
+$$
+z\,\bar z = (a+bi)(a-bi) = a^2 - (bi)^2 = a^2 + b^2 = |z|^2 .
+$$
+
+Multiplying a number by its conjugate gives its squared length, a real number that is never negative. In quantum mechanics, **probabilities are computed exactly this way**: as $|z|^2 = z\bar z$ for a complex "amplitude" $z$.
+
+<NumQuiz id="u0l1-mod" answer={5} tol={0.01}>
+  <Q>What is $|3 - 4i|$?</Q>
+  <Hint>$|a+bi| = \sqrt{a^2+b^2}$. The sign of $b$ doesn't matter.</Hint>
+  <Explain>$\sqrt{3^2 + (-4)^2} = \sqrt{25} = 5$. (A 3-4-5 right triangle.) And $(3-4i)(3+4i) = 9 + 16 = 25 = |z|^2$.</Explain>
+</NumQuiz>
+
+---
+
+## Multiplication: rotate and scale
+
+Here is the new ingredient, the thing that makes $\mathbb{C}$ more than $\mathbb{R}^2$. Multiply out two complex numbers with ordinary algebra and the rule $i^2=-1$:
+
+$$
+(a + bi)(c + di) = (ac - bd) + (ad + bc)\,i .
+$$
+
+As a formula that is opaque. Geometrically it is beautiful. Write each number by its length and angle, $z = r_1(\cos\theta_1 + i \sin\theta_1)$ and $w = r_2(\cos\theta_2 + i\sin\theta_2)$. Multiply, and the angle-addition formulas from trigonometry appear on their own:
+
+$$
+zw = r_1 r_2\big[(\cos\theta_1\cos\theta_2 - \sin\theta_1\sin\theta_2) + i(\sin\theta_1\cos\theta_2 + \cos\theta_1\sin\theta_2)\big] = r_1r_2\big[\cos(\theta_1+\theta_2) + i\sin(\theta_1+\theta_2)\big].
+$$
+
+<KeyIdea>
+To multiply two complex numbers, **multiply their lengths and add their angles.**
+
+Equivalently: multiplying by $w$ is a machine that takes every point of the plane, **rotates** it by $\arg w$ and **scales** it by $|w|$.
+</KeyIdea>
+
+So multiplying by $i$ (length 1, angle 90°) is a pure quarter-turn, exactly what the opening question assumed. Multiplying by $-1$ is a half-turn. Multiplying by $2$ stretches without turning. Multiplying by $1+i$ (length $\sqrt2$, angle 45°) turns by 45° and stretches by $\sqrt2$.
+
+<ComplexPlayground mode="mul" lockMode initialZ={[1.5, 0.5]} initialW={[0, 1]} title="Multiplication = rotate & scale" />
+
+<Try>
+- Put $w$ at $i$ (it snaps there). Drag $z$ anywhere: $zw$ is always $z$ turned by exactly 90°.
+- Put $w$ on the unit circle (dashed). Now $|zw| = |z|$: multiplying by a number of length 1 is a **pure rotation**. These "unit-modulus" numbers are going to be the stars of quantum mechanics.
+- Put $w$ inside the unit circle: $zw$ shrinks.
+</Try>
+
+<Quiz id="u0l1-square">
+  <Q>Without multiplying out, what is $(1+i)^2$?</Q>
+  <Opt>$2$</Opt>
+  <Opt correct>$2i$</Opt>
+  <Opt>$1 + i^2 = 0$</Opt>
+  <Opt why="Check the length: squaring a number of length √2 gives length 2, not √2.">$\sqrt2\, i$</Opt>
+  <Explain>$1+i$ has length $\sqrt 2$ and angle $45°$. Squaring multiplies the length by itself ($\sqrt2\cdot\sqrt2 = 2$) and doubles the angle ($90°$). Length 2 pointing straight up is $2i$. Check: $(1+i)^2 = 1 + 2i + i^2 = 2i$. ✓</Explain>
+</Quiz>
+
+<Warning>
+"Imaginary" numbers are not fake or less real than real numbers; the name is a dismissive label René Descartes used in 1637 that unfortunately stuck. A complex number is a perfectly concrete object: a 2D arrow equipped with a rule for multiplying arrows. Electrical engineers use them every day for AC circuits, and quantum mechanics simply cannot be written without them.
+</Warning>
+
+---
+
+## Euler's formula: the spinning arrow
+
+The unit circle is so important that it has its own notation. The point at angle $\theta$ on the unit circle is
+
+$$
+e^{i\theta} = \cos\theta + i\sin\theta .
+$$
+
+This is **Euler's formula**. Why on earth should an exponential describe a rotation? Here are two ways to see it.
+
+**1. The motion argument.** Think of $z(t) = e^{it}$ as the position of a moving point at time $t$. The defining property of the exponential is that it is its own derivative (up to the constant in the exponent), so the velocity is
+
+$$
+\frac{dz}{dt} = i\,e^{it} = i\,z(t).
+$$
+
+Multiplying by $i$ rotates by 90°, so **the velocity is always perpendicular to the position**, with length equal to $|z|$. Starting from $z(0) = 1$, a point whose velocity is always perpendicular to its position, with unit speed, moves around the unit circle at one radian per second. After time $\theta$ it is at angle $\theta$, at the point $\cos\theta + i\sin\theta$.
+
+**2. The power-series argument.** Plug $x = i\theta$ into $e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \cdots$. Each term is the previous one multiplied by $i\theta/k$, which means each arrow is **turned 90°** from the last and shorter. The arrows curl around and home in on a point of the unit circle. Watch it happen:
+
+<EulerSeries />
+
+<Try>
+- Set $\theta = \pi$ and slide the number of terms up from 1. The spiral of arrows closes in on $-1$: that is **Euler's identity** $e^{i\pi} = -1$.
+- Notice the colours: each term's arrow is turned a quarter-turn from the previous one ($1, i, -1, -i, 1, \dots$), so the colours cycle. Collect the even terms (horizontal arrows) and you get the series for $\cos\theta$; the odd terms (vertical) give $\sin\theta$.
+</Try>
+
+<History>
+Leonhard Euler published $e^{ix} = \cos x + i\sin x$ in his *Introductio in analysin infinitorum* (1748). The picture of complex numbers as points in a plane came later, from Caspar Wessel (1799), Jean-Robert Argand (1806) and finally Carl Friedrich Gauss, whose prestige made it mainstream in the 1830s.
+</History>
+
+<Quiz id="u0l1-euler-values">
+  <Q>What is $e^{i\pi/2}$?</Q>
+  <Opt>$1$</Opt>
+  <Opt>$-1$</Opt>
+  <Opt correct>$i$</Opt>
+  <Opt>$\pi/2$</Opt>
+  <Explain>$e^{i\pi/2}$ is the point at angle $90°$ on the unit circle: $\cos 90° + i \sin 90° = i$. Likewise $e^{i\pi} = -1$, $e^{3i\pi/2} = -i$ and $e^{2\pi i} = 1$.</Explain>
+</Quiz>
+
+---
+
+## Polar form: the fluent way to compute
+
+Combine "length times direction" with Euler's formula and every complex number can be written in **polar form**:
+
+$$
+z = r\,e^{i\theta}, \qquad r = |z|,\ \ \theta = \arg z .
+$$
+
+Now the rotate-and-scale rule is just the law of exponents:
+
+$$
+r_1 e^{i\theta_1}\cdot r_2 e^{i\theta_2} = (r_1 r_2)\,e^{i(\theta_1+\theta_2)} .
+$$
+
+The useful consequences follow at once:
+
+| Operation | Polar form | Geometry |
+|---|---|---|
+| product $zw$ | $r_1r_2\,e^{i(\theta_1+\theta_2)}$ | multiply lengths, add angles |
+| quotient $z/w$ | $(r_1/r_2)\,e^{i(\theta_1-\theta_2)}$ | divide lengths, subtract angles |
+| power $z^n$ | $r^n e^{in\theta}$ | $n$-fold rotation (de Moivre) |
+| conjugate $\bar z$ | $r\,e^{-i\theta}$ | flip the angle |
+| $\lvert z\rvert^2 = z\bar z$ | $r^2$ | the angle cancels |
+
+Notice the last row: the angle drops out. Keep that in mind.
+
+Now use the polar picture to solve a problem. The playground below fixes $z = 1 + i$. Find the $w$ that sends $z\cdot w$ to the green target $-2$. Think before you drag: what length does $w$ need, and what angle?
+
+<ComplexPlayground challenge={{ z: [1, 1], target: [-2, 0], id: 'u0l1-rot' }} />
+
+<NumQuiz id="u0l1-inverse" answer={-1} tol={0.001}>
+  <Q>Using polar form: $1/i = e^{i\theta}$ for which angle? Give $\theta$ in units of $\pi/2$ (so answer 1 would mean $\theta = \pi/2$).</Q>
+  <Hint>$i = e^{i\pi/2}$. Dividing subtracts angles.</Hint>
+  <Explain>$1/i = e^0 / e^{i\pi/2} = e^{-i\pi/2} = -i$. So $\theta = -\pi/2$, i.e. $-1$ in units of $\pi/2$. A neat fact used all the time: $1/i = -i$.</Explain>
+</NumQuiz>
+
+---
+
+## Phase: the hand of a clock
+
+In quantum mechanics, the complex numbers that describe a system are called **amplitudes**. It helps to picture each one as a little clock: the **length** of the hand is the modulus, and the **direction** of the hand, its angle $\theta$, is called the **phase**. Throughout this course, phase is also shown as **colour**:
+
+<div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap', margin: '1em 0' }}>
+  <PhasorClock z={{ re: 0.9, im: 0 }} size={56} />
+  <PhasorClock z={{ re: 0, im: 0.9 }} size={56} />
+  <PhasorClock z={{ re: -0.9, im: 0 }} size={56} />
+  <PhasorClock z={{ re: 0, im: -0.9 }} size={56} />
+  <PhasorClock z={{ re: 0.45, im: 0.45 }} size={56} />
+  <PhaseLegend size={56} />
+</div>
+
+Two facts make phase special.
+
+**1. By itself, phase is invisible.** Probability is $|z|^2$, and $|e^{i\phi}z|^2 = |e^{i\phi}|^2\,|z|^2 = |z|^2$. Turning the clock hand changes nothing you can measure from that single number.
+
+**2. Phase changes in time.** An isolated quantum system with a definite energy $E$ has its amplitude turning like a clock hand, $z(t) = z_0\,e^{-iEt/\hbar}$, at a rate set by its energy. Back in the first playground, switch on **spin w** in the $z\cdot w$ mode to see what multiplying by a spinning unit arrow does: the product keeps its length and goes around in a circle.
+
+If phase is invisible, why care? Because the moment two amplitudes are **added**, their relative phase decides whether they reinforce or cancel. That is the subject of the next lesson, and it is the engine of every quantum algorithm.
+
+<CSCorner>
+On a computer a complex number is just a pair of floats (`complex128` in NumPy is two `float64`s). The new thing is the multiplication rule, and it has a matrix form you already know: multiplying by $w = a + bi$ acts on the vector $(x, y)$ exactly like the matrix
+$$
+\begin{pmatrix} a & -b \\ b & a \end{pmatrix} = r\begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta\end{pmatrix},
+$$
+a rotation times a scaling. Complex numbers *are* the rotation-scaling matrices of the plane, packaged so you can do algebra with them.
+</CSCorner>
+
+<Quiz id="u0l1-phase">
+  <Q>An amplitude is $z = 0.6\,e^{i\pi/3}$. Which change would alter the probability $|z|^2$?</Q>
+  <Opt>Multiplying by $e^{i\pi}$</Opt>
+  <Opt>Replacing $z$ by its conjugate $\bar z$</Opt>
+  <Opt correct>Multiplying by $1+i$</Opt>
+  <Opt>Letting it evolve as $z\,e^{-iEt/\hbar}$ for some time</Opt>
+  <Explain>Multiplying by any unit-modulus number ($e^{i\pi}$, $e^{-iEt/\hbar}$) only rotates the arrow, and conjugating flips it, so the length stays $0.6$ and $|z|^2 = 0.36$. But $|1+i| = \sqrt2$, so $|z(1+i)|^2 = 2 \times 0.36 = 0.72$.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- A complex number $z = a+bi$ is an arrow in the plane with length $|z| = \sqrt{a^2+b^2}$ and angle $\arg z$. Addition is tip-to-tail.
+- **Multiplication rotates and scales:** lengths multiply, angles add. $i$ is a quarter-turn, so $i^2 = -1$.
+- **Euler's formula:** $e^{i\theta} = \cos\theta + i\sin\theta$ is the point at angle $\theta$ on the unit circle. Polar form $z = re^{i\theta}$ turns multiplication into adding exponents.
+- **Conjugate** flips the angle: $\bar z = re^{-i\theta}$, and $z\bar z = |z|^2 \ge 0$, which is how quantum probabilities are computed.
+- A unit-modulus factor $e^{i\phi}$ (a **phase**) is a pure rotation. On its own it is invisible to $|z|^2$, but relative phases matter as soon as amplitudes are added.
+
+<Watch title="e^(iπ) in 3.14 minutes, using dynamics" by="3Blue1Brown" url="https://www.3blue1brown.com/lessons/eulers-formula-dynamically/" note="the velocity-perpendicular-to-position argument, animated" />

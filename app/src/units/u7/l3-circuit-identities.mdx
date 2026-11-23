@@ -1,0 +1,152 @@
+import { IdentityChecker } from './widgets/IdentityChecker';
+import { unitaryGoal } from './lib/goals';
+
+Every quantum program you run is rewritten before it reaches the hardware. The compiler swaps gates the chip lacks for gates it has, cancels pairs that undo each other, and slides gates around to shorten the circuit. Each rewrite rests on a **circuit identity**: two circuits that look different but are the same unitary.
+
+The identities in this lesson are the working vocabulary of everyone who designs quantum algorithms. Most of them come from one idea.
+
+## Conjugation is a change of basis
+
+<Predict id="u7l3-hxh">
+  <Q>What single gate equals the sandwich $H\,X\,H$ ($H$, then $X$, then $H$)?</Q>
+  <Opt>$X$: the two Hadamards cancel</Opt>
+  <Opt>$H$</Opt>
+  <Opt correct>$Z$</Opt>
+  <Opt>$Y$</Opt>
+  <Reveal>
+Multiply it out: $HXH = \tfrac12\begin{pmatrix}1&1\\1&-1\end{pmatrix}\begin{pmatrix}0&1\\1&0\end{pmatrix}\begin{pmatrix}1&1\\1&-1\end{pmatrix} = \begin{pmatrix}1&0\\0&-1\end{pmatrix} = Z$.
+
+The Hadamards do *not* cancel, because $X$ sits between them and $H$ doesn't commute with $X$. Here is the geometric picture. $H$ is a half-turn about the diagonal axis, so it **swaps the $x$- and $z$-axes**. Running $HXH$ means: swap the axes, do a half-turn about $x$, swap back. The net effect is a half-turn about the axis that $x$ was swapped with, which is $z$.
+  </Reveal>
+</Predict>
+
+The general rule is one of the most useful facts in quantum computing:
+
+<KeyIdea title="Conjugation rotates the axis">
+If $U = R_{\hat n}(\theta)$ is a rotation, then $VUV^\dagger = R_{V\hat n}(\theta)$: **the same rotation about the axis carried along by $V$**. Conjugating a gate by $V$ is the gate "seen in $V$'s basis".
+</KeyIdea>
+
+Since $H$ swaps $x \leftrightarrow z$ and flips $y \to -y$:
+
+$$
+HXH = Z,\qquad HZH = X,\qquad HYH = -Y .
+$$
+
+Since $S$ is a quarter-turn about $z$, carrying $x \to y$:
+
+$$
+SXS^\dagger = Y,\qquad SYS^\dagger = -X,\qquad SZS^\dagger = Z .
+$$
+
+A gate that maps every Pauli to a Pauli (up to sign) under conjugation, as $H$ and $S$ do, is called a **Clifford gate**. That definition will matter in Lesson 7.5.
+
+---
+
+## The identity checker
+
+Below are two editable circuits. The checker computes both unitaries and tells you whether they are **identical**, **equal up to a global phase** (physically the same gate), or **different**. If they are different, it finds an input where they disagree. Start with the presets, then edit the circuits yourself. Click a palette gate, then click a wire. For two-qubit gates, click the control first. Right-click a gate to delete it.
+
+<IdentityChecker />
+
+<Try>
+- **HYH = Y?** The verdict is "equal up to global phase $-1$". The matrices really differ ($HYH = -Y$), but no experiment could tell the two gates apart.
+- **X on control?** The checker says *different* and shows a counterexample. Can you fix circuit B with **one** extra gate? (Hint: which qubits end up flipped?)
+- **Z on target?** Same challenge.
+- **free play:** make circuit B a CCX targeting q0 with $H$ on either side of it. Is it the same as A?
+</Try>
+
+<Quiz id="u7l3-which-equal">
+  <Q>Which pair consists of **physically identical** single-qubit gates? (Select all that apply.)</Q>
+  <Opt correct>$H Z H$ and $X$</Opt>
+  <Opt correct>$S X S^\dagger$ and $Y$</Opt>
+  <Opt correct>$H Y H$ and $Y$</Opt>
+  <Opt>$T X T^\dagger$ and $Y$</Opt>
+  <Explain>All of the first three hold, the third up to a global phase of $-1$. But $T$ is only an *eighth*-turn about $z$, so it carries the $x$-axis to $(\hat x + \hat y)/\sqrt2$, not to $\hat y$: $TXT^\dagger = (X + Y)/\sqrt2$. That isn't a Pauli at all. It's a first sign that $T$ is **not** a Clifford gate.</Explain>
+</Quiz>
+
+---
+
+## Flipping a CNOT with Hadamards
+
+Here is the most famous two-qubit identity. Put Hadamards on **both** wires before and after a CNOT, and the CNOT runs **backwards**:
+
+$$
+(H\otimes H)\;\text{CNOT}_{0\to1}\;(H\otimes H) \;=\; \text{CNOT}_{1\to0}.
+$$
+
+It looks like magic, but it follows in three short steps from things you already know.
+
+1. **CNOT is CZ in disguise.** Since $HZH = X$, a controlled-$Z$ with Hadamards around its target is a controlled-$X$: $\;\text{CNOT}_{0\to1} = (I\otimes H)\,CZ\,(I\otimes H)$.
+2. **Substitute.** Then $(H\otimes H)\,\text{CNOT}_{0\to1}\,(H\otimes H) = (H\otimes H)(I\otimes H)\,CZ\,(I\otimes H)(H\otimes H) = (H\otimes I)\,CZ\,(H\otimes I)$, because $H^2 = I$ on q1.
+3. **CZ is symmetric**, so we can read it with q1 as control and q0 as target. Hadamards around q0 then turn it into a CNOT with target **q0**: $\text{CNOT}_{1\to0}$. ∎
+
+<Warning title="'The target never affects the control' is false">
+In the computational basis, information seems to flow one way through a CNOT, from control to target. But "control" and "target" are labels that depend on the basis. In the Hadamard basis the roles swap, and the old target controls the old control. A CNOT is a genuinely two-way interaction. Lesson 7.4 shows it can change the "control" while leaving the "target" untouched.
+</Warning>
+
+Your turn: compile a CZ for a machine whose only two-qubit gate is CNOT.
+
+<CircuitLab title="Challenge: build CZ from H and CNOT" n={2} gates={['H', 'CNOT']} goal={unitaryGoal('CZ 0 1', 2, 'implement CZ')} challengeId="u7l3-cz-from-cnot" maxGates={3} showBloch={false} columns={5} />
+
+---
+
+## Sliding gates through a CNOT
+
+Compilers constantly ask: *can I move this gate to the other side of that CNOT?* For Pauli gates the answer is always yes, but the Pauli sometimes **spreads** onto the other qubit as it moves. Read each row as "gate before the CNOT = gates after it":
+
+| Before CNOT ($0\to1$) | After CNOT | Why |
+|---|---|---|
+| $Z$ on control | $Z$ on control | $Z$ is diagonal: it reads the control without changing it |
+| $X$ on target | $X$ on target | flipping the target before or after an XOR is the same |
+| $X$ on control | $X$ on control **and** target | flip $a$ first, and $b\oplus a$ flips too |
+| $Z$ on target | $Z$ on control **and** target | the phase "kicks back" (the Hadamard-mirror of the row above) |
+
+Rows 3 and 4 are each other's Hadamard mirror images. Flip the CNOT with Hadamards, swap $X\leftrightarrow Z$, and one rule becomes the other. They are exactly the fixes for the two "not equal" presets in the checker. Because conjugating by a CNOT always sends Paulis to Paulis, **CNOT is a Clifford gate** too.
+
+<Quiz id="u7l3-propagate">
+  <Q>An $X$ error hits the **control** qubit just *before* a CNOT. What error comes out after the CNOT?</Q>
+  <Opt>$X$ on the control only</Opt>
+  <Opt>$X$ on the target only</Opt>
+  <Opt correct>$X$ on both control and target</Opt>
+  <Opt>$Z$ on both control and target</Opt>
+  <Explain>$\text{CNOT}\,(X\otimes I) = (X\otimes X)\,\text{CNOT}$. The flipped control causes a flipped target. This is how errors **spread** through circuits, and quantum error-correcting codes (World 11) must be designed so that one fault can't spread into an uncorrectable pattern.</Explain>
+</Quiz>
+
+---
+
+## Building any controlled-U
+
+How do you build controlled-$U$ when $U$ is an arbitrary rotation and the hardware only has CNOT? The Euler decomposition from Lesson 7.1 gives a recipe (Nielsen & Chuang, Corollary 4.2). Every $U$ can be written as
+
+$$
+U = e^{i\alpha}\,A\,X\,B\,X\,C \quad\text{with}\quad ABC = I .
+$$
+
+Now replace each $X$ with a CNOT:
+
+- If the control is $|0\rangle$, the CNOTs do nothing and the target gets $ABC = I$.
+- If the control is $|1\rangle$, the target gets $AXBXC = e^{-i\alpha}U$.
+- A phase gate $P(\alpha) = \mathrm{diag}(1, e^{i\alpha})$ on the control supplies the missing factor $e^{i\alpha}$, but only in the control-$|1\rangle$ branch. (That "global" phase has turned into a relative phase, as Lesson 7.1 warned.)
+
+So every controlled single-qubit gate costs **at most two CNOTs** plus single-qubit gates. Simple cases need only one. Since $SXS^\dagger = Y$, controlled-$Y$ is a CNOT with $S^\dagger$ before it and $S$ after it on the target:
+
+<CircuitLab title="Challenge: build controlled-Y from S, S† and CNOT" n={2} gates={['S', 'Sdg', 'CNOT']} goal={unitaryGoal('CZ 0 1; CNOT 0 1; S 0', 2, 'implement controlled-Y (control q0)')} challengeId="u7l3-cy" maxGates={3} showBloch={false} columns={5} />
+
+<DeepDive title="Why the A, B, C exist">
+From $U = e^{i\alpha}R_z(\beta)R_y(\gamma)R_z(\delta)$ take $A = R_z(\beta)R_y(\gamma/2)$, $B = R_y(-\gamma/2)R_z(-\tfrac{\delta+\beta}{2})$ and $C = R_z(\tfrac{\delta-\beta}{2})$. Then $ABC = I$ is immediate. For the other identity, use $XR_y(\theta)X = R_y(-\theta)$ and $XR_z(\theta)X = R_z(-\theta)$: an $X$ on both sides flips the sign of $y$- and $z$-rotations, since a half-turn about $x$ reverses the $y$- and $z$-axes. Then $XBX = R_y(\gamma/2)R_z(\tfrac{\delta+\beta}{2})$, and $AXBXC = R_z(\beta)R_y(\gamma)R_z(\delta)$.
+</DeepDive>
+
+<CSCorner title="Circuit optimisation is term rewriting">
+A quantum compiler's optimiser is a rewriting system. Identities like $HH = I$, "$Z$ on control commutes with CNOT" and "two CNOTs cancel" are rewrite rules applied to a gate DAG. That's peephole optimisation, as in a classical compiler. Researchers have even built a complete graphical algebra for it, the **ZX-calculus** (Coecke & Duncan, 2008), and tools such as PyZX use it to cut gate counts automatically. Where the analogy breaks: classical rewrites preserve a function on bits, while these must preserve a unitary matrix, including every relative phase.
+</CSCorner>
+
+---
+
+## Summary
+
+- **Conjugation rotates the axis:** $VR_{\hat n}(\theta)V^\dagger = R_{V\hat n}(\theta)$. Hence $HXH = Z$, $HZH = X$, $HYH = -Y$, and $SXS^\dagger = Y$.
+- **CNOT from CZ:** $\text{CNOT} = (I\otimes H)\,CZ\,(I\otimes H)$. **CZ from CNOT** works the same way.
+- **Hadamards on both wires reverse a CNOT.** Control and target are basis-dependent labels.
+- **Pauli propagation** through CNOT: $Z_c$ and $X_t$ pass straight through, $X_c \to X_cX_t$, and $Z_t \to Z_cZ_t$. Errors spread this way.
+- **Any controlled-$U$** = phase on control + $A$, CNOT, $B$, CNOT, $C$ on target, with $ABC = I$, so at most 2 CNOTs.
+- Gates that map Paulis to Paulis ($H$, $S$, CNOT) are **Clifford** gates. $T$ is not.

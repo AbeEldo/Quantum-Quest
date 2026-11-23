@@ -1,0 +1,129 @@
+import { SuperdenseWidget } from './widgets/SuperdenseWidget';
+import { c } from '../../engine/complex';
+
+You've built a toolkit: Bell pairs, CNOT, partial measurement, and the fact that entanglement can't carry a signal on its own. This world puts it to work in **quantum protocols**, recipes that do something useful with entanglement plus ordinary communication.
+
+The first is a puzzle about capacity. A qubit is described by two continuous angles, so it holds infinitely many possible states. Surely you could cram lots of information into one.
+
+<Predict id="u8l1-capacity">
+  <Q>Alice may send Bob exactly **one qubit**, and nothing else. What is the largest number of classical bits Bob can reliably decode?</Q>
+  <Opt>Unlimited: encode the bits in the digits of $\theta$ and $\phi$</Opt>
+  <Opt correct>1 bit, unless they shared entanglement beforehand, in which case 2</Opt>
+  <Opt>Always exactly 2 bits</Opt>
+  <Opt>0, because measurement destroys the state</Opt>
+  <Explain>Bob can measure the qubit only once and gets one bit out. **Holevo's theorem** says no cleverness beats 1 bit per qubit. But if Alice and Bob already share a Bell pair, one transmitted qubit can carry **2 bits**. That's superdense coding.</Explain>
+  <Reveal>
+That sounds like it contradicts Holevo, but it doesn't, and seeing why is the key to understanding entanglement as a **resource**. This lesson walks through the protocol, then builds it gate by gate.
+  </Reveal>
+</Predict>
+
+---
+
+## The Holevo limit: 1 bit per qubit
+
+Alice can prepare any state $|\psi\rangle$ she likes, but Bob has one copy and no way to clone it (World 6). A measurement in any basis has two outcomes, so it gives him one bit. Choosing among more elaborate measurements doesn't help either. **Holevo's theorem (1973)** says that $n$ qubits sent without prior entanglement convey at most $n$ classical bits.
+
+The continuum of qubit states is real, but it's **not readable**. That's the same theme as World 6's warning that $2^n$ amplitudes can't be read out.
+
+<Quiz id="u8l1-holevo">
+  <Q>Alice encodes a 2-bit message into one of four qubit states, $|0\rangle, |1\rangle, |+\rangle, |-\rangle$, and sends it (no prior entanglement). Why can't Bob always decode it?</Q>
+  <Opt>Because the states aren't normalised</Opt>
+  <Opt correct>The four states aren't mutually orthogonal, so no measurement can distinguish all four perfectly</Opt>
+  <Opt>Because Bob needs to know the basis before Alice sends it</Opt>
+  <Opt>He can, so this does send 2 bits</Opt>
+  <Explain>A qubit lives in $\mathbb C^2$, which has room for only **two** mutually orthogonal states. Four states must overlap: $|\langle 0|+\rangle|^2 = \tfrac12$, so Bob can't tell those apart reliably. (In fact these four states are exactly BB84's, and you'll see their non-orthogonality protect secrets in Lesson 3.)</Explain>
+</Quiz>
+
+---
+
+## The protocol
+
+The trick is to encode into a **two-qubit** space, which has room for four orthogonal states, the four Bell states. It works even though Alice touches only one of the two qubits.
+
+1. **Beforehand:** Alice and Bob share $|\Phi^+\rangle = \tfrac{1}{\sqrt2}(|00\rangle + |11\rangle)$. Alice holds qubit A, Bob holds qubit B.
+2. **Encode:** to send bits $b_1b_2$, Alice applies a gate to qubit A alone:
+
+| message | Alice applies | shared state becomes |
+|---|---|---|
+| 00 | $I$ | $\lvert\Phi^+\rangle = \tfrac{1}{\sqrt2}(\lvert 00\rangle + \lvert 11\rangle)$ |
+| 01 | $X$ | $\lvert\Psi^+\rangle = \tfrac{1}{\sqrt2}(\lvert 10\rangle + \lvert 01\rangle)$ |
+| 10 | $Z$ | $\lvert\Phi^-\rangle = \tfrac{1}{\sqrt2}(\lvert 00\rangle - \lvert 11\rangle)$ |
+| 11 | $X$, then $Z$ | $\lvert\Psi^-\rangle = \tfrac{1}{\sqrt2}(\lvert 01\rangle - \lvert 10\rangle)$ |
+
+3. **Send:** Alice sends qubit A to Bob. **One qubit travels.**
+4. **Decode:** Bob now holds both qubits. He runs the Bell-pair circuit backwards, CNOT (A controls B) then $H$ on A, which maps the four Bell states to $|00\rangle,|01\rangle,|10\rangle,|11\rangle$. He measures and reads $b_1b_2$.
+
+<SuperdenseWidget />
+
+<Try>
+- Pick message **10** and step through. After Alice's $Z$, the amplitudes look the same size as before, but the $|11\rangle$ arrow now points the opposite way (colour flipped). That relative phase *is* the message.
+- Watch the **qubit A alone** sphere during steps 1–3. It stays a dot at the centre whatever Alice encodes. The information isn't in qubit A. It's in how A relates to B.
+- At step 4, Bob's two gates turn the four Bell states into the four computational basis states, so a plain measurement reads the bits.
+</Try>
+
+<Quiz id="u8l1-decode">
+  <Q>Alice wants to send $01$. Which gate does she apply, and which Bell state does Bob receive?</Q>
+  <Opt>$Z$, giving $|\Phi^-\rangle$</Opt>
+  <Opt correct>$X$, giving $|\Psi^+\rangle$</Opt>
+  <Opt>$H$, giving $|{+}0\rangle$</Opt>
+  <Opt>Nothing, giving $|\Phi^+\rangle$</Opt>
+  <Explain>$(X\otimes I)\tfrac{1}{\sqrt2}(|00\rangle+|11\rangle) = \tfrac{1}{\sqrt2}(|10\rangle+|01\rangle) = |\Psi^+\rangle$. Bob's CNOT turns that into $\tfrac{1}{\sqrt2}(|11\rangle+|01\rangle) = |+\rangle|1\rangle$, and $H$ gives $|01\rangle$.</Explain>
+</Quiz>
+
+---
+
+## Build it in the Circuit Lab
+
+Here's the whole protocol as one circuit. Wire $q_0$ is Alice's qubit (it travels), and $q_1$ is Bob's. Columns 1–2 make the pair, columns 3–4 are Alice's encoding for "11", columns 5–6 are Bob's decoder, and the last column measures. Drag the step slider to watch the state evolve.
+
+<CircuitLab n={2} circuit="H 0; CNOT 0 1; X 0; Z 0; CNOT 0 1; H 0; M 0 1" gates={['H', 'X', 'Z', 'CNOT', 'M']} qubitLabels={['Alice', 'Bob']} showHistogram title="Superdense coding, message 11" />
+
+**Your turn.** The pair-making and decoding are already in place, with an empty gap in columns 3–4 for Alice's encoding. Make Bob decode the message **11**, using only gates on Alice's wire in the gap.
+
+<CircuitLab n={2} circuit="H 0; CNOT 0 1; ; ; CNOT 0 1; H 0" gates={['X', 'Z']} qubitLabels={['Alice', 'Bob']} goal={{ kind: 'state', amps: [c(0), c(0), c(0), c(1)], label: 'Bob ends with |11⟩' }} challengeId="u8l1-send11" maxGates={6} title="Challenge: encode 11" />
+
+---
+
+## No free lunch: counting resources
+
+So did one qubit carry 2 bits, beating Holevo? Count everything that was sent. Before the protocol, a Bell pair had to be distributed, which means a qubit travelled to Alice and another to Bob. In total **two** qubits travelled, carrying 2 bits. Holevo survives. What superdense coding does is let you send half the quantum communication **in advance**, at off-peak time, before you even know the message.
+
+The resource accounting is written as an inequality:
+
+$$
+1\ \text{ebit} + 1\ \text{qubit sent} \;\ge\; 2\ \text{classical bits sent}.
+$$
+
+(An **ebit** is one shared Bell pair.) Teleportation, next lesson, is the mirror image: $1\ \text{ebit} + 2\ \text{bits} \ge 1\ \text{qubit}$.
+
+<Warning>
+"Superdense coding sends information faster than light, or sends 2 bits for free." **Neither.** Alice's qubit still has to physically travel to Bob, at light speed or slower. Until it arrives, Bob's qubit is maximally mixed and tells him nothing (no-signalling). And the pre-shared pair cost a qubit of transmission earlier on. Entanglement doesn't create information. It lets you **move when** the quantum communication happens.
+</Warning>
+
+<NumQuiz id="u8l1-count" answer={200} tol={0}>
+  <Q>Alice and Bob pre-share 100 Bell pairs. Later Alice sends Bob 100 qubits. What is the maximum number of classical bits Bob can decode?</Q>
+  <Explain>Each ebit plus one sent qubit gives 2 bits, so 100 of each give **200 bits**. Without the ebits, 100 qubits could carry at most 100 bits (Holevo). Even with unlimited entanglement, it's never more than 2 bits per qubit sent.</Explain>
+</NumQuiz>
+
+---
+
+## A security bonus, and the history
+
+**Bonus:** an eavesdropper who intercepts the travelling qubit learns *nothing*. Qubit A alone is maximally mixed for every message, as you saw on the mini Bloch sphere, so the four messages look identical to anyone without qubit B.
+
+<History>
+Superdense coding was proposed by **Charles Bennett and Stephen Wiesner** in 1992 ("Communication via one- and two-particle operators on Einstein-Podolsky-Rosen states", *Phys. Rev. Lett.*). The first experiment, by **Klaus Mattle, Harald Weinfurter, Paul Kwiat and Anton Zeilinger** (Innsbruck, 1996), used polarisation-entangled photons. With only linear optics, Bob can't tell all four Bell states apart (just three outcomes are distinguishable), so they sent "trits": $\log_2 3 \approx 1.58$ bits per photon. That's still more than one bit per photon, which is the point. Full four-state Bell measurements need extra tricks such as hyperentanglement or nonlinear interactions.
+</History>
+
+<CSCorner>
+Quantum Shannon theory treats ebits, qubits and classical bits like currencies with exchange rates. Superdense coding and teleportation are the two basic conversions, and they're optimal: you can't get 3 bits from an ebit plus a qubit, or teleport a qubit with only 1 bit. A whole algebra of **resource inequalities** builds on these, much as classical information theory builds on channel capacity. The entanglement-assisted classical capacity of a noiseless qubit channel is exactly 2 bits per use.
+</CSCorner>
+
+---
+
+## Summary
+
+- Without entanglement, one qubit carries at most **1 classical bit** (Holevo).
+- **Superdense coding:** share $|\Phi^+\rangle$. Alice applies $I, X, Z$ or $ZX$ to her half to choose one of the four orthogonal Bell states, then sends her qubit. Bob applies CNOT then $H$ and measures, giving **2 bits**.
+- The message lives in the *correlation* (including the relative phase) between the qubits. Qubit A alone is maximally mixed, so an interceptor learns nothing.
+- Resource count: $1$ ebit $+ 1$ qubit $\ge 2$ bits. Nothing travels faster than light, and nothing comes for free.

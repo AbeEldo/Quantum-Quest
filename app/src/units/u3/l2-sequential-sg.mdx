@@ -1,0 +1,138 @@
+import { SGChain } from './widgets/SGChain';
+
+One Stern–Gerlach magnet shows that spin has two values along any axis. The real surprises start when you **chain magnets together**, feeding one output beam into the next analyzer. This is the opening move of many quantum mechanics textbooks (Sakurai's *Modern Quantum Mechanics* starts right here, and Feynman builds his whole spin discussion out of such "filters"), because three magnets in a row already show what's deeply non-classical about measurement.
+
+Notation: an **SG-z** analyzer measures spin along $z$; its "+" output carries atoms found spin-up along $z$ (we'll write $z+$). Likewise **SG-x**, and **SG-θ** for a magnet tilted by angle $\theta$ from $z$ toward $x$.
+
+---
+
+## Experiment 1: ask the same question twice
+
+<Predict id="u3l2-zz">
+  <Q>Atoms from the oven go through SG-z. The $z-$ beam is blocked; the $z+$ beam enters a **second** SG-z. What does the second analyzer show?</Q>
+  <Opt>50% up, 50% down, since the oven atoms are random</Opt>
+  <Opt correct>100% up</Opt>
+  <Opt>75% up, 25% down</Opt>
+  <Reveal>
+<SGChain preset="z → z" title="Experiment 1: z then z" />
+
+**100% up.** Ask the same question twice and you get the same answer. The first magnet didn't just *find* atoms with $z+$; the atoms that leave its "+" port **are** in the state "spin up along $z$", and stay that way.
+  </Reveal>
+</Predict>
+
+That's reassuring. Measurement results are **repeatable**: the first analyzer **prepares** a state, and the second confirms it with certainty.
+
+---
+
+## Experiment 2: ask a different question
+
+<Predict id="u3l2-zx">
+  <Q>Now the $z+$ beam enters an **SG-x** instead. What fraction comes out $x+$?</Q>
+  <Opt>100%: the atoms were already "up"</Opt>
+  <Opt>0%</Opt>
+  <Opt correct>50%</Opt>
+  <Opt>It depends on the oven temperature</Opt>
+  <Reveal>
+<SGChain preset="z → x" title="Experiment 2: z then x" />
+
+**50/50.** Knowing an atom is $z+$ tells you **nothing** about its $x$ component. The outcome along $x$ is a fair coin.
+  </Reveal>
+</Predict>
+
+So far a classical story might still work. Maybe each atom carries a hidden list like "z: up, x: down", and the first magnet just filtered for "z: up" while the $x$ entries are still random. The third experiment kills that story.
+
+---
+
+## Experiment 3: the memory eraser
+
+Take the $z+$ beam, pass it through SG-x, keep only the $x+$ atoms, and send *them* into a final SG-z. Every one of these atoms was certified $z+$ two magnets ago.
+
+<Predict id="u3l2-zxz">
+  <Q>What does the final SG-z show for the atoms that were selected $z+$ and then $x+$?</Q>
+  <Opt>100% up: they were selected $z+$ and nothing has changed that</Opt>
+  <Opt correct>50% up, 50% down: the $x$ measurement erased the $z$ information</Opt>
+  <Opt>100% down</Opt>
+  <Opt>Nothing gets through</Opt>
+  <Reveal>
+<SGChain preset="z → x → z" title="Experiment 3: z then x then z" />
+
+**Half of them come out $z-$**, even though every atom entering SG-x had been filtered to be $z+$. The $x$ measurement didn't just read the $x$ component; it **reset** the state to "$x+$", which carries no memory of the earlier $z$ result.
+  </Reveal>
+</Predict>
+
+<KeyIdea>
+**Measurement disturbs.** Measuring spin along $x$ destroys whatever was known about spin along $z$, and vice versa. There is no hidden table of answers to all questions at once. A spin-½ particle can have a definite answer to **one** axis question at a time.
+</KeyIdea>
+
+<Warning>
+"The $x$ magnet randomizes the spin because it gives the atom a clumsy shove." That's not the right picture. The state $z+$ is *itself* an equal superposition of $x+$ and $x-$ (next lesson makes this precise), and $x+$ is an equal superposition of $z+$ and $z-$. Nothing random needs to be "added" by the magnet. Feynman even describes a modified apparatus that separates the $x\pm$ beams and then **recombines both of them** without blocking either. The $z+$ state comes back intact, 100% up. Only when one $x$ path is blocked (that is, when which-path information is extracted) is the $z$ memory lost. Sound familiar? It's the which-path story from World 2 again.
+</Warning>
+
+<Quiz id="u3l2-fraction">
+  <Q>In Experiment 3, what fraction of the atoms that **leave the oven** end up in the final $z-$ counter?</Q>
+  <Opt>1/2</Opt>
+  <Opt>1/4</Opt>
+  <Opt correct>1/8</Opt>
+  <Opt>0</Opt>
+  <Explain>Oven → $z+$: $\tfrac12$. Then $z+ \to x+$: $\tfrac12$. Then $x+ \to z-$: $\tfrac12$. Total $\tfrac18$. Compare the three-polarizer paradox in World 2, which also gave $\tfrac18$ from three "halvings".</Explain>
+</Quiz>
+
+---
+
+## Tilted magnets: $\cos^2(\theta/2)$
+
+What if the second magnet is tilted at an angle $\theta$ between $z$ and $x$? Measurements give this beautifully simple rule:
+
+$$
+P\big(\text{up along } \hat n \,\big|\, \text{prepared up along } \hat z\big) = \cos^2\frac{\theta}{2},
+$$
+
+where $\theta$ is the angle between $\hat z$ and $\hat n$. More generally, if the atom is up along $\hat m$, an analyzer along $\hat n$ gives "+" with probability $\cos^2(\Theta/2) = \tfrac12(1 + \hat m\cdot\hat n)$, where $\Theta$ is the angle between them.
+
+<ParamPlot title="Spin vs. polarization: probability of a 'yes'" params={[{ name: 't', label: 'angle', min: 0, max: Math.PI, value: Math.PI / 3, pi: true }]} series={(p) => [{ f: (x) => Math.cos(x / 2) ** 2, color: '#fcd34d', label: 'spin: cos²(θ/2)' }, { f: (x) => Math.cos(x) ** 2, color: '#58c4dd', label: 'polarization: cos²θ', dashed: true }]} xRange={[0, Math.PI]} yRange={[0, 1.05]} xLabel="angle between preparation and measurement axis" yLabel="P(yes)" vlines={(p) => [{ x: p.t, color: '#e07ab6' }]} readout={(p) => 'spin: ' + (100 * Math.cos(p.t / 2) ** 2).toFixed(1) + '%   ·   photon: ' + (100 * Math.cos(p.t) ** 2).toFixed(1) + '%'} height={230} />
+
+Check the special cases: $\theta = 0$ gives 1 (same axis), $\theta = 90°$ gives $\tfrac12$ (that was Experiment 2), and $\theta = 180°$ gives 0, since "up along $-z$" is "down along $z$". For spin, the **opposite** direction is the orthogonal, never-coincident outcome. For photon polarization (dashed curve) the "never" angle is $90°$. The spin curve is the polarization curve stretched by a factor of 2 in angle, as the World 2 note warned.
+
+<SGChain preset="z → tilted" title="Tilt the second magnet" />
+
+<Try>
+- In the widget, set analyzer 2 to **tilt θ** and try $\theta = 60°$, $90°$, $120°$, $180°$. Compare the counts with $\cos^2(\theta/2)$.
+- Add a third analyzer (SG-z) after a $60°$ tilt and predict the final split before running it.
+</Try>
+
+<NumQuiz id="u3l2-tilt-60" answer={0.75} tol={0.01}>
+  <Q>A beam of $z+$ atoms enters an analyzer tilted $60°$ from $z$. What fraction exits the "+" port?</Q>
+  <Explain>$\cos^2(30°) = 3/4$. (For a photon polarizer at $60°$ it would be $\cos^2 60° = 1/4$; spin angles count double.)</Explain>
+</NumQuiz>
+
+<NumQuiz id="u3l2-chain-60" answer={0.5625} tol={0.01}>
+  <Q>$z+$ atoms pass through a $60°$ analyzer (keep "+"), then an SG-z. What fraction of the atoms entering the $60°$ analyzer end up $z+$ at the end?</Q>
+  <Hint>After the tilted analyzer the atoms are "up along $60°$". The angle back to $z$ is again $60°$.</Hint>
+  <Explain>$\cos^2 30° \times \cos^2 30° = 0.75 \times 0.75 = 0.5625$. Without the middle magnet it would be 1. Every measurement re-prepares the state.</Explain>
+</NumQuiz>
+
+---
+
+## What this means
+
+<CSCorner>
+In a classical computer, **reading is free**: reading a register doesn't change it, and you can read it as often as you like. For a qubit, a measurement is a **read-and-overwrite** operation: you get one bit out, and the state is replaced by the basis state matching your answer. Reading in a different basis gives a fresh random answer and destroys the old information.
+
+Two practical consequences you'll meet later. You can't copy an unknown qubit by just measuring it (World 6: no-cloning). And you can't debug a quantum program by peeking at intermediate states (you'd collapse them), which is why quantum algorithms are designed so that **one** final measurement gives the answer.
+</CSCorner>
+
+<History>
+Feynman's *Lectures* Vol. III (ch. 5–6) and Sakurai's *Modern Quantum Mechanics* (ch. 1) both build quantum mechanics from sequential Stern–Gerlach thought-experiments like these. Real sequential Stern–Gerlach experiments are hard, since beams of atoms are fragile, but the same logic is tested routinely today with photons (polarizers), trapped ions, and superconducting qubits, where "measure along $x$" means "rotate, then measure along $z$".
+</History>
+
+You can design your own magnet chains, and predict their counts before you run them, in the **Stern–Gerlach Sandbox** game.
+
+---
+
+## Summary
+
+- **z then z:** 100% repeat. A measurement **prepares** the state it reports.
+- **z then x:** 50/50. Knowing $z$ says nothing about $x$.
+- **z then x then z:** 50/50 again! The $x$ measurement **erased** the $z$ information. There's no hidden table of answers.
+- Tilted analyzer at angle $\theta$ from the prepared direction: $P(+) = \cos^2(\theta/2) = \tfrac12(1+\hat m\cdot\hat n)$. Opposite directions are the mutually exclusive outcomes.
+- Measurement is read-and-overwrite. It disturbs because the states themselves are superpositions in other bases (next lesson), not because the probe is clumsy.

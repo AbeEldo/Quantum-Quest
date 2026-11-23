@@ -1,0 +1,197 @@
+import { ObservableExplorer } from './widgets/ObservableExplorer';
+
+In World 3 you sent silver atoms through Stern–Gerlach magnets. Turn the magnet to point along $z$ and every atom lands in one of **two** spots. Turn it to point along $x$, or tilt it $37°$ off vertical, and you still get exactly two spots. You never see a smear.
+
+Classically that's very strange. A spinning magnet pointed in a random direction should have *every* possible component along the magnet axis, from fully up to fully down, and the beam should spread into a continuous stripe. Instead nature hands back one of two answers, whatever question you ask.
+
+This world is about the **rules of the game**: the handful of postulates that every quantum system obeys, from a single electron to a 1000-qubit processor. The first rule answers a question we've dodged so far: **what is a measurable quantity, mathematically?**
+
+<Predict id="u4l1-how-many">
+  <Q>An electron's spin is measured along an axis tilted $37°$ away from $z$. How many different outcomes can the measurement give?</Q>
+  <Opt>A continuous range, from $-\hbar/2$ to $+\hbar/2$ depending on the tilt</Opt>
+  <Opt correct>Exactly two: $+\hbar/2$ or $-\hbar/2$, for every axis</Opt>
+  <Opt>Two along $x$, $y$, $z$, but more for tilted axes</Opt>
+  <Opt>Only one, determined by how the electron was prepared</Opt>
+  <Reveal>
+**Exactly two, always.** Rotating the apparatus changes the *probabilities* of the two outcomes, but never the outcomes themselves. You'll see why below: the "spin along $\hat n$" observable is a $2\times 2$ matrix whose eigenvalues are $\pm\hbar/2$ for **every** direction $\hat n$.
+  </Reveal>
+</Predict>
+
+---
+
+## Observables are matrices
+
+Here's the idea that Heisenberg, Born and Jordan stumbled onto in 1925, stated in the clean form it reached a few years later:
+
+<KeyIdea>
+**Postulate (observables).** Every measurable quantity $A$ is represented by a **Hermitian operator** $\hat A = \hat A^\dagger$ on the state space.
+
+- The **possible outcomes** of measuring $A$ are the **eigenvalues** $a_k$ of $\hat A$.
+- Each outcome comes with an **eigenvector** $|a_k\rangle$: a state in which that outcome is *certain*.
+</KeyIdea>
+
+In World 0 you met Hermitian matrices and the **spectral theorem**: a Hermitian matrix has real eigenvalues and an orthonormal basis of eigenvectors, so it can be written
+
+$$
+\hat A \;=\; \sum_k a_k\, |a_k\rangle\langle a_k| .
+$$
+
+Read this formula as a **lookup table** packed into one matrix. Each term pairs an outcome (the number $a_k$) with the state that gives it (the projector $|a_k\rangle\langle a_k|$).
+
+Why Hermitian, and not some other kind of matrix? Two physical requirements force it:
+
+1. **Outcomes are real numbers.** Detectors read out real numbers like $+\hbar/2$ or $2.3$ eV. Hermitian matrices are exactly the normal matrices with real eigenvalues.
+2. **Different outcomes must be perfectly distinguishable.** If a state *certainly* gives $a_1$, it must *never* give $a_2$. Zero probability means zero overlap: $\langle a_1|a_2\rangle = 0$. Hermitian matrices have orthogonal eigenvectors for distinct eigenvalues.
+
+<DeepDive title="Proof: real eigenvalues and orthogonal eigenvectors">
+Let $\hat A|a\rangle = a|a\rangle$ with $\langle a|a\rangle = 1$. Then $\langle a|\hat A|a\rangle = a$. Take the complex conjugate: $\langle a|\hat A|a\rangle^* = \langle a|\hat A^\dagger|a\rangle = \langle a|\hat A|a\rangle$, because $\hat A^\dagger = \hat A$. So $a^* = a$, which means $a$ is real.
+
+Now take two eigenvectors with $a_1 \ne a_2$. Compute $\langle a_1|\hat A|a_2\rangle$ two ways. Acting to the right gives $a_2\langle a_1|a_2\rangle$. Acting to the left (using $\hat A^\dagger = \hat A$ and $a_1$ real) gives $a_1\langle a_1|a_2\rangle$. Subtracting, $(a_1 - a_2)\langle a_1|a_2\rangle = 0$, so $\langle a_1|a_2\rangle = 0$. ∎
+</DeepDive>
+
+<Quiz id="u4l1-which-hermitian">
+  <Q>Which of these matrices could represent a physical observable? (Select all that apply.)</Q>
+  <Opt correct>$\begin{pmatrix} 2 & 0 \\ 0 & 5 \end{pmatrix}$</Opt>
+  <Opt correct>$\begin{pmatrix} 1 & -i \\ i & 1 \end{pmatrix}$</Opt>
+  <Opt why="The off-diagonal entries are not complex conjugates of each other: (1,2) is i but (2,1) is also i, not −i.">$\begin{pmatrix} 0 & i \\ i & 0 \end{pmatrix}$</Opt>
+  <Opt why="A diagonal entry is imaginary. Hermitian matrices have real diagonals.">$\begin{pmatrix} i & 0 \\ 0 & 1 \end{pmatrix}$</Opt>
+  <Explain>Hermitian means $A_{ij} = A_{ji}^*$: real on the diagonal, and complex-conjugate pairs across it. The second matrix passes, with eigenvalues $0$ and $2$. The third is $i\sigma_x$, which is *anti*-Hermitian and has eigenvalues $\pm i$, not real numbers.</Explain>
+</Quiz>
+
+---
+
+## The Pauli matrices: spin, built from experiments
+
+Let's *build* the spin observables directly from the Stern–Gerlach data, using the lookup-table formula. We'll measure spin in units of $\hbar/2$, so the outcomes are $\pm 1$.
+
+**Along $z$.** The outcomes are $+1$ for $|0\rangle$ (spin up) and $-1$ for $|1\rangle$ (spin down):
+
+$$
+\sigma_z = (+1)|0\rangle\langle 0| + (-1)|1\rangle\langle 1| = \begin{pmatrix} 1 & 0 \\ 0 & -1\end{pmatrix}.
+$$
+
+**Along $x$.** The outcomes are $+1$ for $|+\rangle$ and $-1$ for $|-\rangle$, where $|\pm\rangle = (|0\rangle \pm |1\rangle)/\sqrt2$:
+
+$$
+\sigma_x = |+\rangle\langle +| - |-\rangle\langle -| = \tfrac12\begin{pmatrix} 1 & 1 \\ 1 & 1\end{pmatrix} - \tfrac12\begin{pmatrix} 1 & -1 \\ -1 & 1\end{pmatrix} = \begin{pmatrix} 0 & 1 \\ 1 & 0\end{pmatrix}.
+$$
+
+**Along $y$**, using $|\pm i\rangle = (|0\rangle \pm i|1\rangle)/\sqrt2$, the same recipe gives
+
+$$
+\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0\end{pmatrix}.
+$$
+
+These are the **Pauli matrices** (Wolfgang Pauli, 1927). The physical spin observables are $\hat S_i = \frac{\hbar}{2}\sigma_i$, with outcomes $\pm\hbar/2$.
+
+<CSCorner>
+You've seen $\sigma_x$ before: it's the **X gate** (NOT), and $\sigma_z$ is the **Z gate**. The *same matrix* plays two completely different roles:
+
+- **As a gate** (a unitary), it's an *action*: apply it and the state changes, $|0\rangle \to |1\rangle$.
+- **As an observable** (a Hermitian operator), it's a *question*: "is the spin along $+x$ or $-x$?" The matrix encodes the answers and the states that give them.
+
+The Paulis are among the rare matrices that are both unitary *and* Hermitian, because $\sigma_i^2 = I$. Most observables (energy, position) are not unitary, and most gates ($S$, $T$) are not Hermitian.
+</CSCorner>
+
+<Warning>
+**Multiplying a state by an observable is *not* measuring it.** $\sigma_x|0\rangle = |1\rangle$, but measuring $\sigma_x$ on $|0\rangle$ does *not* give "$|1\rangle$". It gives $+1$ or $-1$ with probability ½ each, and leaves the spin in $|+\rangle$ or $|-\rangle$. The matrix product $\hat A|\psi\rangle$ is a bookkeeping tool (you'll use it to compute averages next lesson), not a physical process.
+</Warning>
+
+<Quiz id="u4l1-sigma-y-eig">
+  <Q>Which state is an eigenvector of $\sigma_y$ with eigenvalue $-1$?</Q>
+  <Opt>$|1\rangle$</Opt>
+  <Opt>$\frac{1}{\sqrt2}(|0\rangle - |1\rangle)$</Opt>
+  <Opt correct>$\frac{1}{\sqrt2}(|0\rangle - i|1\rangle)$</Opt>
+  <Opt>$\frac{1}{\sqrt2}(|0\rangle + i|1\rangle)$</Opt>
+  <Explain>$\sigma_y \binom{1}{-i} = \binom{(-i)(-i)}{i\cdot 1} = \binom{-1}{i} = -\binom{1}{-i}$. ✔ That's $|{-i}\rangle$, the $-y$ point on the Bloch sphere.</Explain>
+</Quiz>
+
+---
+
+## Spin along any axis
+
+What about the tilted magnet? A magnet along unit vector $\hat n = (n_x, n_y, n_z)$ measures the component of spin along $\hat n$. Since spin components combine like a vector, the observable is the dot product
+
+$$
+\hat n\cdot\vec\sigma \;=\; n_x\sigma_x + n_y\sigma_y + n_z\sigma_z \;=\; \begin{pmatrix} n_z & n_x - i n_y \\ n_x + i n_y & -n_z\end{pmatrix}.
+$$
+
+Its eigenvalues are **always $\pm 1$**. That's the two-spot result, for any axis. The reason is short: the Paulis anticommute ($\sigma_x\sigma_y = -\sigma_y\sigma_x$, and so on) and each squares to $I$. Expand $(\hat n\cdot\vec\sigma)^2$ and the cross terms cancel in pairs:
+
+$$
+(\hat n\cdot\vec\sigma)^2 = (n_x^2 + n_y^2 + n_z^2)\, I = I.
+$$
+
+A matrix that squares to $I$ can only have eigenvalues whose squares are $1$, which means $\pm 1$.
+
+The eigenvectors are even prettier. Drag the axis around and watch:
+
+<ObservableExplorer />
+
+<Try>
+- Click the presets $\sigma_x$, $\sigma_y$, $\sigma_z$. The green ($+1$) and red ($-1$) eigenstates sit at the two ends of the axis: $|\pm\rangle$, $|\pm i\rangle$, $|0\rangle/|1\rangle$.
+- Drag the axis anywhere. The eigenstates are always **antipodal points** $\pm\hat n$ on the Bloch sphere. That makes sense: from World 3, antipodal means orthogonal, and orthogonal eigenvectors are exactly what a Hermitian matrix must have.
+- Switch to dragging the **state** ψ. When ψ points along $+\hat n$, $P(+1) = 100\%$. When ψ is perpendicular to the axis, it's 50/50.
+</Try>
+
+So the general eigenvectors are just the Bloch-sphere states pointing along $\pm\hat n$. If $\hat n$ has angles $(\theta,\phi)$:
+
+$$
+|{+}n\rangle = \cos\tfrac\theta2|0\rangle + e^{i\phi}\sin\tfrac\theta2|1\rangle, \qquad |{-}n\rangle = \sin\tfrac\theta2|0\rangle - e^{i\phi}\cos\tfrac\theta2|1\rangle .
+$$
+
+<KeyIdea>
+For a qubit, **every** two-outcome measurement is "measure spin along some axis $\hat n$". The observable is $\hat n\cdot\vec\sigma$, the outcomes are $\pm1$, and the outcome states are the two antipodal points $\pm\hat n$. Measuring "in the $\{|+\rangle, |-\rangle\}$ basis" is the same thing as measuring $\sigma_x$.
+</KeyIdea>
+
+<Quiz id="u4l1-hadamard-axis">
+  <Q>The observable $\frac{1}{\sqrt2}(\sigma_x + \sigma_z)$ measures spin along the axis halfway between $x$ and $z$. Where on the Bloch sphere is its $+1$ eigenstate?</Q>
+  <Opt>At the north pole, $|0\rangle$</Opt>
+  <Opt correct>On the $xz$ great circle, $45°$ down from the north pole toward $+x$</Opt>
+  <Opt>On the equator, at $+x$</Opt>
+  <Opt>At $45°$ toward $+y$</Opt>
+  <Explain>Here $\hat n = (1/\sqrt2, 0, 1/\sqrt2)$, so $\theta = \pi/4$ and $\phi = 0$. The $+1$ eigenstate is $\cos\frac{\pi}{8}|0\rangle + \sin\frac\pi8|1\rangle$, and the $-1$ eigenstate is the antipodal point. (This matrix is the Hadamard gate, which is again both Hermitian and unitary.)</Explain>
+</Quiz>
+
+---
+
+## Outcome probabilities from the observable
+
+The observable tells you the outcomes and outcome states. The **Born rule** from World 3 gives the odds:
+
+$$
+P(a_k) \;=\; |\langle a_k|\psi\rangle|^2 .
+$$
+
+For spin along $\hat n$ there's a lovely geometric shortcut. With $\vec r$ the Bloch vector of $|\psi\rangle$,
+
+$$
+P(+1) = \frac{1 + \hat n\cdot\vec r}{2}, \qquad P(-1) = \frac{1 - \hat n\cdot\vec r}{2}.
+$$
+
+The probability depends only on the angle between the state and the measurement axis.
+
+<NumQuiz id="u4l1-prob-tilted" answer={0.933} tol={0.005}>
+  <Q>A spin has Bloch angles $\theta = 60°$, $\phi = 0$. You measure $\sigma_x$. What is $P(+1)$? (Give 3 decimals.)</Q>
+  <Hint>The Bloch vector is $(\sin 60°, 0, \cos 60°)$ and $\hat n = (1,0,0)$.</Hint>
+  <Explain>$\hat n\cdot\vec r = \sin 60° \approx 0.866$, so $P(+1) = (1 + 0.866)/2 \approx 0.933$.</Explain>
+</NumQuiz>
+
+<Note title="Degenerate eigenvalues">
+Sometimes several orthogonal states share one eigenvalue. Example: the two-qubit **parity** observable $Z\otimes Z$ gives $+1$ for both $|00\rangle$ and $|11\rangle$. Then the outcome corresponds to a whole **eigenspace**, and the lookup table uses a projector onto that subspace: $\hat A = \sum_a a\,P_a$. This turns out to be the key to quantum error correction (World 11): you can measure the parity without learning the individual bits.
+</Note>
+
+<History>
+In 1925 the 23-year-old **Werner Heisenberg**, recovering from hay fever on the island of Helgoland, worked out a mechanics in which position and momentum were arrays of numbers that didn't commute. **Max Born** recognised the arrays as matrices, and with **Pascual Jordan** the trio built "matrix mechanics" within months. **Pauli** introduced his spin matrices in 1927. In 1932 **John von Neumann** recast the whole theory as linear algebra on Hilbert space, with observables as self-adjoint operators. That is the language you are learning now.
+</History>
+
+---
+
+## Summary
+
+- **Observables are Hermitian operators.** Eigenvalues are the possible outcomes, and eigenvectors are the states in which each outcome is certain.
+- Hermitian is forced by physics: real outcomes, and perfectly distinguishable (orthogonal) outcome states.
+- Spectral form: $\hat A = \sum_k a_k |a_k\rangle\langle a_k|$, a lookup table from outcomes to states.
+- **Pauli matrices** $\sigma_x, \sigma_y, \sigma_z$ are the spin observables in units of $\hbar/2$. Spin along $\hat n$ is $\hat n\cdot\vec\sigma$, whose eigenvalues are always $\pm1$ because $(\hat n\cdot\vec\sigma)^2 = I$.
+- Its eigenstates are the antipodal Bloch points $\pm\hat n$, and $P(\pm1) = (1 \pm \hat n\cdot\vec r)/2$.
+- Applying a matrix to a state is not the same as measuring the observable.

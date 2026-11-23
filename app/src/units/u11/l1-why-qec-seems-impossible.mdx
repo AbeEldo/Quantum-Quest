@@ -1,0 +1,130 @@
+import { RepetitionCodeSim } from './widgets/RepetitionCodeSim';
+import { c } from '../../engine/complex';
+
+Right now your phone is silently fixing errors. Cosmic rays flip bits in its memory, Wi-Fi packets arrive with corrupted bytes, and a scratched QR code still scans. All of that works because of **error-correcting codes**: spend some extra bits on redundancy, then use the redundancy to detect and undo damage.
+
+World 10 ended with a hard number: physical qubits fail about once every $10^3$–$10^4$ operations, while useful algorithms need billions. So can we do for qubits what we do for bits?
+
+In 1995 many physicists thought the answer was **no**. This lesson shows why that view was reasonable, and why it turned out to be wrong.
+
+---
+
+## The simplest code: say it three times
+
+The oldest trick in the book: to send a bit over a noisy line, send it **three times** and take a **majority vote**.
+
+$$
+0 \mapsto 000, \qquad 1 \mapsto 111 .
+$$
+
+If each copy flips independently with probability $p$, the vote fails only when **two or more** copies flip.
+
+<Predict id="u11l1-vote">
+  <Q>Each copy flips with probability $p = 10\%$. How often does the 3-copy majority vote give the wrong bit?</Q>
+  <Opt>10%, the same as one copy</Opt>
+  <Opt>About 5%</Opt>
+  <Opt correct>About 2.8%</Opt>
+  <Opt>About 0.1%</Opt>
+  <Explain>Two flips: $3p^2(1-p) = 0.027$. Three flips: $p^3 = 0.001$. Total $p_L = 3p^2 - 2p^3 = 0.028$. The error rate went from 10% to 2.8%, because failure now needs *two* independent accidents.</Explain>
+</Predict>
+
+<RepetitionCodeSim />
+
+<Try>
+- At $p = 10\%$, compare 1, 3, 5 and 7 copies. Each extra pair of copies cuts the failure rate by roughly another factor of $p$.
+- Slide $p$ past 50%. Now *more* copies make things **worse**, because the majority is usually wrong. Below the crossing point, more redundancy always helps. Above it, redundancy hurts. That crossing is the code's **threshold**, an idea that will drive the rest of this world.
+</Try>
+
+The general formula for $n$ copies (with $n$ odd) is a binomial tail:
+
+$$
+p_L(n) = \sum_{k > n/2} \binom{n}{k} p^k (1-p)^{n-k} \;\approx\; \binom{n}{\lceil n/2\rceil} p^{\lceil n/2\rceil} \quad (p \ll 1).
+$$
+
+So below threshold the logical error rate falls **exponentially** in the amount of redundancy. That's the whole promise of error correction: a polynomial cost (more copies) buys an exponential improvement.
+
+<CSCorner>
+**Hamming distance** is the number of positions in which two codewords differ. For the repetition code, $d(000, 111) = 3$, so the code has **distance 3**. A distance-$d$ code can *correct* any $\lfloor (d-1)/2\rfloor$ errors (here 1) and *detect* $d-1$ (here 2). Repetition is wasteful: 3 bits to carry 1. Richard Hamming's (7,4) code carries 4 data bits in 7 using three cleverly chosen **parity checks**, and still corrects any single error. Hold on to "parity checks." The quantum version will be built entirely out of them, and the Hamming code itself reappears in World 11's Steane code.
+</CSCorner>
+
+<History>
+In 1947 **Richard Hamming** was using the Bell Labs relay computers on weekends, when no operator was around to restart jobs after the machine detected an error. Frustrated that it could *detect* errors but not *fix* them, he invented codes that could, publishing them in 1950. Shannon's 1948 noisy-channel theorem had already shown that reliable communication over noisy channels is possible in principle. Hamming showed how to do it in practice.
+</History>
+
+---
+
+## Three reasons it "can't" work for qubits
+
+Try to copy the recipe for a qubit $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$ and you hit three walls.
+
+**1. You can't copy.** The **no-cloning theorem** (World 6) forbids $|\psi\rangle \mapsto |\psi\rangle|\psi\rangle|\psi\rangle$ for unknown $|\psi\rangle$. There is no quantum photocopier.
+
+**2. Looking destroys.** A majority vote *reads* the copies. Measuring a qubit in superposition collapses it, and $\alpha$ and $\beta$ are gone. The cure seems to kill the patient.
+
+**3. Errors are continuous.** A bit can only be right or flipped. A qubit can drift by *any* small angle: $R_x(0.01)$, $R_z(0.003)$, or a rotation about some tilted axis. There are infinitely many possible errors. How could a finite procedure undo all of them?
+
+And as a bonus, **4. there are two kinds of error.** Besides bit flips ($X$), qubits suffer phase flips ($Z$), which have no classical counterpart and are invisible to a $Z$-basis measurement (World 10).
+
+<Quiz id="u11l1-obstacles">
+  <Q>Which of these is **not** one of the obstacles to quantum error correction?</Q>
+  <Opt why="This is obstacle 1: no-cloning.">Unknown quantum states cannot be copied.</Opt>
+  <Opt why="This is obstacle 2: measuring data qubits collapses the superposition.">Measuring a qubit to check it destroys its superposition.</Opt>
+  <Opt why="This is obstacle 3: an error can be any rotation, not just a flip.">Errors form a continuum, not a discrete set.</Opt>
+  <Opt correct>Quantum gates are reversible, so errors can't be undone.</Opt>
+  <Explain>Reversibility isn't an obstacle. If anything it helps, since every unitary error has an inverse. The real obstacles are no-cloning, measurement disturbance, continuous errors and the extra phase errors.</Explain>
+</Quiz>
+
+---
+
+## How each wall falls
+
+Here's the plan for World 11, in four moves.
+
+**Copy the basis, not the state.** Instead of cloning, *entangle*. Two CNOTs map
+
+$$
+(\alpha|0\rangle + \beta|1\rangle)|00\rangle \;\longmapsto\; \alpha|000\rangle + \beta|111\rangle .
+$$
+
+That's legal, since it's a unitary, and it is **not** three copies of $|\psi\rangle$. Build the encoder yourself. The input on the top wire is the state $\cos\frac{\pi}{8}|0\rangle + \sin\frac{\pi}{8}|1\rangle$:
+
+<CircuitLab title="Encode into the repetition code" n={3} gates={['H', 'X', 'CNOT']} initialState={[[0.9238795, 0], [0, 0], [0, 0], [0, 0], [0.3826834, 0], [0, 0], [0, 0], [0, 0]]} goal={{ kind: 'state', amps: [c(0.9238795), c(0), c(0), c(0), c(0), c(0), c(0), c(0.3826834)], label: 'encode α|0⟩+β|1⟩ into α|000⟩+β|111⟩' }} challengeId="u11l1-encode" maxGates={4} />
+
+<Predict id="u11l1-notclone">
+  <Q>With $|\psi\rangle = \cos\frac{\pi}{8}|0\rangle + \sin\frac{\pi}{8}|1\rangle$, is the encoded state $\alpha|000\rangle + \beta|111\rangle$ the same as $|\psi\rangle|\psi\rangle|\psi\rangle$?</Q>
+  <Opt>Yes, that's what encoding means.</Opt>
+  <Opt correct>No. $|\psi\rangle^{\otimes 3}$ has amplitude on all 8 basis states, including $|010\rangle$.</Opt>
+  <Explain>$|\psi\rangle^{\otimes3}$ has amplitude $\alpha^2\beta$ on $|010\rangle$, which isn't zero here. The encoded state is an *entangled* state with only two terms. No-cloning is respected: the information is spread across three qubits, not copied three times. Only for $|0\rangle$ or $|1\rangle$ (the classical cases) do the two coincide.</Explain>
+</Predict>
+
+**Measure questions, not answers.** We never ask "what is qubit 1?" Instead we ask "**do qubits 1 and 2 agree?**", the parity $Z_1Z_2$, and "do qubits 2 and 3 agree?" ($Z_2Z_3$). Both $|000\rangle$ and $|111\rangle$ answer "yes, yes," so these questions reveal *nothing* about $\alpha$ and $\beta$. But if qubit 1 has flipped, $\alpha|100\rangle + \beta|011\rangle$ answers "no, yes," which pinpoints the culprit without touching the superposition. The pattern of answers is the **syndrome**.
+
+**Let the measurement discretize the error.** Here's the deepest trick. A small rotation error $R_x(\epsilon)$ on qubit 1 produces a superposition of "no error" and "qubit 1 flipped." Measuring the syndrome *forces* it to pick one: with probability $\cos^2(\epsilon/2)$ you get "no error" (and the state is restored), with probability $\sin^2(\epsilon/2)$ you get "flip on qubit 1" (and you fix it). **Correcting the discrete errors $X$ and $Z$ automatically corrects every continuous error.** You'll verify this numerically next lesson.
+
+**Handle phase flips by changing basis.** A $Z$ error is a bit flip in the $\{|+\rangle, |-\rangle\}$ basis. Encode $|0\rangle \mapsto |{+}{+}{+}\rangle$, $|1\rangle\mapsto|{-}{-}{-}\rangle$ and the same machinery catches phase flips. Nest the two codes and you get Shor's 9-qubit code, which handles both (Lesson 3).
+
+<Warning>
+**"Quantum error correction makes redundant copies of the quantum state."** It doesn't, and it can't. It spreads the information into **entanglement** among many qubits, so that no single qubit holds any information about $\alpha$ and $\beta$. That's exactly why local errors can't destroy it, and why measuring a local parity can't reveal it.
+</Warning>
+
+<History>
+In 1995 the mood was gloomy. Bill Unruh published an analysis showing how quickly decoherence would ruin a quantum computation, and Rolf Landauer warned that quantum computers would be fatally sensitive to small imperfections. Months later **Peter Shor**, fresh from his factoring algorithm, published "Scheme for reducing decoherence in quantum computer memory" with the first quantum error-correcting code, using 9 qubits. **Andrew Steane** independently found a 7-qubit code in 1996. Within two years, Aharonov & Ben-Or, Kitaev, and Knill, Laflamme & Zurek had proved the **threshold theorem**: below a certain error rate, arbitrarily long quantum computations are possible.
+</History>
+
+<Quiz id="u11l1-parity">
+  <Q>The 3-qubit state is $\alpha|000\rangle + \beta|111\rangle$ and an $X$ error hits qubit 3. What do the parity checks $(Z_1Z_2,\ Z_2Z_3)$ report? (Here $+1$ = "agree," $-1$ = "disagree.")</Q>
+  <Opt>$(+1, +1)$</Opt>
+  <Opt>$(-1, +1)$</Opt>
+  <Opt correct>$(+1, -1)$</Opt>
+  <Opt>$(-1, -1)$</Opt>
+  <Explain>The state becomes $\alpha|001\rangle + \beta|110\rangle$. Qubits 1 and 2 still agree, and qubits 2 and 3 now disagree. Both branches give the same answers, so the measurement doesn't disturb $\alpha, \beta$. The decoder says "flip qubit 3 back."</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- **Classical repetition** ($0\to000$, majority vote) cuts the error rate from $p$ to $p_L = 3p^2 - 2p^3$. Below a **threshold** (50% for repetition), more redundancy suppresses errors **exponentially**.
+- **Distance** $d$ = the minimum Hamming distance between codewords. A code corrects $\lfloor (d-1)/2\rfloor$ errors.
+- Quantum obstacles: **no-cloning**, **measurement destroys superpositions**, **continuous errors**, and **phase errors**.
+- Fixes: **entangle instead of copy** ($\alpha|000\rangle+\beta|111\rangle$), **measure parities (syndromes) instead of qubits**, let **syndrome measurement discretize errors**, and **change basis** to catch phase flips.

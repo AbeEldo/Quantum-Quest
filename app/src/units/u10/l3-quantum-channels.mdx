@@ -1,0 +1,191 @@
+import { ChannelExplorer } from './widgets/ChannelExplorer';
+import { NoisyCircuitLab } from './widgets/NoisyCircuitLab';
+
+Quantum hardware companies love to quote **gate fidelities**: "99.9% single-qubit fidelity!", "99.5% two-qubit fidelity!" Those sound almost perfect. A 99.5% exam score is an A+.
+
+But a quantum computation isn't one gate. It's thousands, or eventually billions, and every one of them must work.
+
+<Predict id="u10l3-chain">
+  <Q>Suppose each two-qubit gate succeeds with probability 99.5% and failures are independent. Roughly what fraction of runs of a 1,000-gate circuit contain **no** error at all?</Q>
+  <Opt>About 99%</Opt>
+  <Opt>About 50%</Opt>
+  <Opt>About 5%</Opt>
+  <Opt correct>Less than 1%</Opt>
+  <Explain>$0.995^{1000} = e^{1000\ln 0.995} \approx e^{-5.0} \approx 0.007$. Errors compound exponentially. A 99.5% gate is a superb physics achievement, and it still caps you at a few hundred gates.</Explain>
+</Predict>
+
+To reason about this properly we need a precise language for "a gate that mostly works." That language is **quantum channels**.
+
+---
+
+## The most general thing that can happen to a qubit
+
+Unitaries describe *closed* systems. A real qubit is never closed: it's always coupled to the wires, the chip and stray fields. The right model is
+
+1. bring in an environment $E$ (in some state $|e_0\rangle$),
+2. let system and environment evolve together under a joint unitary $U$,
+3. stop looking at the environment, which means taking the partial trace from Lesson 1.
+
+Working this out (see the deep dive) always gives a map of the same form:
+
+<Definition term="Quantum channel (Kraus form)">
+$$
+\mathcal{E}(\rho) = \sum_k K_k\,\rho\,K_k^\dagger, \qquad \sum_k K_k^\dagger K_k = I .
+$$
+
+The matrices $K_k$ are **Kraus operators**. The condition $\sum K^\dagger K = I$ guarantees the trace stays 1. Any such map sends density matrices to density matrices, *even when applied to half of an entangled pair*. Mathematicians call these maps **completely positive and trace preserving (CPTP)**.
+</Definition>
+
+Read the Kraus form as a story: "with some probability, operation $K_k$ happened to the qubit, and the environment knows which one, but you don't." A unitary gate is the special case with a single Kraus operator $K_0 = U$.
+
+<DeepDive title="Where Kraus operators come from (Stinespring)">
+Write the joint evolution as $U(|\psi\rangle|e_0\rangle)$ and expand the environment in a basis $\{|e_k\rangle\}$:
+
+$$
+U\,(|\psi\rangle \otimes |e_0\rangle) = \sum_k (K_k|\psi\rangle)\otimes|e_k\rangle, \qquad K_k = \langle e_k|U|e_0\rangle .
+$$
+
+Tracing out the environment gives $\rho_S = \sum_k K_k|\psi\rangle\langle\psi|K_k^\dagger$, and unitarity of $U$ gives $\sum_k K_k^\dagger K_k = I$.
+
+**Example: the bit-flip channel.** Let the environment be one qubit in $\sqrt{1-p}\,|0\rangle + \sqrt p\,|1\rangle$, and let it act as the control of a CNOT on our qubit. Then $K_0 = \sqrt{1-p}\,I$ and $K_1 = \sqrt p\,X$. So "an X happens with probability p" is literally "our qubit got entangled with a stray qubit that we then lost track of." The converse also holds: every channel arises this way (Stinespring's dilation theorem).
+</DeepDive>
+
+<Quiz id="u10l3-kraus">
+  <Q>Which pair of matrices is a valid set of Kraus operators?</Q>
+  <Opt why="K₀†K₀ + K₁†K₁ = 0.8I + 0.3I = 1.1I ≠ I.">$\sqrt{0.8}\,I$ and $\sqrt{0.3}\,Z$</Opt>
+  <Opt correct>$\sqrt{0.9}\,I$ and $\sqrt{0.1}\,Y$</Opt>
+  <Opt why="I†I + X†X = 2I: the probabilities add to 2.">$I$ and $X$</Opt>
+  <Opt why="Kraus operators need not be unitary, but here K₀†K₀ + K₁†K₁ = |0⟩⟨0| ≠ I: nothing says what happens to |1⟩.">$\sqrt{0.5}\,|0\rangle\langle 0|$ and $\sqrt{0.5}\,|1\rangle\langle 0|$</Opt>
+  <Explain>$0.9\,I^\dagger I + 0.1\,Y^\dagger Y = 0.9I + 0.1I = I$. ✔ This is a "Y-flip with probability 0.1" channel.</Explain>
+</Quiz>
+
+---
+
+## A zoo of noise
+
+Five channels cover most of what you'll meet in papers and datasheets:
+
+| Channel | Kraus operators | What it does to the Bloch ball |
+|---|---|---|
+| Bit flip | $\sqrt{1-p}\,I,\ \sqrt p\,X$ | shrinks $y, z$ by $(1-2p)$; keeps $x$ |
+| Phase flip | $\sqrt{1-p}\,I,\ \sqrt p\,Z$ | shrinks $x, y$ by $(1-2p)$; keeps $z$ |
+| Depolarizing | $\sqrt{1-\tfrac{3p}{4}}\,I,\ \tfrac{\sqrt p}{2}X,\ \tfrac{\sqrt p}{2}Y,\ \tfrac{\sqrt p}{2}Z$ | shrinks everything by $(1-p)$: $\rho \to (1-p)\rho + p\,\tfrac{I}{2}$ |
+| Amplitude damping ($T_1$) | $\begin{pmatrix}1&0\\0&\sqrt{1-\gamma}\end{pmatrix},\ \begin{pmatrix}0&\sqrt\gamma\\0&0\end{pmatrix}$ | shrinks $x,y$ by $\sqrt{1-\gamma}$ and pushes toward $\lvert 0\rangle$ |
+| Phase damping ($T_2$) | $\begin{pmatrix}1&0\\0&\sqrt{1-\lambda}\end{pmatrix},\ \begin{pmatrix}0&0\\0&\sqrt\lambda\end{pmatrix}$ | shrinks $x,y$ by $\sqrt{1-\lambda}$; keeps $z$ |
+
+Every single-qubit channel acts on the Bloch ball as an **affine map**, $\vec r \mapsto A\vec r + \vec b$. It squashes the sphere into an ellipsoid, and possibly shifts it. Watch:
+
+<ChannelExplorer />
+
+<Try>
+- **Phase flip** with $p = 0.5$ flattens the sphere into a *line segment*: the $z$ axis. Every coherence is gone, every population survives. This is "complete dephasing."
+- **Depolarizing**: crank "apply n times" up. The ball shrinks geometrically toward the centre, $(1-p)^n$.
+- **Amplitude damping** is the only channel here whose ellipsoid *moves*. Applied many times, the whole ball collapses onto the north pole, because $|0\rangle$ is its fixed point.
+- Compare phase flip and phase damping. They're the same channel in disguise: phase damping with $\lambda$ equals phase flip with $p = \tfrac12(1 - \sqrt{1-\lambda})$.
+</Try>
+
+<Quiz id="u10l3-which">
+  <Q>A channel leaves $|0\rangle$ and $|1\rangle$ completely untouched but turns $|+\rangle$ into a mixture closer to $I/2$. Which channels could it be? (Select all that apply.)</Q>
+  <Opt correct>Phase flip</Opt>
+  <Opt correct>Phase damping</Opt>
+  <Opt why="Bit flip moves |0⟩ toward |1⟩.">Bit flip</Opt>
+  <Opt why="Depolarizing shrinks every Bloch vector, including the poles.">Depolarizing</Opt>
+  <Explain>Both dephasing channels fix the $z$ axis and shrink the equatorial plane. That's the defining signature of $T_2$-type noise.</Explain>
+</Quiz>
+
+---
+
+## Measuring damage: fidelity
+
+How close is the noisy output $\rho$ to the state $|\psi\rangle$ we wanted? For a pure target, the standard figure of merit is the **fidelity**
+
+$$
+F(|\psi\rangle, \rho) = \langle\psi|\rho|\psi\rangle = \tfrac12\left(1 + \vec r_\psi \cdot \vec r_\rho\right) \quad\text{(for one qubit)},
+$$
+
+the probability that a measurement asking "are you $|\psi\rangle$?" says yes. $F = 1$ means perfect. A random guess on one qubit gives $\tfrac12$. The **gate fidelity** quoted by hardware groups is this quantity averaged over all input states. The **error rate** is roughly $1 - F$, measured with techniques like randomized benchmarking.
+
+<NumQuiz id="u10l3-depolF" answer={0.95} tol={0.002}>
+  <Q>A depolarizing channel with $p = 0.1$ acts on $|0\rangle$. What is the fidelity of the output with $|0\rangle$?</Q>
+  <Hint>$\rho' = (1-p)|0\rangle\langle 0| + p\,I/2$. Compute $\langle 0|\rho'|0\rangle$.</Hint>
+  <Explain>$(1-p)\cdot 1 + p\cdot\tfrac12 = 1 - p/2 = 0.95$. Half the time a "replaced by noise" qubit happens to look right anyway.</Explain>
+</NumQuiz>
+
+<CSCorner>
+The **bit-flip channel is Shannon's binary symmetric channel**, the textbook model of a noisy wire. A classical channel is a stochastic matrix acting on probability vectors, and a quantum channel is its generalisation acting on density matrices. On diagonal (classical) inputs, a quantum channel reduces to a stochastic matrix. The new feature is what happens to the off-diagonal coherences: phase-flip noise has **no classical analogue at all**, since it is invisible to a $Z$ measurement and yet destroys interference. That's one reason quantum error correction has to be cleverer than classical coding (World 11).
+</CSCorner>
+
+---
+
+## Errors compound: the Noisy Circuit Lab
+
+Time to see the opening puzzle play out on a real simulation. The lab below runs circuits on a **density-matrix simulator**: after every gate it applies a depolarizing channel, and after every time step it applies amplitude and phase damping to every qubit.
+
+Two experiments are built in:
+
+- **Mirror circuits.** Run $k$ random layers $U$ and then their exact inverse $U^\dagger$. Ideally you return to $|0\cdots 0\rangle$ every time, so any deviation is pure noise. Hardware groups really do benchmark processors this way.
+- **GHZ memory.** Prepare $\tfrac{1}{\sqrt2}(|0\cdots0\rangle + |1\cdots1\rangle)$ and simply *wait*.
+
+<NoisyCircuitLab />
+
+<Try>
+- With the "Mediocre" preset, find the depth at which the mirror circuit's fidelity drops below 50%. Then switch to "Good." How much deeper can you go?
+- Compare 2, 3 and 4 qubits at the same depth. More qubits means more gates per layer, so faster decay.
+- In **GHZ memory**, set every noise source to zero except dephasing. Watch the heatmap: the populations in the corners survive, but the off-diagonal **corner** entries (the "cat" coherence) fade. Now compare 2 vs 4 qubits. A GHZ state dephases about $n$ times faster than a single qubit, because each qubit's phase noise adds to the relative phase between $|0\cdots0\rangle$ and $|1\cdots1\rangle$. **Big entangled states are fragile.**
+</Try>
+
+<Predict id="u10l3-ghz">
+  <Q>Under pure dephasing at rate λ per step on each qubit, the coherence of a single qubit $|+\rangle$ decays like $(1-\lambda)^{t/2}$. How does the coherence $\rho_{0\cdots0,\,1\cdots1}$ of an $n$-qubit GHZ state decay?</Q>
+  <Opt>Like $(1-\lambda)^{t/2}$, the same as one qubit</Opt>
+  <Opt correct>Like $(1-\lambda)^{nt/2}$, $n$ times faster in the exponent</Opt>
+  <Opt>Like $(1-\lambda)^{t/(2n)}$, slower thanks to redundancy</Opt>
+  <Explain>Each qubit's dephasing channel multiplies the $|0\cdots0\rangle\langle1\cdots1|$ entry by $\sqrt{1-\lambda}$ per step, and there are $n$ of them. That's why "Schrödinger cat" states of many particles are almost never seen. Their decoherence rate scales with their size.</Explain>
+</Predict>
+
+---
+
+## Why deep circuits fail
+
+A useful rule of thumb: if gate $i$ has error rate $\varepsilon_i$, the probability that a run is error-free is about
+
+$$
+F_{\text{circuit}} \approx \prod_i (1-\varepsilon_i) \approx e^{-\sum_i \varepsilon_i}.
+$$
+
+So **the total error budget $\sum\varepsilon_i$ must stay below about 1**. Some numbers:
+
+| Circuit | Gates | Error per gate | $e^{-\sum\varepsilon}$ |
+|---|---|---|---|
+| Small demo | 100 | 0.5% | ≈ 0.61 |
+| 100 qubits × depth 100 | 10,000 | 0.1% | ≈ 5×10⁻⁵ |
+| 100 qubits × depth 100 | 10,000 | 0.01% | ≈ 0.37 |
+| Factoring RSA-2048 (Shor) | billions | anything physical | ≈ 0 |
+
+No conceivable improvement in materials gets physical error rates to $10^{-10}$. Something qualitatively different is needed.
+
+<Warning>
+**"More qubits means a more powerful quantum computer."** Only if they're good enough. Adding qubits adds gates and therefore errors. A 1,000-qubit chip whose circuits decohere after 50 layers can't run anything a 50-layer circuit on fewer qubits couldn't. That is why the field increasingly reports *logical* qubits, error rates and "quantum volume"-style metrics, not raw qubit counts.
+</Warning>
+
+<History>
+In 2018 **John Preskill** coined the term **NISQ**, Noisy Intermediate-Scale Quantum, for the era of 50–1,000-qubit machines without error correction. He was candid: they might find uses, but "noise will limit the size of quantum circuits that can be executed reliably." Since then, **error mitigation** techniques (zero-noise extrapolation, probabilistic error cancellation) have squeezed more out of noisy devices by running many noisy variants and extrapolating, at a sampling cost that grows exponentially with circuit size. The long-term answer is **quantum error correction**, the subject of World 11.
+</History>
+
+<Quiz id="u10l3-budget">
+  <Q>A circuit has 2,000 two-qubit gates (error 0.3% each) and 6,000 single-qubit gates (error 0.02% each). Estimate the probability of an error-free run.</Q>
+  <Opt>About 90%</Opt>
+  <Opt>About 50%</Opt>
+  <Opt correct>About 0.07%, essentially never</Opt>
+  <Opt>About 25%</Opt>
+  <Explain>Total budget: $2000\times0.003 + 6000\times0.0002 = 6 + 1.2 = 7.2$, so $e^{-7.2}\approx 7\times10^{-4}$. The two-qubit gates dominate, which is typical: improving them is the top priority for every hardware team.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- A **quantum channel** is the most general physical process: $\mathcal E(\rho) = \sum_k K_k\rho K_k^\dagger$ with $\sum K_k^\dagger K_k = I$. It comes from a unitary on system + environment followed by tracing out the environment.
+- The standard noise zoo: **bit flip, phase flip, depolarizing, amplitude damping ($T_1$), phase damping ($T_2$)**. Each squashes and possibly shifts the Bloch ball.
+- **Fidelity** $F = \langle\psi|\rho|\psi\rangle$ measures how close the output is to the target. A depolarizing channel gives $F = 1 - p/2$.
+- Errors compound: $F_{\text{circuit}}\approx e^{-\sum\varepsilon_i}$. Mirror-circuit and GHZ experiments show fidelity decaying with depth, and entangled states decaying faster with size.
+- Useful algorithms need far more gates than physical error rates allow. Mitigation helps a little. **Error correction** is the way out.

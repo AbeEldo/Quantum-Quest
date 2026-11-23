@@ -1,0 +1,189 @@
+import { DeutschLab } from './widgets/DeutschLab';
+import { c } from '../../engine/complex';
+
+Someone hands you a sealed box with one input wire and one output wire. Inside is a function $f:\{0,1\}\to\{0,1\}$. There are only four possibilities:
+
+| name | $f(0)$ | $f(1)$ | type |
+|---|---|---|---|
+| constant 0 | 0 | 0 | constant |
+| constant 1 | 1 | 1 | constant |
+| identity | 0 | 1 | balanced |
+| NOT | 1 | 0 | balanced |
+
+Your job is to answer a single yes/no question: **is $f$ constant or balanced?** Equivalently, is $f(0) = f(1)$? You don't care *which* constant or *which* balanced function it is. You just want that one bit of information.
+
+Each time you feed the box an input, that's a **query**, and queries are expensive. (Imagine each one takes a week of supercomputer time.)
+
+<Predict id="u9l1-hook">
+  <Q>What's the minimum number of queries needed to be certain whether $f$ is constant or balanced?</Q>
+  <Opt>One classical query is enough</Opt>
+  <Opt>Two classical queries are needed, and no physical device can do better</Opt>
+  <Opt correct>Two classical queries, but a quantum computer can do it with one</Opt>
+  <Explain>Classically, learning $f(0)$ alone tells you nothing about whether $f(1)$ matches it, so you need both. A quantum computer can get the answer with **one** query. That result, Deutsch's algorithm, is the first quantum speedup ever found. This lesson builds it.</Explain>
+</Predict>
+
+---
+
+## The query model: why count questions?
+
+Most of complexity theory can't prove lower bounds. Nobody can prove that SAT needs more than linear time, or even that factoring is hard. **Query complexity** is the exception. Here you treat the input as a black box (an **oracle**) and count only how many times an algorithm must look inside. In this model, lower bounds are *provable*.
+
+<CSCorner>
+You've met this model before. The $\Omega(n\log n)$ lower bound for comparison sorting is a query lower bound: the "oracle" answers "is $a_i < a_j$?" and a decision-tree argument shows you need $\log_2(n!)$ questions. Likewise, searching an unsorted array needs $\Omega(n)$ lookups. In quantum query complexity we count oracle calls the same way. The difference is that the quantum algorithm is allowed to ask its question *in superposition*.
+</CSCorner>
+
+The point of the query model is that it gives us **provable separations** between classical and quantum algorithms. The catch, which we'll come back to: a real problem isn't a black box. Someone has to *build* the oracle as a circuit from code, and then a classical algorithm could read that code too.
+
+<Quiz id="u9l1-query-why">
+  <Q>Why do quantum algorithm papers so often state results in terms of "queries to an oracle"?</Q>
+  <Opt>Because oracles are physical devices that already exist in labs</Opt>
+  <Opt correct>Because in the query model, lower bounds (for classical *and* quantum algorithms) can actually be proved</Opt>
+  <Opt>Because counting queries is the same as counting total running time</Opt>
+  <Opt why="Real problems are usually not black boxes. That's the main caveat of the model.">Because all practical problems come as black boxes</Opt>
+  <Explain>Query complexity is a model where we can *prove* that, say, any classical algorithm needs 2 queries while a quantum one needs 1. In the general (white-box) setting, such separations are conjectures. Running time also includes the cost of each query and all the processing between them.</Explain>
+</Quiz>
+
+---
+
+## Making a function reversible: the bit oracle
+
+A quantum computer can only apply **unitary**, hence reversible, operations. But $f$ might not be reversible: "constant 0" sends both inputs to 0. You met the fix in World 7: keep the input, and XOR the answer into a fresh register.
+
+<Definition term="bit oracle">
+For $f:\{0,1\}^n \to \{0,1\}^m$, the **bit oracle** is the unitary
+$$
+U_f\,|x\rangle|y\rangle = |x\rangle\,|y \oplus f(x)\rangle .
+$$
+It permutes the computational basis states, so it is unitary. It is also its own inverse: applying it twice XORs $f(x)$ in and then out again.
+</Definition>
+
+Any classical circuit for $f$ can be turned into a circuit for $U_f$ with Toffolis, ancillas and uncomputation (World 7), at a modest overhead. So "one query" means "one run of a reversible circuit for $f$".
+
+The real power comes from feeding $U_f$ a **superposition**. By linearity,
+$$
+U_f\left(\frac{1}{\sqrt{2^n}}\sum_x |x\rangle\right)|0\rangle = \frac{1}{\sqrt{2^n}}\sum_x |x\rangle|f(x)\rangle .
+$$
+All $2^n$ values of $f$ are now written into the state, using a single query.
+
+<Warning title="That's not the speedup (yet)">
+It is tempting to say the computer "evaluated $f$ on every input at once." But if you measure now, you get **one random pair** $(x, f(x))$. A classical computer can do that too, by picking $x$ at random. Writing all the answers into amplitudes is free; *reading* them is not. Every quantum speedup comes from what we do **next**: making the amplitudes interfere so that the answer to a *global* question about $f$ becomes likely.
+</Warning>
+
+<Quiz id="u9l1-uf-twice">
+  <Q>What does $U_f U_f$ do to $|x\rangle|y\rangle$?</Q>
+  <Opt>Gives $|x\rangle|y \oplus 2f(x)\rangle$, a new state</Opt>
+  <Opt correct>Returns $|x\rangle|y\rangle$: the bit oracle is its own inverse</Opt>
+  <Opt>Gives $|f(x)\rangle|y\rangle$</Opt>
+  <Opt>Gives $(-1)^{f(x)}|x\rangle|y\rangle$</Opt>
+  <Explain>$y \oplus f(x) \oplus f(x) = y$ because XOR-ing the same bit twice cancels. So $U_f^2 = I$, which is exactly why $U_f$ is unitary even when $f$ itself is not invertible.</Explain>
+</Quiz>
+
+---
+
+## The phase oracle: kickback strikes again
+
+Now the trick from World 7. Set the output qubit to $|-\rangle = \tfrac{1}{\sqrt2}(|0\rangle - |1\rangle)$ and query:
+$$
+U_f|x\rangle|-\rangle = \frac{1}{\sqrt2}\Big(|x\rangle|f(x)\rangle - |x\rangle|1\oplus f(x)\rangle\Big).
+$$
+If $f(x) = 0$ this is just $|x\rangle|-\rangle$. If $f(x) = 1$ the two terms swap places, giving $-|x\rangle|-\rangle$. Either way:
+
+<KeyIdea>
+$$
+U_f\,|x\rangle|-\rangle = (-1)^{f(x)}\,|x\rangle|-\rangle .
+$$
+The ancilla doesn't change. The value $f(x)$ has been **kicked back** into the *phase* of the input. Dropping the spectator ancilla, we get the **phase oracle** $O_f|x\rangle = (-1)^{f(x)}|x\rangle$.
+</KeyIdea>
+
+Signs on individual basis states are invisible to measurement. But once there's a superposition they become **relative phases**, and relative phases are exactly what interference can turn into probabilities. Try it with the simplest oracle, $f(x) = x$, which is just a CNOT. Below, q1 is prepared in $|-\rangle$ and q0 in $|+\rangle$. Step through and watch which qubit changes:
+
+<CircuitLab n={2} circuit="X 1; H 0, H 1; CNOT 0 1" gates={['H', 'X', 'Z', 'CNOT']} title="Phase kickback with f(x) = x (the oracle is a CNOT)" showBloch />
+
+<Try>
+- Move the step slider from 2 to 3. The CNOT "targets" q1, yet q1's Bloch arrow stays at $|-\rangle$ and q0 flips from $|+\rangle$ to $|-\rangle$.
+- That's $|+\rangle \to \tfrac{1}{\sqrt2}\big((-1)^{f(0)}|0\rangle + (-1)^{f(1)}|1\rangle\big) = |-\rangle$, with $f(0)=0$ and $f(1)=1$.
+</Try>
+
+<Quiz id="u9l1-kick-const">
+  <Q>Same setup, but the oracle is for $f(x) = 1$ (constant): it applies $X$ to q1 regardless of q0. What happens to q0, starting from $|+\rangle$?</Q>
+  <Opt>It flips to $|-\rangle$</Opt>
+  <Opt correct>It stays $|+\rangle$ (the whole state picks up a global sign $-1$)</Opt>
+  <Opt>It becomes entangled with q1</Opt>
+  <Opt>It collapses to $|1\rangle$</Opt>
+  <Explain>Both $|0\rangle$ and $|1\rangle$ get the same factor $(-1)^1 = -1$, so q0 becomes $-|+\rangle$. A global sign is physically invisible. Equivalently, $X|-\rangle = -|-\rangle$.</Explain>
+</Quiz>
+
+---
+
+## Deutsch's algorithm
+
+Now put it together. One qubit for the input and one ancilla:
+
+1. Start in $|0\rangle|1\rangle$ and apply $H\otimes H$, giving $|+\rangle|-\rangle$.
+2. Query once. Kickback turns $|+\rangle$ into $\tfrac{1}{\sqrt2}\big((-1)^{f(0)}|0\rangle + (-1)^{f(1)}|1\rangle\big)$.
+3. Apply $H$ to the input qubit and measure it.
+
+After step 2, factor out $(-1)^{f(0)}$:
+$$
+(-1)^{f(0)}\cdot\frac{1}{\sqrt2}\Big(|0\rangle + (-1)^{f(0)\oplus f(1)}|1\rangle\Big) = \pm\begin{cases} |+\rangle & f(0) = f(1)\\ |-\rangle & f(0)\neq f(1)\end{cases}
+$$
+The final $H$ maps $|+\rangle \to |0\rangle$ and $|-\rangle \to |1\rangle$. **Measure 0 means constant, 1 means balanced, with certainty, after one query.**
+
+<DeutschLab />
+
+<Try>
+- In **Explore** mode, click through all four functions and look at stage 2. In every case q1 stays $|-\rangle$, and the answer is sitting in q0's phase.
+- Switch to **🎲 Mystery** and identify three functions in a row using only the quantum query. Then try it with classical queries only, and notice that one classical answer never settles it.
+</Try>
+
+<Note title="What the algorithm does *not* learn">
+After one query you know $f(0)\oplus f(1)$, and nothing else. You cannot tell "constant 0" from "constant 1". That's no accident: one query can't extract two bits of information about $f$. The quantum algorithm is good at exactly one thing here, answering a **global** question (a parity) without learning the individual values.
+</Note>
+
+---
+
+## Challenge: run Deutsch yourself
+
+The oracle for $f(x) = x$ is already placed (the CNOT in column 3). Add gates **before** it and **after** it to run Deutsch's algorithm. The goal is the final state of a correct run: q0 = $|1\rangle$ ("balanced") with q1 still in $|-\rangle$.
+
+<CircuitLab n={2} circuit="; ; CNOT 0 1" gates={['H', 'X', 'CNOT']} goal={{ kind: 'state', amps: [c(0), c(0), c(Math.SQRT1_2), c(-Math.SQRT1_2)], label: 'q0 = |1⟩ (balanced), q1 = |−⟩' }} challengeId="u9l1-deutsch-build" maxGates={6} title="Challenge: Deutsch's algorithm around a CNOT oracle" />
+
+<NumQuiz id="u9l1-classical-count" answer={2} tol={0}>
+  <Q>How many queries does the best **deterministic classical** algorithm need, in the worst case, to decide constant vs. balanced for a 1-bit function?</Q>
+  <Explain>Two. After seeing $f(0)$, both a constant and a balanced function are still possible, so you must also ask for $f(1)$. The quantum algorithm needs one. The ratio is only 2:1, but it is a *provable* separation, and it generalizes dramatically in the next lessons.</Explain>
+</NumQuiz>
+
+---
+
+## A small speedup with a big idea
+
+<History>
+David Deutsch (Oxford) described this problem in 1985, in the paper that defined the universal quantum computer. His original version only succeeded half the time (it could output "don't know"). The deterministic, one-query version you just built, with the $|-\rangle$ ancilla, is due to Cleve, Ekert, Macchiavello and Mosca in 1998. Deutsch and Jozsa had generalized the problem to $n$ bits in 1992. That generalization is the next lesson.
+</History>
+
+<Warning title="Is Deutsch's algorithm useful?">
+Not by itself. Saving one query out of two is no practical win, and in reality there is no sealed box: to run $U_f$ you need a circuit for $f$, and given that circuit a classical algorithm might simply analyze it. The value of Deutsch's algorithm is as a **proof of concept**. It shows the three-step pattern behind nearly every quantum algorithm:
+
+1. **superpose** the inputs,
+2. **query** in superposition, writing the answers as **phases** (kickback),
+3. **interfere** with a transform (here $H$) so that the answer to a global question piles up on one outcome.
+</Warning>
+
+<Quiz id="u9l1-pattern">
+  <Q>Which step of Deutsch's algorithm is responsible for turning "information hidden in phases" into a measurable outcome?</Q>
+  <Opt>The first Hadamards, which create the superposition</Opt>
+  <Opt>The oracle query</Opt>
+  <Opt correct>The final Hadamard on the input qubit, which makes the two paths interfere</Opt>
+  <Opt>Measuring the ancilla</Opt>
+  <Explain>Before the last $H$, the state is $\pm|+\rangle$ or $\pm|-\rangle$, which give identical measurement statistics in the $Z$ basis. The final $H$ makes the $|0\rangle$ and $|1\rangle$ paths interfere constructively or destructively depending on $f(0)\oplus f(1)$. We never measure the ancilla; it stays $|-\rangle$.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- **Query complexity** counts calls to a black-box function. Lower bounds are provable in this model, which makes it the natural arena for classical-vs-quantum separations.
+- The **bit oracle** $U_f|x\rangle|y\rangle = |x\rangle|y\oplus f(x)\rangle$ makes any function reversible and is its own inverse.
+- With the ancilla in $|-\rangle$, **phase kickback** gives the **phase oracle** $|x\rangle \mapsto (-1)^{f(x)}|x\rangle$.
+- Querying a superposition writes *all* values of $f$ into the state, but measuring returns only one random value. Speedups come from **interference** afterwards.
+- **Deutsch's algorithm** decides whether $f:\{0,1\}\to\{0,1\}$ is constant or balanced with 1 query instead of 2: $H$, query, $H$, measure.

@@ -1,0 +1,134 @@
+import { VQEPlayground } from './widgets/VQEPlayground';
+import { QaoaMaxCut } from './widgets/QaoaMaxCut';
+
+Everything so far, including Shor, phase estimation and big Grover searches, needs long, deep circuits and therefore **error correction**: thousands of logical qubits made from perhaps a million physical ones. Today's machines have roughly 100 to 1,000+ physical qubits, two-qubit gate errors around 0.1–1%, and no large-scale error correction. After a few thousand gates, noise wins.
+
+John Preskill named this era **NISQ** (Noisy Intermediate-Scale Quantum) in 2018. The question it raises: *can short, noisy circuits do anything useful?* The leading idea is a **hybrid** loop. A small quantum circuit prepares a parameterized state and measures something about it, and a classical computer adjusts the parameters.
+
+<Predict id="u9l9-hook">
+  <Q>A noisy quantum chip prepares a trial state $|\psi(\vec\theta)\rangle$ for a molecule, and you measure its energy $\langle H\rangle$. You tweak $\vec\theta$ to make the energy as low as possible. If everything were noise-free, could the measured energy ever come out *below* the true ground-state energy?</Q>
+  <Opt>Yes, if the trial state is cleverly chosen</Opt>
+  <Opt correct>No: every state's energy expectation is at least the ground-state energy</Opt>
+  <Opt>Only if the circuit is entangled</Opt>
+  <Opt>Only on a quantum computer, not classically</Opt>
+  <Explain>That's the **variational principle**: $\langle\psi|H|\psi\rangle \ge E_0$ for every normalized $|\psi\rangle$. So minimizing over trial states can only approach the ground energy from above, and the lowest value you find is an **upper bound** on $E_0$. It's the foundation of the variational quantum eigensolver.</Explain>
+</Predict>
+
+---
+
+## The variational principle
+
+Expand any state in the eigenbasis of the Hamiltonian, $|\psi\rangle = \sum_j c_j|E_j\rangle$ with $E_0 \le E_1 \le \cdots$. Then
+$$
+\langle\psi|H|\psi\rangle = \sum_j |c_j|^2 E_j \ \ge\ \sum_j |c_j|^2 E_0 = E_0 ,
+$$
+with equality exactly when $|\psi\rangle$ is a ground state. The energy is a weighted average of eigenvalues, and an average can't be below the minimum.
+
+That turns "find the ground state" into "minimize a function". Choose a family of states $|\psi(\vec\theta)\rangle$ (the **ansatz**) and minimize $E(\vec\theta) = \langle\psi(\vec\theta)|H|\psi(\vec\theta)\rangle$ over $\vec\theta$.
+
+<Quiz id="u9l9-varprinc">
+  <Q>Your VQE run reports a best energy of $-1.13$ hartree for a molecule whose true ground energy is $-1.137$. What can you conclude, ignoring measurement noise?</Q>
+  <Opt>The ansatz found the exact ground state</Opt>
+  <Opt correct>$-1.13$ is an upper bound on $E_0$; the ansatz (or optimizer) got within 0.007 hartree but not exactly</Opt>
+  <Opt>The calculation is wrong, because VQE energies are lower bounds</Opt>
+  <Opt>The true ground energy must be above $-1.13$</Opt>
+  <Explain>Variational energies approach from above. The gap of 0.007 hartree is about 4 times "chemical accuracy" (1.6 mHa), the precision chemists need. With noise, shot noise and gate errors can push the *estimate* around in either direction.</Explain>
+</Quiz>
+
+---
+
+## VQE: the loop
+
+The **variational quantum eigensolver** (Peruzzo et al., 2014):
+
+1. **Ansatz:** a short parameterized circuit, e.g. layers of $R_y(\theta_k)$ rotations and CNOTs.
+2. **Measure the energy.** Write $H$ as a sum of Pauli strings, like $H = Z\otimes Z + 0.6(X\otimes I + I\otimes X)$. Measure each term by rotating into its basis and averaging $\pm1$ outcomes over many shots.
+3. **Classical optimizer:** update $\vec\theta$ to lower $E$, and repeat.
+
+The quantum computer does what's hard classically: preparing and measuring a highly entangled state whose energy you couldn't compute directly. The classical computer does the rest.
+
+<VQEPlayground challengeId="u9l9-hand-vqe" />
+
+<Try>
+- On the **1 qubit** tab, *you* are the optimizer. Drag the arrow or use the sliders to get $\langle H\rangle$ below $-0.98$. The landscape underneath shows where the valley is. The true ground state is the Bloch vector pointing opposite to $(0.8, 0, 0.6)$.
+- Press **run gradient descent** and watch the white path roll downhill. Then switch the noise to **100 shots**: the path jitters and stalls, because each energy and gradient is now a noisy estimate.
+- On the **2 qubit** tab, four parameters are too many to tune by hand comfortably. Let gradient descent do it, and check that it never goes below the exact ground energy.
+</Try>
+
+---
+
+## Gradients from the quantum computer: the parameter-shift rule
+
+How does the optimizer get gradients when all it can do is estimate $E(\vec\theta)$ from samples? Finite differences are terrible with shot noise: dividing a noisy difference by a tiny step blows up the noise. Instead, for gates of the form $e^{-i\theta P/2}$ with $P$ a Pauli ($R_x, R_y, R_z$), there's an **exact** formula:
+$$
+\frac{\partial E}{\partial\theta_k} = \frac{E(\theta_k + \tfrac{\pi}{2}) - E(\theta_k - \tfrac{\pi}{2})}{2}.
+$$
+
+<DeepDive title="Why the shift rule is exact">
+Fix all parameters except $\theta = \theta_k$. Because $e^{-i\theta P/2} = \cos\tfrac\theta2\, I - i\sin\tfrac\theta2\,P$ and $P^2 = I$, the energy is a trigonometric polynomial of degree 1 in $\theta$: $E(\theta) = A + B\cos\theta + C\sin\theta$. For such a function, $E'(\theta) = -B\sin\theta + C\cos\theta$. And $\tfrac12\big[E(\theta+\tfrac\pi2) - E(\theta-\tfrac\pi2)\big] = \tfrac12\big[-2B\sin\theta + 2C\cos\theta\big]$, which is the same. (This is the tangent of a sinusoid measured from two points a half-period apart.) The test suite in this unit checks the formula against finite differences.
+</DeepDive>
+
+<NumQuiz id="u9l9-shift-cost" answer={40} tol={0}>
+  <Q>An ansatz has 20 rotation parameters. How many distinct energy estimates (circuit settings) does one full parameter-shift gradient need?</Q>
+  <Explain>Two per parameter: $2\times 20 = 40$. Each of those estimates itself needs many shots per Pauli term. For chemistry-sized Hamiltonians with thousands of terms, this **measurement cost** is one of VQE's biggest practical problems.</Explain>
+</NumQuiz>
+
+---
+
+## QAOA: variational circuits for optimization
+
+The **quantum approximate optimization algorithm** (Farhi, Goldstone and Gutmann, 2014) applies the same loop to combinatorial optimization. Take **Max-Cut**: color the vertices of a graph with two colors so that as many edges as possible connect different colors. Encode a coloring as a bit string $z$ and define the cost
+$$
+C(z) = \sum_{(u,v)\in E} [z_u \neq z_v] .
+$$
+QAOA with depth $p$ prepares
+$$
+|\gamma,\beta\rangle = e^{-i\beta_p B}e^{-i\gamma_p C}\cdots e^{-i\beta_1 B}e^{-i\gamma_1 C}\,|+\rangle^{\otimes n}, \qquad B = \sum_v X_v ,
+$$
+alternating a **phase separator** $e^{-i\gamma C}$ (which phases each bit string by its cut value: a diagonal, phase-oracle-like step) with a **mixer** $e^{-i\beta B}$ (which lets amplitude flow between bit strings and interfere). Then it tunes the $2p$ angles to maximize $\langle C\rangle$.
+
+<QaoaMaxCut />
+
+<Try>
+- On the **square**, find the bright spot in the landscape. At its best, $p = 1$ QAOA gets $\langle C\rangle = 3$ of a possible 4 (ratio 0.75), and the optimal cuts $0101$ and $1010$ are the most likely outcomes.
+- Press **measure once** several times. Each shot gives a concrete coloring. In practice you keep the best one you've seen, so the *expected* cut understates what you'd report.
+- Try the **triangle**: an odd cycle can't be cut completely (max 2 of 3 edges).
+</Try>
+
+<Quiz id="u9l9-qaoa">
+  <Q>What role does the mixer $e^{-i\beta\sum_v X_v}$ play in QAOA?</Q>
+  <Opt>It measures the cut value</Opt>
+  <Opt correct>Without it, the phase separator only adds phases to computational-basis amplitudes, so probabilities never change. The mixer makes those phases interfere</Opt>
+  <Opt>It prepares the uniform superposition at the start</Opt>
+  <Opt>It implements the oracle that marks the maximum cut</Opt>
+  <Explain>$e^{-i\gamma C}$ is diagonal: it changes phases but not the probabilities $|a_z|^2$. The mixer rotates every qubit about $x$, mixing bit strings so that the phase differences turn into probability differences, like the diffuser after Grover's oracle. QAOA alternates the two, like a Trotterized version of adiabatic evolution (which it approaches as $p\to\infty$).</Explain>
+</Quiz>
+
+---
+
+## The catch: barren plateaus, noise, and no proven advantage
+
+<Warning title="Variational algorithms are heuristics, with serious open problems">
+- **Barren plateaus** (McClean et al., 2018). For sufficiently random, deep ansatz circuits, gradients vanish *exponentially* in the number of qubits: the landscape is flat almost everywhere, and estimating a gradient to useful precision needs exponentially many shots. Hardware noise causes its own barren plateaus (Wang et al., 2021). Avoiding them requires structured, problem-aware ansätze, and recent work suggests that landscapes provably free of barren plateaus are often efficiently *classically simulable*.
+- **Measurement cost.** Reaching precision $\epsilon$ takes about $1/\epsilon^2$ shots per term. Chemical accuracy across thousands of Pauli terms can mean billions of circuit runs.
+- **Noise** biases the energy, and error mitigation adds overhead that grows exponentially with circuit size.
+- **No proven speedup.** QAOA at $p = 1$ guarantees a cut ratio of 0.6924 on 3-regular graphs, while the classical Goemans–Williamson algorithm guarantees 0.878 on every graph. Whether VQE or QAOA beats the best classical methods on any practically relevant instance is open, and so far careful classical benchmarks have kept pace.
+</Warning>
+
+<History>
+**Peruzzo et al. (2014)** ran the first VQE on a two-qubit photonic chip, finding the ground-state energy of the HeH⁺ molecular ion. **IBM (Kandala et al., 2017)** scaled "hardware-efficient" VQE to molecules like BeH₂ on six superconducting qubits. **QAOA** was introduced by Edward Farhi, Jeffrey Goldstone and Sam Gutmann in 2014, and for a short time in 2014–15 it held the best known approximation ratio for a particular constraint-satisfaction problem, until a better classical algorithm appeared. That episode is a miniature of the whole field's quantum-vs-classical back-and-forth.
+</History>
+
+<CSCorner>
+Think of VQE and QAOA as **training a model whose forward pass runs on quantum hardware**. Everything ML engineers know applies: the choice of architecture (ansatz) is an inductive bias, optimizers get stuck in local minima, gradients can vanish, and evaluation is noisy and expensive. The difference is that each "forward pass" costs thousands of hardware shots. And unlike neural networks, nobody yet has a striking empirical success that justifies the approach at scale.
+</CSCorner>
+
+---
+
+## Summary
+
+- **NISQ** devices can't run Shor-sized circuits, so **hybrid variational algorithms** use short parameterized circuits inside a classical optimization loop.
+- **Variational principle:** $\langle\psi|H|\psi\rangle\ge E_0$, so minimizing the energy over an ansatz gives an upper bound on the ground energy.
+- **VQE:** ansatz → measure Pauli terms → classical optimizer. Gradients come from the **parameter-shift rule**, $\partial_\theta E = \tfrac12[E(\theta+\tfrac\pi2) - E(\theta-\tfrac\pi2)]$.
+- **QAOA:** alternate the cost phase $e^{-i\gamma C}$ and the mixer $e^{-i\beta\sum X}$, then tune the angles to maximize the expected cut.
+- **Caveats:** barren plateaus, huge measurement costs, noise, and **no proven advantage** over the best classical algorithms.

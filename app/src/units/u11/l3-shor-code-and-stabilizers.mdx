@@ -1,0 +1,131 @@
+import { StabilizerExplorer } from './widgets/StabilizerExplorer';
+
+We now have two half-codes. The bit-flip code catches $X$ errors and is blind to $Z$. The phase-flip code catches $Z$ errors and is blind to $X$. Real qubits suffer both, and worse, any *combination* or continuous mixture of them.
+
+Peter Shor's 1995 idea was beautifully simple: **nest one code inside the other.**
+
+<Predict id="u11l3-howmany">
+  <Q>You protect a qubit with the phase-flip code (3 qubits), then protect **each** of those 3 qubits with the bit-flip code. How many physical qubits does the logical qubit use?</Q>
+  <Opt>3</Opt>
+  <Opt>6</Opt>
+  <Opt correct>9</Opt>
+  <Opt>27</Opt>
+  <Explain>3 × 3 = 9. This is **concatenation**: the outer code's "qubits" are themselves encoded by an inner code. Shor's code was the first code to protect a qubit against an arbitrary single-qubit error.</Explain>
+</Predict>
+
+---
+
+## Shor's 9-qubit code
+
+Start with the phase-flip code, $|0\rangle \mapsto |{+}{+}{+}\rangle$, $|1\rangle\mapsto |{-}{-}{-}\rangle$. Then replace each $|\pm\rangle$ by its bit-flip-encoded version, $|\pm\rangle \mapsto \tfrac{1}{\sqrt2}(|000\rangle \pm |111\rangle)$:
+
+$$
+|0_L\rangle = \frac{1}{2\sqrt2}\big(|000\rangle + |111\rangle\big)^{\otimes 3}, \qquad
+|1_L\rangle = \frac{1}{2\sqrt2}\big(|000\rangle - |111\rangle\big)^{\otimes 3}.
+$$
+
+The nine qubits come in three **blocks** of three. Here's how each error type gets caught:
+
+- **Bit flip ($X$) on one qubit:** inside its block, the pair-parities $Z_0Z_1$, $Z_1Z_2$ (and similarly for the other blocks) catch it, exactly like the 3-qubit code. That's 6 checks.
+- **Phase flip ($Z$) on one qubit:** it flips the sign of that block's $|000\rangle\pm|111\rangle$. To find which block changed sign, compare the signs of neighbouring blocks with the 6-qubit operators $X_0X_1X_2X_3X_4X_5$ and $X_3X_4X_5X_6X_7X_8$. That's 2 checks.
+- **$Y = iXZ$:** both kinds of checks fire, and the decoder fixes both.
+
+Add digitization of errors from last lesson, and Shor's code corrects **any** error on **any one** qubit.
+
+<StabilizerExplorer />
+
+<Try>
+- Put an $X$ on qubit 4. Only one block's pair-parities fire, and the decoder flips qubit 4.
+- Put a $Z$ on qubit 0, then clear it and put a $Z$ on qubit 1. **Same syndrome!** The decoder can't tell them apart, and it doesn't need to: either fix works. (See the green message.)
+- Put a $Y$ on any qubit. Both kinds of checks fire.
+- Two $X$ errors in **different** blocks: still corrected. Two $X$ errors in the **same** block: logical error. Shor's code corrects *some* two-qubit errors but not all.
+</Try>
+
+<Quiz id="u11l3-z-block">
+  <Q>In Shor's code, a $Z$ error hits qubit 7 (block 3). Which checks report $-1$?</Q>
+  <Opt>$Z_6Z_7$ and $Z_7Z_8$</Opt>
+  <Opt>Only $X_0 \cdots X_5$</Opt>
+  <Opt correct>Only $X_3 \cdots X_8$</Opt>
+  <Opt>Both $X$-type checks</Opt>
+  <Explain>A $Z$ commutes with all the $Z$-pair checks, so those stay silent. Among the $X$-type checks, it anticommutes with the one that includes qubit 7: $X_3\cdots X_8$ covers qubits 3–8. Syndrome "only the second $X$-check" means "block 3 flipped sign." The decoder applies $Z$ to any qubit of block 3.</Explain>
+</Quiz>
+
+---
+
+## A better language: stabilizers
+
+Writing out states like $|0_L\rangle$ above gets painful fast. A 49-qubit code would need $2^{49}$ amplitudes. **Daniel Gottesman**'s insight (1996–97) was to describe a code by the operators that **leave it alone**.
+
+<Definition term="Stabilizer code">
+A set of commuting Pauli operators $S_1, \dots, S_{n-k}$ on $n$ qubits (the **generators**). The **code space** is every state with
+
+$$
+S_i |\psi\rangle = +|\psi\rangle \quad \text{for all } i .
+$$
+
+Each independent generator cuts the space in half, so $n-k$ generators leave a $2^k$-dimensional code space: $k$ logical qubits.
+</Definition>
+
+For the 3-qubit bit-flip code the generators are $Z_0Z_1$ and $Z_1Z_2$. Both $|000\rangle$ and $|111\rangle$ are $+1$ eigenstates of both. For Shor's code they are the 8 operators in the table above. Everything follows from the Pauli algebra:
+
+- **Syndromes.** A Pauli error $E$ either commutes or anticommutes with each generator. If $E$ anticommutes with $S_i$, then $S_i(E|\psi\rangle) = -E S_i|\psi\rangle = -E|\psi\rangle$, so measuring $S_i$ gives $-1$. **The syndrome is just the commutation pattern of the error with the generators.**
+- **Harmless errors.** If $E$ is *itself* in the stabilizer group (a product of generators), it does nothing to code states. That's why $Z_0$ and $Z_1$ were interchangeable in Shor's code: $Z_0 Z_1$ is a stabilizer. Codes with this property are called **degenerate**.
+- **Logical operators.** Operators that commute with every generator but are *not* in the stabilizer group act on the encoded qubit without being detected: $\bar X$ and $\bar Z$. For the bit-flip code, $\bar X = X_0X_1X_2$ and $\bar Z = Z_0$ (or $Z_1$, or $Z_2$, all equivalent up to stabilizers).
+
+The code's **distance** $d$ is the smallest weight (number of non-identity factors) of any logical operator. An error of weight $\lt d$ is either detectable or harmless. A code of distance $d$ corrects any $\lfloor (d-1)/2 \rfloor$ errors.
+
+<KeyIdea>
+**$[[n, k, d]]$ notation:** $n$ physical qubits, $k$ logical qubits, distance $d$. (Double brackets distinguish quantum codes from classical $[n,k,d]$ codes.)
+- 3-qubit bit-flip code: $[[3,1,1]]$ as a *quantum* code, since a single $Z$ is a logical error, even though it has distance 3 against $X$ errors.
+- Shor's code: $[[9,1,3]]$.
+- Steane's code: $[[7,1,3]]$.
+- The "perfect" 5-qubit code: $[[5,1,3]]$, the smallest code that corrects an arbitrary single-qubit error.
+</KeyIdea>
+
+<NumQuiz id="u11l3-gens" answer={6} tol={0}>
+  <Q>How many independent stabilizer generators does a $[[7,1,3]]$ code have?</Q>
+  <Explain>$n - k = 7 - 1 = 6$. Each generator halves the 128-dimensional space: $2^7 / 2^6 = 2$ dimensions, exactly one logical qubit. (Switch the explorer to Steane to see all 6.)</Explain>
+</NumQuiz>
+
+<CSCorner>
+Write a Pauli on $n$ qubits (ignoring phase) as a bit string $(x \mid z) \in \mathbb{F}_2^{2n}$: $x_i = 1$ for $X$ or $Y$ on qubit $i$, $z_i = 1$ for $Z$ or $Y$. Multiplying Paulis is XOR. Two Paulis commute iff the **symplectic inner product** $x\cdot z' + z\cdot x' \pmod 2$ is 0. A stabilizer code is then a classical linear code over $\mathbb F_2^{2n}$ that is "self-orthogonal" under this product, and syndrome computation is a matrix–vector product mod 2. (The explorer above runs exactly these bit operations.) The same bookkeeping powers the **Gottesman–Knill theorem**: circuits of Clifford gates ($H$, $S$, CNOT) acting on stabilizer states can be simulated in polynomial time on a classical computer. Quantum advantage needs something more, like the $T$ gate.
+</CSCorner>
+
+---
+
+## Steane's code: Hamming goes quantum
+
+Andrew Steane found a more economical code in 1996 by reusing the classical **(7,4) Hamming code** you met in Lesson 1. Its three parity checks
+
+$$
+H = \begin{pmatrix} 0&0&0&1&1&1&1\\ 0&1&1&0&0&1&1 \\ 1&0&1&0&1&0&1 \end{pmatrix}
+$$
+
+locate any single bit flip: the syndrome is the binary number of the flipped position. Steane uses these checks **twice**: once as $X$-type generators (to catch $Z$ errors) and once as $Z$-type generators (to catch $X$ errors). Six generators, 7 qubits, one logical qubit, distance 3.
+
+Codes built from two classical codes this way are called **CSS codes** (Calderbank, Shor, Steane). They're everywhere, and the surface code in the next lesson is one too.
+
+Steane's code has a bonus. Applying $H$ to all seven qubits implements a logical $\bar H$, and likewise for $S$ (up to a sign convention) and CNOT between two code blocks. Gates applied qubit-by-qubit like this are called **transversal**. They can't spread one error into two errors inside a block, which makes them naturally fault-tolerant. Sadly, no code has a *universal* set of transversal gates (the Eastin–Knill theorem, 2009). The missing $T$ gate is usually supplied by **magic-state distillation**, preparing special states and teleporting them in.
+
+<Quiz id="u11l3-distance">
+  <Q>A code has parameters $[[17, 1, 5]]$. Which statement is true?</Q>
+  <Opt>It encodes 5 logical qubits in 17 physical qubits.</Opt>
+  <Opt correct>It can correct any error affecting up to 2 qubits.</Opt>
+  <Opt>It can correct any error affecting up to 5 qubits.</Opt>
+  <Opt>It has 17 stabilizer generators.</Opt>
+  <Explain>$d = 5$ corrects $\lfloor(5-1)/2\rfloor = 2$ errors. It encodes $k = 1$ logical qubit using $n - k = 16$ generators. (The distance-5 *color code* and *rotated surface code* have $[[17,1,5]]$ and $[[25,1,5]]$ variants.)</Explain>
+</Quiz>
+
+<History>
+Within about two years of Shor's 1995 paper, the field went from "impossible" to a general theory. **Calderbank & Shor** and **Steane** (1996) introduced CSS codes. **Knill & Laflamme** (1997) gave necessary and sufficient conditions for a code to correct a set of errors. **Laflamme, Miquel, Paz & Zurek** and, independently, **Bennett, DiVincenzo, Smolin & Wootters** (1996) found the 5-qubit code. **Gottesman**'s 1997 Caltech PhD thesis, *Stabilizer Codes and Quantum Error Correction*, unified it all in the stabilizer formalism that is still the working language of the field.
+</History>
+
+---
+
+## Summary
+
+- **Shor's code** $[[9,1,3]]$ = phase-flip code with each qubit replaced by a bit-flip code (**concatenation**). It corrects any single-qubit error.
+- A **stabilizer code** is defined by commuting Pauli generators. The code space is their joint $+1$ eigenspace, $n-k$ generators leave $k$ logical qubits, and the **syndrome** is the pattern of which generators anticommute with the error.
+- Errors that are themselves stabilizers are harmless (**degeneracy**). **Logical operators** commute with all generators but act on the encoded qubit.
+- **$[[n,k,d]]$**: distance $d$ = minimum weight of a logical operator. It corrects $\lfloor(d-1)/2\rfloor$ errors.
+- **Steane's** $[[7,1,3]]$ CSS code reuses the Hamming code's checks for both $X$ and $Z$, and has transversal Clifford gates.

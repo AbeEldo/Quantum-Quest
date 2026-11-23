@@ -1,0 +1,179 @@
+import { HydrogenAtom, SpectrumStrip } from './widgets/HydrogenAtom';
+
+Pass sunlight through a prism and you get a rainbow, a smooth continuous spread of colours. That's what a hot, dense glowing object gives: the blackbody spectrum of lesson 2.
+
+Now take a glass tube of thin hydrogen gas, run an electric discharge through it so it glows pinkish-purple, and pass *that* light through a prism.
+
+<Predict id="u1l4-hydrogen-spectrum">
+  <Q>What does the spectrum of glowing hydrogen gas look like?</Q>
+  <Opt>A continuous rainbow, like sunlight</Opt>
+  <Opt>A rainbow with a few colours missing</Opt>
+  <Opt correct>Just a few thin, sharp lines of colour on a dark background</Opt>
+  <Opt>One single colour (pink)</Opt>
+  <Reveal>
+In the visible range you see just **four sharp lines**: a strong red line, a blue-green one, and two violet ones, at very precise wavelengths:
+
+<SpectrumStrip lines={[{ nm: 656.3, label: '656.3' }, { nm: 486.1, label: '486.1' }, { nm: 434.0, label: '434.0' }, { nm: 410.2, label: '410.2' }]} />
+
+Every element has its own pattern of lines, its own **barcode**. Sodium gives a bright yellow pair near 589 nm (the colour of old street lamps); neon gives a cluster of reds and oranges. The pink glow you see is the red line mixed with the others.
+  </Reveal>
+</Predict>
+
+---
+
+## Barcodes of the elements
+
+<History>
+In 1814 Joseph von Fraunhofer, a master lens-maker, looked at sunlight through a fine prism and found it crossed by hundreds of **dark lines**. In 1859–60 Gustav Kirchhoff and Robert Bunsen (of burner fame) showed that each element, heated in a flame, emits bright lines at its own characteristic wavelengths, and that a cool gas **absorbs** at exactly the same wavelengths it emits. The dark lines in sunlight are the fingerprints of elements in the Sun's atmosphere absorbing light from the hotter surface beneath.
+
+Spectroscopy became the first way to learn what stars are made of. In 1868, observers of a solar eclipse saw a yellow line at 587.6 nm that matched no known element. Norman Lockyer named the mystery element **helium**, after the Greek *helios*, the Sun. It wasn't found on Earth until 1895.
+</History>
+
+Physicists now had a precise, reproducible pattern of numbers for each element. But nobody knew *why* atoms emit only certain wavelengths. Classical physics had no explanation at all.
+
+The first breakthrough came from numerology. In 1885 Johann Balmer, a Swiss schoolteacher, noticed that the four visible hydrogen wavelengths fit a simple formula:
+
+$$
+\lambda = B\,\frac{n^2}{n^2 - 4}, \qquad B = 364.56\ \text{nm}, \quad n = 3, 4, 5, 6.
+$$
+
+In 1888 Johannes Rydberg recast it in the form that turned out to generalize, using inverse wavelengths:
+
+$$
+\frac{1}{\lambda} = R_H\left(\frac{1}{n_1^2} - \frac{1}{n_2^2}\right), \qquad R_H \approx 1.0968\times10^{7}\ \text{m}^{-1},\quad n_2 > n_1 .
+$$
+
+Balmer's lines are the ones with $n_1 = 2$. The formula predicted other series, and they were found: $n_1 = 1$ in the ultraviolet (Lyman, 1906–1914) and $n_1 = 3$ in the infrared (Paschen, 1908).
+
+<NumQuiz id="u1l4-balmer-n4" answer={486.1} tol={0.5}>
+  <Q>Use Balmer's formula with $n = 4$. What wavelength do you get, in nm?</Q>
+  <Hint>$364.56 \times \frac{16}{16 - 4}$.</Hint>
+  <Explain>$364.56\times16/12 = 486.08$ nm: the blue-green line, to five significant figures. A formula that good is telling you something deep, but in 1885 nobody knew what.</Explain>
+</NumQuiz>
+
+---
+
+## The atom that shouldn't exist
+
+By 1911, Ernest Rutherford's scattering experiments had revealed the structure of the atom: a tiny, heavy, positive **nucleus** with light negative electrons somewhere around it. The obvious picture is a miniature solar system, electrons orbiting the nucleus held by electric attraction.
+
+Classical physics says this atom is a disaster:
+
+- An orbiting electron is constantly accelerating, and Maxwell's equations say **accelerating charges radiate**. The electron should lose energy, spiral inward, and crash into the nucleus. The calculated time for a hydrogen atom is about **$10^{-11}$ seconds**.
+- As it spirals in, its orbital frequency changes continuously, so it should emit a **continuous smear** of frequencies, not sharp lines.
+
+Yet atoms are stable for billions of years and emit sharp lines. Something is badly wrong.
+
+<Quiz id="u1l4-classical-fail">
+  <Q>Which two observations does the classical "solar system" atom fail to explain?</Q>
+  <Opt correct>Atoms are stable</Opt>
+  <Opt correct>Atoms emit light only at sharp, specific wavelengths</Opt>
+  <Opt>Atoms have a small positive nucleus</Opt>
+  <Opt>Electrons are attracted to the nucleus</Opt>
+  <Explain>Classically, an orbiting electron radiates continuously, spirals into the nucleus in about $10^{-11}$ s, and emits a continuous spectrum on the way. The nucleus and the electric attraction are the *inputs* to the model, from Rutherford's experiments and Coulomb's law.</Explain>
+</Quiz>
+
+---
+
+## Bohr's quantum atom
+
+In 1913 Niels Bohr, a 27-year-old Dane fresh from a stay in Rutherford's laboratory in Manchester, proposed rules that simply *forbade* the classical disaster. They were not derived from anything; they were bold postulates, justified by their results.
+
+<KeyIdea>
+**Bohr's postulates (1913).**
+
+1. The electron can occupy only certain **stationary states** (allowed orbits) with definite energies $E_1, E_2, E_3, \dots$, and while in one it does **not** radiate.
+2. Light is emitted or absorbed only when the electron **jumps** between stationary states, as a single photon carrying the energy difference:
+$$
+hf = E_{\text{upper}} - E_{\text{lower}} .
+$$
+3. The allowed orbits are those whose angular momentum is a whole multiple of $\hbar = h/2\pi$: $\;L = n\hbar,\ n = 1, 2, 3, \dots$
+</KeyIdea>
+
+Combining postulate 3 with Newton's laws and Coulomb's law gives orbit radii $r_n = n^2 a_0$ (with $a_0 = 0.0529$ nm, the **Bohr radius**) and energies
+
+$$
+E_n = -\frac{13.6\ \text{eV}}{n^2}.
+$$
+
+The energy is negative because the electron is bound: you need to *add* 13.6 eV to free it from the ground state $n=1$. Each jump down emits a photon with $hc/\lambda = E_{n_2} - E_{n_1} = 13.6\ \text{eV}\,(1/n_1^2 - 1/n_2^2)$, which is **exactly Rydberg's formula**, and Bohr's theory predicts the value of $R_H$ from $h$, $e$, $m_e$ and $c$. Play with it:
+
+<HydrogenAtom />
+
+<Try>
+- Find all four visible hydrogen lines. Hint: they all end on the same level. Which one?
+- Jump from $n=2$ to $n=1$. The photon is invisible: 121.6 nm ultraviolet, the **Lyman-α** line. Every jump down to $n=1$ lands in the UV; every jump down to $n=3$ lands in the infrared.
+- Switch to **Absorption** and jump *up* from $n=2$. The same wavelengths now appear as **dark** lines on a bright rainbow: Fraunhofer's lines, explained.
+- Notice how the levels crowd together near 0 eV. That's why each series of lines crowds toward a limit at short wavelengths (the **series limit**).
+</Try>
+
+<DeepDive title="Deriving Bohr's energy levels">
+For a circular orbit of radius $r$ and speed $v$, the Coulomb force provides the centripetal force:
+$$
+\frac{m v^2}{r} = \frac{k e^2}{r^2}, \qquad k = \frac{1}{4\pi\varepsilon_0}.
+$$
+Bohr's condition: $L = m v r = n\hbar$, so $v = n\hbar/(mr)$. Substituting,
+$$
+r_n = \frac{n^2\hbar^2}{m k e^2} = n^2 a_0, \qquad a_0 = \frac{\hbar^2}{m k e^2} \approx 0.0529\ \text{nm}.
+$$
+The total energy is kinetic plus potential, $E = \tfrac12mv^2 - \tfrac{ke^2}{r} = -\tfrac{ke^2}{2r}$ (using the force balance), so
+$$
+E_n = -\frac{ke^2}{2a_0}\frac{1}{n^2} = -\frac{m k^2 e^4}{2\hbar^2}\frac{1}{n^2} \approx -\frac{13.6\ \text{eV}}{n^2}.
+$$
+Every constant is a known fundamental constant: no fitting.
+</DeepDive>
+
+<NumQuiz id="u1l4-halpha" answer={656} tol={2}>
+  <Q>Compute the wavelength of the photon emitted when hydrogen jumps from $n = 3$ to $n = 2$, in nm. (Use $E_n = -13.6\ \text{eV}/n^2$ and $hc = 1240$ eV nm.)</Q>
+  <Hint>$\Delta E = 13.6\,(1/4 - 1/9)$ eV, then $\lambda = 1240/\Delta E$.</Hint>
+  <Explain>$\Delta E = 13.6\times(0.25 - 0.1111) = 1.889$ eV, and $\lambda = 1240/1.889 \approx 656$ nm: the red **H-alpha** line, the colour of glowing hydrogen in nebulae all over the sky.</Explain>
+</NumQuiz>
+
+<NumQuiz id="u1l4-ionize-n2" answer={3.4} tol={0.02}>
+  <Q>How much energy (in eV) is needed to completely free (ionize) an electron that starts in the $n = 2$ level?</Q>
+  <Explain>From $E_2 = -13.6/4 = -3.4$ eV up to $0$: you need $3.4$ eV. Any photon with more than 3.4 eV (wavelength shorter than about 365 nm, the Balmer series limit) can do it.</Explain>
+</NumQuiz>
+
+---
+
+## Triumph, and the limits of a stopgap
+
+Bohr's model was a sensation. Beyond hydrogen's lines, it explained the spectrum of ionized helium (one electron around a doubly charged nucleus) and the pattern of X-ray energies across the periodic table. Einstein called it "the highest form of musicality in the sphere of thought". Bohr received the 1922 Nobel Prize.
+
+But it was clearly a patch, not a theory:
+
+- It works only for one-electron atoms. It fails badly for neutral helium, with just two electrons.
+- It can't say how *bright* each line is, or how long an atom stays excited.
+- It doesn't explain *why* angular momentum should be quantized, or why a stationary orbit doesn't radiate. It just declares it.
+- High-resolution spectra show that lines split into close pairs and triplets (fine structure), especially in a magnetic field, beyond the model's reach.
+
+The real answer came in 1925–26 with quantum mechanics proper (Heisenberg, Schrödinger and others), which reproduces Bohr's energy levels exactly while abandoning orbits altogether.
+
+<Warning>
+"Electrons orbit the nucleus like tiny planets." This is Bohr's 1913 picture, and it is wrong. In modern quantum mechanics an electron in an atom has no trajectory at all. It's described by a **wavefunction** (an "orbital") spread out around the nucleus, and the allowed energies come from the requirement that this wave fits around the nucleus consistently. Bohr's energies survive, but his orbits don't. The atom icon with elliptical orbits is a logo, not a picture.
+</Warning>
+
+<CSCorner>
+Spectral lines make atoms the most reproducible oscillators in the universe, and that's why **time** itself is now defined by one. Since 1967 the second has been defined as exactly 9 192 631 770 periods of the radiation from a particular transition in caesium-133 (between two hyperfine levels of its ground state). Every GPS satellite carries atomic clocks; your phone's position is computed from timing differences of nanoseconds. A quantum jump is the master clock behind the internet's time synchronization.
+</CSCorner>
+
+<Quiz id="u1l4-absorb">
+  <Q>Cool hydrogen gas sits between you and a hot star. At which wavelengths will you see dark absorption lines?</Q>
+  <Opt>At random wavelengths, depending on the star's temperature</Opt>
+  <Opt correct>At the same wavelengths hot hydrogen emits, for transitions that start from levels the cool gas actually occupies</Opt>
+  <Opt>Only at wavelengths longer than 656 nm</Opt>
+  <Opt>Nowhere: gases only emit, they don't absorb</Opt>
+  <Explain>An atom can absorb a photon only if its energy exactly matches a jump *up* from a level the atom is in. So the dark lines line up with the emission lines. In cool gas almost all atoms sit in $n=1$, so the strongest absorption is the Lyman series (UV); the visible Balmer absorption lines need a population in $n=2$, which is why they're strongest in stars around 10 000 K.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Glowing gases emit (and cool gases absorb) light only at sharp, element-specific wavelengths: **line spectra**.
+- Hydrogen fits Rydberg's formula $1/\lambda = R_H(1/n_1^2 - 1/n_2^2)$; the visible **Balmer** lines (656, 486, 434, 410 nm) all end at $n_1 = 2$.
+- Classical atoms would collapse in about $10^{-11}$ s and emit continuous spectra.
+- **Bohr (1913):** stationary states with $L = n\hbar$, energies $E_n = -13.6\ \text{eV}/n^2$; photons carry the energy difference $hf = E_u - E_l$. This reproduces Rydberg's formula from fundamental constants.
+- The model fails beyond hydrogen-like atoms; real quantum mechanics keeps the energy levels but replaces orbits with wavefunctions.
+
+<Watch title="Hydrogen energies and spectrum (HyperPhysics)" by="C. R. Nave, Georgia State University" url="http://hyperphysics.phy-astr.gsu.edu/hbase/hyde.html" kind="article" note="energy-level diagram with all the series" />

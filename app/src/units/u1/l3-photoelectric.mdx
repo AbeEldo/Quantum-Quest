@@ -1,0 +1,178 @@
+import { PhotoelectricLab } from './widgets/PhotoelectricLab';
+
+In 1887, while proving that Maxwell's electromagnetic waves were real, Heinrich Hertz noticed something odd: the sparks in his apparatus jumped more easily when **ultraviolet** light fell on the metal electrodes. Within a few years it was clear what was happening. Light shining on a metal can knock **electrons** out of it.
+
+That sounds unsurprising: light is an electromagnetic wave, a wave shakes charges, and shake an electron hard enough and it flies off. But when experimenters looked closely, every detail came out wrong. Make your prediction first.
+
+<Predict id="u1l3-red-violet">
+  <Q>You shine light on a clean sodium surface. Beam A is an extremely bright red laser (650 nm). Beam B is a very dim violet lamp (400 nm). Which beam knocks electrons out of the sodium?</Q>
+  <Opt>A only: it delivers far more energy per second</Opt>
+  <Opt correct>B only, even though it is much dimmer</Opt>
+  <Opt>Both, but A ejects many more electrons</Opt>
+  <Opt>Neither: visible light can't eject electrons</Opt>
+  <Reveal>
+**Only the dim violet light works.** Red light, at *any* brightness, ejects **no electrons at all** from sodium. Violet light ejects electrons immediately, even when it is so dim that classical physics says each electron should take minutes to soak up enough energy.
+
+What matters is the **colour** (frequency) of the light, not how much energy the beam carries. Explore the effect in the lab below.
+  </Reveal>
+</Predict>
+
+---
+
+## The experiment
+
+The apparatus is a vacuum tube with two metal plates. Light falls on one plate (the **emitter**). Ejected electrons fly across to the other plate (the **collector**) and a current flows around the circuit. A battery lets you apply a voltage $V$ that **opposes** the electrons, so only electrons with kinetic energy greater than $eV$ make it across.
+
+<PhotoelectricLab millikan={false} />
+
+<Try>
+- With sodium (Na) selected, slowly increase the wavelength from 400 nm. At some point the electrons **stop completely**. Now push the intensity to 100%. Nothing. Below a **threshold frequency**, no electrons come out, however bright the light.
+- Go back to 400 nm. Change the intensity. The **current** goes up and down in proportion. But raise the voltage $V$ until the current just reaches zero: that **stopping voltage** doesn't depend on the intensity at all.
+- Now change the wavelength instead. Shorter wavelengths (higher frequency) need a **bigger** stopping voltage: the fastest electrons come out faster.
+- Try other metals. Each has its own threshold. Caesium responds even to orange light; platinum needs deep ultraviolet.
+</Try>
+
+By about 1902 (thanks above all to measurements by Philipp Lenard), the facts were:
+
+1. **Threshold:** each metal has a minimum frequency below which no electrons are emitted, at any intensity.
+2. **Energy depends on frequency:** the maximum kinetic energy of the electrons increases with the light's frequency and does **not** depend on its intensity.
+3. **Number depends on intensity:** brighter light ejects more electrons per second (more current), each with the same energy range.
+4. **No delay:** electrons appear as soon as the light is switched on, even when the light is extremely dim.
+
+<Quiz id="u1l3-observations">
+  <Q>In the lab, you double the intensity of 400 nm light on sodium. What happens?</Q>
+  <Opt>The stopping voltage doubles</Opt>
+  <Opt correct>The current doubles; the stopping voltage is unchanged</Opt>
+  <Opt>Both the current and the stopping voltage double</Opt>
+  <Opt>Nothing changes</Opt>
+  <Explain>More intense light ejects more electrons per second (more current), but the most energetic electron is no faster, so the voltage needed to stop it stays the same. Intensity controls *how many*; frequency controls *how energetic*.</Explain>
+</Quiz>
+
+---
+
+## Why the wave picture fails
+
+Classical electromagnetism makes clear predictions here, and they disagree with every observation:
+
+| | Wave theory predicts | Experiment shows |
+|---|---|---|
+| Brighter light | bigger field ⇒ harder shaking ⇒ **faster** electrons | **more** electrons, not faster ones |
+| Colour | irrelevant; any colour works if bright enough | below a threshold frequency, **nothing**, at any brightness |
+| Dim light | electrons need time to soak up energy: a **delay** | **instant** emission |
+
+The delay argument is especially damning. In a wave, energy is spread smoothly over the wavefront, and an electron can only absorb what falls on roughly its own atom.
+
+<NumQuiz id="u1l3-delay" answer={320} tol={20}>
+  <Q>Dim light delivers $1.0\times10^{-2}$ W/m² to a metal with work function $2.0$ eV ($3.2\times10^{-19}$ J). Suppose an electron can absorb the energy falling on an area of about one atom, $10^{-19}$ m². In the wave picture, how many seconds would it need to accumulate enough energy to escape?</Q>
+  <Hint>Power absorbed = intensity × area. Time = energy needed / power absorbed.</Hint>
+  <Explain>Power $= 10^{-2}\times10^{-19} = 10^{-21}$ W, so the time is $3.2\times10^{-19}/10^{-21} = 320$ s, about five minutes. In reality electrons appear within nanoseconds (Lawrence and Beams put the delay below $3\times10^{-9}$ s in 1928). The energy is not spread out; it arrives in a lump.</Explain>
+</NumQuiz>
+
+---
+
+## Einstein's light quanta
+
+In March 1905, Albert Einstein, then a 26-year-old patent clerk in Bern, submitted a paper with the modest title *On a Heuristic Point of View Concerning the Production and Transformation of Light*. He took Planck's quanta, which Planck had applied only to the material oscillators, and applied them to **light itself**.
+
+<KeyIdea>
+**Light comes in quanta.** Light of frequency $f$ consists of discrete packets (today called **photons**), each carrying energy
+
+$$
+E = hf .
+$$
+
+A photon is absorbed by a single electron, all or nothing. If the electron needs energy $\phi$ (the metal's **work function**) to escape, its kinetic energy afterwards is at most
+
+$$
+K_{\max} = hf - \phi .
+$$
+</KeyIdea>
+
+Every observation now follows at once:
+
+1. **Threshold:** if $hf < \phi$, no single photon can free an electron, and an electron can't combine many photons' energy, so brightness doesn't help. Threshold frequency $f_0 = \phi/h$.
+2. **Energy vs frequency:** $K_{\max} = hf - \phi$ grows linearly with $f$, independent of intensity.
+3. **Number vs intensity:** a brighter beam is *more photons per second*, so more electrons, each with the same energies.
+4. **No delay:** a photon's energy is delivered in one go, the instant it is absorbed.
+
+The stopping voltage $V_0$ measures $K_{\max}$ directly, since $eV_0 = K_{\max}$:
+
+$$
+eV_0 = hf - \phi \qquad\Longrightarrow\qquad V_0 = \frac{h}{e}\,f - \frac{\phi}{e}.
+$$
+
+A plot of stopping voltage against frequency should be a **straight line**, with the **same slope $h/e$ for every metal**. Only the intercept depends on the metal. That's a bold, testable prediction.
+
+<NumQuiz id="u1l3-threshold" answer={539} tol={4}>
+  <Q>Potassium has a work function of about 2.30 eV. What is its threshold wavelength (the longest wavelength that can eject electrons), in nm?</Q>
+  <Hint>At threshold, $hc/\lambda_0 = \phi$, so $\lambda_0 = hc/\phi$ with $hc\approx1240$ eV nm.</Hint>
+  <Explain>$\lambda_0 = 1240/2.30 \approx 539$ nm, green light. Anything redder than that (yellow, orange, red) does nothing, at any intensity; anything bluer works.</Explain>
+</NumQuiz>
+
+<Warning>
+"Brighter light means more energetic photons." No. The energy of each photon is fixed by its frequency, $E = hf$. Brightness is the **number** of photons per second. A dim blue beam has fewer photons than a bright red one, but each blue photon packs more energy, enough to do things (eject electrons, damage DNA, trigger a chemical reaction) that no number of red photons can do one at a time. This is why ultraviolet light gives you sunburn and infrared heat lamps don't.
+</Warning>
+
+---
+
+## Millikan measures $h$
+
+Einstein's proposal was widely rejected. Maxwell's wave theory was too successful to abandon, and even Planck thought Einstein had overreached. Robert Millikan at the University of Chicago spent years testing the prediction, cutting fresh metal surfaces inside a vacuum to keep them clean, fully expecting to prove Einstein wrong.
+
+He couldn't. Do his experiment yourself: for several wavelengths, find the stopping voltage and record it.
+
+<PhotoelectricLab millikan initialNm={400} initialMetal={2} />
+
+<Try>
+- Pick a wavelength (say 400 nm). Raise $V$ until the current *just* reaches zero, and press **Record**. The I–V plot on the left helps you find the point where the green curve hits zero.
+- Repeat for 350, 300 and 250 nm. A pink best-fit line appears through your points. Read off your value of $h$.
+- Switch to a different metal and repeat. The new points lie on a **parallel line**, shifted sideways: same slope ($h/e$), different threshold.
+</Try>
+
+<History>
+Millikan published his results in 1916 (*Physical Review* 7, 355). The stopping voltage was a perfectly straight function of frequency, and its slope gave $h = 6.57\times10^{-34}$ J s, which he quoted with a precision of about 0.5%. (The modern value is 6.626; his surfaces were not as clean as he thought.) Even so, he called the light-quantum theory behind the equation "wholly untenable". Decades later (1949) he recalled being compelled "to assert its unambiguous experimental verification in spite of its unreasonableness".
+
+Einstein received the Nobel Prize in Physics for 1921 "especially for his discovery of the law of the photoelectric effect", not for relativity. Millikan received the 1923 prize, partly for this work. The word **photon** came later still, coined by the chemist Gilbert Lewis in 1926.
+</History>
+
+<Quiz id="u1l3-slope">
+  <Q>You plot stopping voltage $V_0$ against frequency $f$ for two different metals. What do you expect?</Q>
+  <Opt>Two lines through the origin with different slopes</Opt>
+  <Opt correct>Two parallel lines with slope $h/e$, crossing the frequency axis at different thresholds</Opt>
+  <Opt>Two identical lines</Opt>
+  <Opt>Two curves that flatten out at high frequency</Opt>
+  <Explain>$V_0 = (h/e)f - \phi/e$. The slope $h/e$ is a universal constant; the metal only shifts the line through $\phi$. Where a line crosses $V_0 = 0$ is the threshold frequency $f_0 = \phi/h$.</Explain>
+</Quiz>
+
+---
+
+## Photons everywhere
+
+The photoelectric effect isn't a museum piece. Every digital camera sensor is a grid of millions of tiny photoelectric detectors: each photon that lands can free one electron, and the sensor counts electrons. Solar cells, night-vision tubes and the photomultipliers that detect single photons in physics labs all run on $E = hf$.
+
+<CSCorner>
+Because light arrives in discrete photons, every image sensor has an irreducible noise floor called **shot noise**. If a pixel expects $N$ photons on average, the actual count is Poisson-distributed with standard deviation $\sqrt N$, so the signal-to-noise ratio is $\sqrt N$. That's why low-light photos look grainy: at 100 photons per pixel you can't do better than about 10% noise, no matter how perfect your electronics. It's quantization noise imposed by nature rather than by an ADC.
+</CSCorner>
+
+So is light a particle after all? Not so fast. Light still makes interference fringes, which particles shouldn't. In World 2 you'll send photons through a double slit **one at a time**, and watch the fringes build up dot by dot. Light is neither a classical wave nor a classical particle. It's something new.
+
+<Quiz id="u1l3-uv-skin">
+  <Q>A 1 mW ultraviolet LED (300 nm) and a 1 W infrared heat lamp (1000 nm) both shine on your skin. Which can break a chemical bond needing 4 eV, one photon at a time?</Q>
+  <Opt>Only the heat lamp: it delivers 1000× more power</Opt>
+  <Opt correct>Only the UV LED</Opt>
+  <Opt>Both</Opt>
+  <Opt>Neither</Opt>
+  <Explain>UV photons at 300 nm carry $1240/300\approx4.1$ eV, just enough. Infrared photons at 1000 nm carry only 1.24 eV, and a bond can't add up the energy of several photons that arrive separately. The heat lamp delivers more total energy, as heat, but no single photon can do the job.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Light ejects electrons from metals, but only above a **threshold frequency**; the electrons' maximum energy depends on **frequency**, their number on **intensity**, and emission is **instantaneous**. Classical waves predict none of this.
+- **Einstein (1905):** light consists of quanta of energy $E = hf$; one photon frees at most one electron: $K_{\max} = hf - \phi$.
+- **Stopping voltage:** $eV_0 = hf - \phi$, a straight line with universal slope $h/e$.
+- **Millikan (1916)** confirmed it and measured $h$ to within about 1% while trying to disprove it.
+- Brightness = number of photons; colour = energy per photon.
+
+<Watch title="Photoelectric effect (HyperPhysics)" by="C. R. Nave, Georgia State University" url="http://hyperphysics.phy-astr.gsu.edu/hbase/mod2.html" kind="article" note="experiment, Einstein's equation and work functions" />

@@ -1,0 +1,175 @@
+import { TwoQubitGateExplorer } from './widgets/TwoQubitGateExplorer';
+import { unitaryGoal, stateGoal } from './lib/goals';
+
+One qubit on its own can only be rotated. Every interesting quantum algorithm, along with entanglement, teleportation and error correction, needs qubits that **act on each other**. That takes multi-qubit gates, and it takes care with a deceptively simple question: *which qubit is which?*
+
+## Reading a circuit diagram
+
+A quantum circuit is a score for qubits:
+
+- **Each horizontal wire is one qubit.** Time flows **left to right**.
+- In this course (as in Nielsen & Chuang and Craig Gidney's simulator Quirk), **q0 is the top wire and the left-most symbol in a ket**. The state $|q_0q_1q_2\rangle = |110\rangle$ means q0 = 1, q1 = 1, q2 = 0.
+- A box on a wire is a single-qubit gate. A vertical line joining wires is a multi-qubit gate. A filled dot (●) marks a **control**.
+- Gates in the same column act at the same time on different qubits.
+
+Reading order and matrix order are reversed. If a circuit applies $A$ and then $B$, the state becomes $B(A|\psi\rangle)$, so the circuit's matrix is $BA$. **Left-to-right in the picture means right-to-left in the algebra.** Gates stacked in one column multiply with the tensor product: $A$ on q0 and $B$ on q1 at the same moment is $A\otimes B$.
+
+<CircuitLab title="A circuit to read: step through it" n={2} circuit="H 0; CNOT 0 1; X 1" gates={['H', 'X', 'Z', 'CNOT']} />
+
+<Quiz id="u7l2-read">
+  <Q>The circuit above applies $H$ on q0, then CNOT (q0 → q1), then $X$ on q1. Which expression is its matrix?</Q>
+  <Opt>$(H\otimes I)\cdot\text{CNOT}\cdot(I\otimes X)$</Opt>
+  <Opt correct>$(I\otimes X)\cdot\text{CNOT}\cdot(H\otimes I)$</Opt>
+  <Opt>$(X\otimes I)\cdot\text{CNOT}\cdot(I\otimes H)$</Opt>
+  <Opt>$H\otimes \text{CNOT} \otimes X$</Opt>
+  <Explain>The first gate in time sits right next to the state, on the far right of the product, so $H\otimes I$ goes last in the written expression. $X$ acts on q1, the **second** tensor factor, which makes it $I\otimes X$. The output is $\tfrac{1}{\sqrt2}(|01\rangle + |10\rangle)$, the Bell state $|\Psi^+\rangle$.</Explain>
+</Quiz>
+
+---
+
+## CNOT: a classical gate with quantum consequences
+
+On basis states the controlled-NOT is exactly reversible XOR: $\text{CNOT}|a, b\rangle = |a,\ b\oplus a\rangle$.
+
+| in $\lvert a\,b\rangle$ | out | |
+|---|---|---|
+| $\lvert 00\rangle$ | $\lvert 00\rangle$ | control 0: nothing happens |
+| $\lvert 01\rangle$ | $\lvert 01\rangle$ | |
+| $\lvert 10\rangle$ | $\lvert 11\rangle$ | control 1: flip the target |
+| $\lvert 11\rangle$ | $\lvert 10\rangle$ | |
+
+Because quantum gates are **linear**, this table fixes CNOT's action on every state. You saw the most famous consequence in World 6: a control in superposition gives an entangled output,
+
+$$
+\text{CNOT}\,\tfrac{1}{\sqrt2}(|0\rangle + |1\rangle)|0\rangle = \tfrac{1}{\sqrt2}(|00\rangle + |11\rangle).
+$$
+
+It is tempting to summarise this as "CNOT copies the control onto the target". Here is a test of that intuition.
+
+<Predict id="u7l2-plus-plus">
+  <Q>Both qubits start in $|+\rangle$. What does CNOT (q0 → q1) do to $|+\rangle|+\rangle$?</Q>
+  <Opt>Creates a Bell state, as it does for $|+\rangle|0\rangle$</Opt>
+  <Opt>Flips the target to $|-\rangle$</Opt>
+  <Opt correct>Nothing at all: the output is still $|+\rangle|+\rangle$</Opt>
+  <Opt>Swaps the two qubits</Opt>
+  <Reveal>
+Expand: $|{+}{+}\rangle = \tfrac12(|00\rangle + |01\rangle + |10\rangle + |11\rangle)$. CNOT swaps $|10\rangle \leftrightarrow |11\rangle$, and since both have the same amplitude **nothing changes**. Another way to see it: $|+\rangle$ is an eigenvector of $X$ with eigenvalue $+1$, so "flip the target" does nothing to it, whatever the control says.
+
+So CNOT is not "copy". It is a specific unitary, and its effect depends on the basis you look in. Now try $|+\rangle|-\rangle$ in the lab below. The *control* changes, and the target doesn't. That surprise is **phase kickback**, and it gets a whole lesson (7.4).
+
+<CircuitLab title="Try other inputs: put H, X, Z before the CNOT" n={2} circuit="H 0, H 1; CNOT 0 1" gates={['H', 'X', 'Z', 'CNOT']} />
+  </Reveal>
+</Predict>
+
+<NumQuiz id="u7l2-cnot-prob" answer={0.64} tol={0.005}>
+  <Q>q0 starts in $0.6|0\rangle + 0.8|1\rangle$ and q1 in $|0\rangle$. After a CNOT (q0 → q1) you measure both qubits. What is the probability of seeing $11$?</Q>
+  <Explain>CNOT gives $0.6|00\rangle + 0.8|11\rangle$, an entangled state. $P(11) = 0.8^2 = 0.64$. The two results always agree, but which one you get is random.</Explain>
+</NumQuiz>
+
+---
+
+## Two-qubit matrices, and the bit-order trap
+
+A two-qubit gate is a $4\times4$ unitary acting on $\mathbb{C}^4 = \mathbb{C}^2\otimes\mathbb{C}^2$. With basis order $|00\rangle, |01\rangle, |10\rangle, |11\rangle$ (q0 first):
+
+$$
+\text{CNOT}_{0\to1} = \begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&0&1\\0&0&1&0\end{pmatrix} = |0\rangle\langle0|\otimes I + |1\rangle\langle1|\otimes X .
+$$
+
+The second form is the best way to remember it: *if the control is 0 do $I$, if it is 1 do $X$*. Every **controlled-$U$** follows the same pattern. With the control on the top wire,
+
+$$
+C(U) = |0\rangle\langle 0|\otimes I + |1\rangle\langle 1|\otimes U = \begin{pmatrix} I & 0\\ 0 & U\end{pmatrix}
+$$
+
+in $2\times2$ blocks. Explore the matrices below. Each entry is drawn as a phasor (size = magnitude, colour = phase). Click a column to feed in that basis state, or choose superposed inputs.
+
+<TwoQubitGateExplorer />
+
+<Try>
+- Compare **H ⊗ I** with **I ⊗ H**. Both are "a Hadamard on one wire", but the matrices look completely different. Tensor products are not commutative.
+- Compare **CNOT 0→1** with **CNOT 1→0**. Then compare **CZ** with itself under the Qiskit ordering. CZ's matrix doesn't change, because it is symmetric.
+- Set q0 = $|+\rangle$, q1 = $|0\rangle$ with CNOT 0→1 and watch the "entangled" badge appear.
+</Try>
+
+<Warning title="Qiskit numbers its qubits the other way round">
+IBM's Qiskit uses **little-endian** order: qubit 0 is the **right-most** bit of a bit string, so Qiskit's `'01'` means q0 = 1, q1 = 0. Its matrices are written in that order too. The CNOT that this course (and Nielsen & Chuang, and Quirk) writes as the matrix above appears in Qiskit with its rows and columns reordered. Neither convention is wrong, but mixing them is the single most common source of "my circuit gives the wrong answer" bugs. Always check which end of the ket is qubit 0. Toggle the explorer above to Qiskit order and see for yourself.
+</Warning>
+
+<Quiz id="u7l2-reverse-matrix">
+  <Q>In this course's ordering ($|q_0q_1\rangle$, q0 on the left), which matrix is CNOT with **control q1 and target q0**?</Q>
+  <Opt>$\begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&0&1\\0&0&1&0\end{pmatrix}$</Opt>
+  <Opt correct>$\begin{pmatrix}1&0&0&0\\0&0&0&1\\0&0&1&0\\0&1&0&0\end{pmatrix}$</Opt>
+  <Opt>$\begin{pmatrix}1&0&0&0\\0&0&1&0\\0&1&0&0\\0&0&0&1\end{pmatrix}$</Opt>
+  <Opt>$\begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\\0&0&0&-1\end{pmatrix}$</Opt>
+  <Explain>Control q1 means: flip q0 when the **right** bit is 1. So $|01\rangle \leftrightarrow |11\rangle$ (indices 1 and 3), and $|00\rangle$, $|10\rangle$ stay put. The first option is the usual CNOT 0→1, the third is SWAP, and the last is CZ.</Explain>
+</Quiz>
+
+---
+
+## CZ, SWAP and controlled-anything
+
+**Controlled-Z** applies a $-1$ to $|11\rangle$ and leaves everything else alone:
+
+$$
+CZ = \mathrm{diag}(1, 1, 1, -1).
+$$
+
+Look at that definition: it never says which qubit is the control. "Phase $-1$ when *both* are 1" is symmetric, so **CZ has no direction**. Circuit diagrams often draw it as two dots joined by a line. Many superconducting processors use CZ as their native two-qubit gate, and a compiler builds every CNOT from it with Hadamards (Lesson 7.3).
+
+**SWAP** exchanges two qubits: $|ab\rangle \to |ba\rangle$. It is not a native gate on most hardware. Engineers build it from CNOTs, using a trick every programmer knows: the XOR swap `a ^= b; b ^= a; a ^= b`.
+
+<CircuitLab title="Challenge: build SWAP from CNOTs only" n={2} gates={['CNOT']} goal={unitaryGoal('SWAP 0 1', 2, 'implement SWAP')} challengeId="u7l2-swap" maxGates={3} showBloch={false} columns={5} />
+
+<Note title="Why SWAPs matter">
+On a chip, qubits can usually interact only with their neighbours. To apply a CNOT between distant qubits, the compiler routes them together with chains of SWAPs, and each SWAP costs 3 CNOTs. This "routing overhead" is a big part of why qubit **connectivity** is a selling point for hardware.
+</Note>
+
+**Controlled-U** in general. Any single-qubit $U$ can be made conditional on a control. The block form $\begin{pmatrix} I&0\\0&U\end{pmatrix}$ says that the control picks between doing nothing and doing $U$. On a superposed control, both happen, each in its own branch. Lesson 7.3 shows how to build any $C(U)$ from CNOTs and single-qubit gates.
+
+---
+
+## Toffoli: AND, made reversible
+
+The **Toffoli** gate (CCNOT, or CCX) has two controls and one target. It flips the target only when **both** controls are 1:
+
+$$
+\text{CCX}|a, b, c\rangle = |a,\ b,\ c\oplus (a\land b)\rangle .
+$$
+
+It is an $8\times8$ permutation matrix that swaps $|110\rangle \leftrightarrow |111\rangle$ and leaves the other six basis states fixed. Set $c = 0$ and the target receives $a\land b$, a reversible **AND**. Toffoli is universal for classical reversible computing (it can also do NOT and FANOUT), so **every classical circuit can be run inside a quantum computer**. Lesson 7.6 develops this.
+
+Fed superposed inputs, a Toffoli computes the AND of every input combination at once, each in its own branch:
+
+<CircuitLab title="Challenge: compute AND of every input at once" n={3} gates={['CCX', 'CNOT', 'X']} initialState={[[0.5, 0], [0, 0], [0.5, 0], [0, 0], [0.5, 0], [0, 0], [0.5, 0], [0, 0]]} goal={stateGoal([[0.5, 0], [0, 0], [0.5, 0], [0, 0], [0.5, 0], [0, 0], [0, 0], [0.5, 0]], 'reach ½(|000⟩+|010⟩+|100⟩+|111⟩)')} challengeId="u7l2-and" maxGates={3} qubitLabels={['a', 'b', 'a∧b']} columns={4} />
+
+<Warning title="This is not 'trying all inputs in parallel'">
+The output is a superposition of all four input/output rows of the AND truth table. But measuring it gives you **one random row**. That is no better than evaluating AND on a random input. Quantum speed-ups come from making the branches *interfere* so that the wrong answers cancel. A superposition of answers on its own gives you nothing. Lessons 7.4 and 7.6 show the interference half of the story.
+</Warning>
+
+<Quiz id="u7l2-toffoli-cost">
+  <Q>Which statement about the Toffoli gate is correct?</Q>
+  <Opt>It is not unitary, because AND is irreversible</Opt>
+  <Opt correct>It is unitary: it keeps $a$ and $b$, so the inputs can always be recovered</Opt>
+  <Opt>It can only act on basis states, not superpositions</Opt>
+  <Opt>It entangles all three qubits whatever the input</Opt>
+  <Explain>Plain AND throws information away: an output of 0 could come from three different inputs. Toffoli keeps its two inputs and XORs the AND into a third bit, which makes it a permutation of the 8 basis states and therefore unitary. On basis inputs it creates no entanglement at all.</Explain>
+</Quiz>
+
+<History>
+Tommaso Toffoli introduced his gate in 1980 while studying reversible computing at MIT. With Edward Fredkin he showed that reversible logic can do everything ordinary logic can. Fredkin's own gate, the controlled-SWAP, became the basis of their "billiard-ball computer" thought experiment. On fault-tolerant quantum hardware a Toffoli is built from 6 CNOTs and 7 $T$-type gates. It has been proven that no circuit uses fewer CNOTs.
+</History>
+
+<CSCorner>
+The Toffoli gate is to reversible logic what NAND is to ordinary logic: one gate that builds everything. With $c = 1$ it computes NAND as $|a,b,1\rangle \to |a, b, \lnot(a\land b)\rangle$, and NAND is universal. The price is that every gate keeps its inputs around. The extra outputs pile up as **garbage**, and Lesson 7.6 shows why garbage is poison in quantum circuits.
+</CSCorner>
+
+---
+
+## Summary
+
+- Circuit diagrams: wires = qubits, time runs left → right, **q0 is the top wire = left-most ket bit** (this course, Nielsen & Chuang, Quirk). The matrix of "$A$ then $B$" is $BA$, and gates side by side combine as $A\otimes B$.
+- CNOT $|a,b\rangle\to|a,b\oplus a\rangle$. It is linear, so a superposed control produces entanglement. It is **not** "copy": it leaves $|{+}{+}\rangle$ unchanged.
+- Controlled-$U$ $= |0\rangle\langle0|\otimes I + |1\rangle\langle1|\otimes U$, block-diagonal when the control is on top.
+- CZ $=\mathrm{diag}(1,1,1,-1)$ is **symmetric**. SWAP = 3 CNOTs. Toffoli = reversible AND, universal for classical logic.
+- **Qiskit puts q0 on the right** (little-endian). Always check the convention before comparing matrices or bit strings.

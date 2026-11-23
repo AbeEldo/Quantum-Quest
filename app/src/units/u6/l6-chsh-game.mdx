@@ -1,0 +1,140 @@
+import { ClassicalChshTable, ChshQuantumPlayer } from './widgets/ChshGameWidgets';
+
+Bell's theorem as an inequality about correlators is correct, but it's a bit abstract. Computer scientists recast it as a **game**, and the game makes the quantum advantage something you can score.
+
+<Definition term="the CHSH game">
+Alice and Bob are put in separate rooms and can't communicate once the game starts. They can agree on a strategy beforehand and share anything they like: notes, random bits, entangled qubits.
+
+1. A referee picks two **independent random bits**: $x$ for Alice and $y$ for Bob.
+2. Alice answers a bit $a$, and Bob answers a bit $b$.
+3. They **win** if $\;a \oplus b = x \wedge y.$
+
+In words: if **both** questions are 1, their answers must **differ**. Otherwise their answers must **agree**.
+</Definition>
+
+<Predict id="u6l6-best-classical">
+  <Q>What is the highest win probability any classical strategy can guarantee (shared random bits allowed, no communication)?</Q>
+  <Opt>50%</Opt>
+  <Opt correct>75%</Opt>
+  <Opt>About 85%</Opt>
+  <Opt>100%, with a clever enough strategy</Opt>
+  <Explain>"Always answer 0" wins whenever $x\wedge y = 0$, which is 3 of the 4 equally likely question pairs: 75%. No classical strategy does better. Entangled qubits reach about **85.4%**.</Explain>
+  <Reveal>
+That gap, 75% versus 85.4%, is Bell's theorem written as a scoreboard. This lesson shows that 75% is the ceiling for classical strategies, then finds the quantum strategy that breaks through it. You'll tune the measurement angles yourself.
+  </Reveal>
+</Predict>
+
+---
+
+## The classical ceiling: 75%
+
+A deterministic classical strategy is just two rulebooks: Alice answers $a_0$ when $x = 0$ and $a_1$ when $x = 1$, and Bob answers $b_0$ or $b_1$. That's 4 bits, so there are only 16 strategies. Try them:
+
+<ClassicalChshTable />
+
+You'll find that the best strategies win exactly 3 of the 4 questions. Here's why none can win all 4. Winning every question would need
+
+$$
+a_0\oplus b_0 = 0,\quad a_0\oplus b_1 = 0,\quad a_1\oplus b_0 = 0,\quad a_1\oplus b_1 = 1 .
+$$
+
+XOR all four equations. On the left, each variable appears exactly twice, so everything cancels to 0. On the right, $0\oplus0\oplus0\oplus1 = 1$. That's a contradiction, so at most 3 of the 4 can hold, and every deterministic strategy wins **at most 75%**.
+
+**Shared randomness doesn't help.** A randomised strategy is a probability mixture of deterministic ones, and its win rate is the matching weighted average of numbers that are each $\le 75\%$. This is the same convexity argument as the CHSH bound, and it isn't a coincidence: the win probability is $p_{\text{win}} = \tfrac12 + \tfrac{S}{8}$, so $|S|\le 2$ means $p_{\text{win}}\le\tfrac34$.
+
+<Quiz id="u6l6-classical">
+  <Q>Alice always answers $a = x$. Bob always answers $b = 0$. What is their win rate?</Q>
+  <Opt>100%</Opt>
+  <Opt correct>75%</Opt>
+  <Opt>50%</Opt>
+  <Opt>25%</Opt>
+  <Explain>Check the four questions. $(0,0)$: $a\oplus b = 0$, need 0, win. $(0,1)$: $0\oplus0 = 0$, need 0, win. $(1,0)$: $1\oplus 0 = 1$, need 0, lose. $(1,1)$: $1\oplus0 = 1$, need 1, win. That's 3 of 4. Every strategy that loses on only one question hits the ceiling.</Explain>
+</Quiz>
+
+---
+
+## The quantum strategy
+
+Before the game, Alice and Bob share a Bell pair $|\Phi^+\rangle$. When a question arrives, each **measures their qubit at an angle that depends on their question**, and the outcome is their answer.
+
+From Lesson 3, measuring $|\Phi^+\rangle$ at real-plane angles $\theta_A$ and $\theta_B$ gives
+
+$$
+P(a = b) = \cos^2(\theta_A - \theta_B).
+$$
+
+So the players control *how correlated* their answers are, round by round, without communicating. For three of the question pairs they want to agree, so those angles should be close. For $(1,1)$ they want to disagree, so those angles should be nearly perpendicular. Each angle appears in two question pairs, so you can't satisfy everything perfectly, but you can do better than classical.
+
+**Find the angles.** Each dial is a measurement direction. The four boxes show the exact win probability for each question pair, and the meter shows the average.
+
+<ChshQuantumPlayer challengeId="u6l6-angles" />
+
+<Try>
+- First try matching angles, e.g. all four dials at 0°. Every question pair agrees: 75%, the classical score.
+- Rotate Bob's dials a little toward $\pm 22.5°$ and Alice's $x=1$ dial to $45°$. Watch the $(1,1)$ box climb while the others drop only a little.
+- Once you're above 85%, play 1000 rounds and watch the running win rate settle near 85.4%, well above the yellow 75% line.
+</Try>
+
+---
+
+## Why 85.4%: a circle of angles
+
+The optimal strategy (Alice at $0°, 45°$, Bob at $22.5°, -22.5°$) has a pleasing geometry. Put the four directions on a circle:
+
+$$
+\underbrace{-22.5°}_{b_1}\;\xrightarrow{22.5°}\;\underbrace{0°}_{a_0}\;\xrightarrow{22.5°}\;\underbrace{22.5°}_{b_0}\;\xrightarrow{22.5°}\;\underbrace{45°}_{a_1}
+$$
+
+The three pairs that must **agree**, $(a_0,b_0)$, $(a_0,b_1)$ and $(a_1,b_0)$, are each $22.5°$ apart and agree with probability $\cos^2 22.5°$. The pair that must **differ**, $(a_1,b_1)$, is $67.5°$ apart and *disagrees* with probability $\sin^2 67.5° = \cos^2 22.5°$. Every question is won with the same probability:
+
+$$
+p_{\text{win}} = \cos^2\frac{\pi}{8} = \frac{2+\sqrt2}{4} \approx 0.854 .
+$$
+
+<NumQuiz id="u6l6-cos2" answer={0.8536} tol={0.002}>
+  <Q>Compute the quantum win probability $\cos^2(\pi/8)$ to three decimal places. Check it against $\tfrac12 + \tfrac{S}{8}$ with $S = 2\sqrt2$.</Q>
+  <Explain>$\cos^2(\pi/8) = \tfrac12(1 + \cos\tfrac\pi4) = \tfrac12 + \tfrac{\sqrt2}{4} \approx 0.8536$. And $\tfrac12 + \tfrac{2\sqrt2}{8} = \tfrac12 + \tfrac{\sqrt2}{4}$, the same number. Tsirelson's bound means **no quantum strategy can do better**, so 85.4% is the true quantum maximum for this game.</Explain>
+</NumQuiz>
+
+<Warning>
+"The quantum players are secretly communicating." **No.** Look at Alice's answers alone: they're a fair coin, 50/50, no matter what Bob's question was. The same goes for Bob. Neither player's output carries any information about the other's input. That's why entanglement can't signal. What entanglement provides is *correlations* that depend on both inputs more strongly than any shared script could.
+</Warning>
+
+---
+
+## Noise kills the advantage
+
+Real Bell pairs aren't perfect. Model a noisy pair as $|\Phi^+\rangle$ with probability $V$ (the **visibility**) and complete junk otherwise. Every correlation gets multiplied by $V$:
+
+$$
+p_{\text{win}} = \tfrac12 + V\cdot\tfrac{\sqrt2}{4} .
+$$
+
+The quantum strategy beats 75% only if $V > 1/\sqrt2 \approx 0.707$. This is why Bell tests need high-quality entanglement, and why the next lesson's experiments were so hard.
+
+<NumQuiz id="u6l6-noise" answer={0.818} tol={0.003}>
+  <Q>A source produces pairs with visibility $V = 0.9$. What is the best quantum win probability?</Q>
+  <Explain>$\tfrac12 + 0.9\cdot\tfrac{\sqrt2}{4} = 0.5 + 0.318 = 0.818$. That's still comfortably above 75%. At $V = 0.7$ it would be $0.747$, below the classical ceiling.</Explain>
+</NumQuiz>
+
+<CSCorner>
+CHSH is the simplest **nonlocal game**, and nonlocal games have become a major topic in theoretical CS:
+
+- **Device-independent cryptography & randomness:** if you observe a CHSH win rate near 85%, the devices *must* be measuring entangled qubits, whoever built them. That certifies fresh randomness and secret keys (World 8).
+- **Self-testing / rigidity:** winning near-optimally forces the strategy to be (essentially) the one you found, $|\Phi^+\rangle$ and those exact angles.
+- **Complexity theory:** with entangled provers, multi-prover interactive proofs become astonishingly powerful. The 2020 result **MIP\* = RE** (Ji, Natarajan, Vidick, Wright, Yuen) shows they can verify answers to problems as hard as the halting problem.
+</CSCorner>
+
+<History>
+Recasting Bell inequalities as cooperative games became standard in the 2000s. An influential paper by **Cleve, Høyer, Toner and Watrous (2004)**, "Consequences and limits of nonlocal strategies", analysed CHSH and other games from a complexity-theory point of view. The game version is now the usual way to teach Bell's theorem to computer scientists: a referee, two isolated players, and a provable gap between 75% and 85.4%.
+</History>
+
+---
+
+## Summary
+
+- **CHSH game:** random bits $x, y$; win iff $a\oplus b = x\wedge y$.
+- **Classical ceiling 75%:** the four win conditions XOR to $0 = 1$, so at most 3 of 4 can hold, and shared randomness only averages.
+- **Quantum strategy:** share $|\Phi^+\rangle$. Alice measures at $0°$ or $45°$, Bob at $\pm22.5°$, and every question is won with probability $\cos^2(\pi/8)\approx 85.4\%$, the maximum allowed by Tsirelson's bound.
+- $p_{\text{win}} = \tfrac12 + S/8$: the game *is* the CHSH inequality.
+- Each player's output alone is a fair coin, so there's no signalling. Noise with visibility $V \le 1/\sqrt2$ erases the advantage.

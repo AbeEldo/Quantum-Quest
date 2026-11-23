@@ -1,0 +1,171 @@
+import { CommutatorLab } from './widgets/CommutatorLab';
+import { UncertaintyExplorer } from './widgets/UncertaintyExplorer';
+
+In World 3 you chained Stern–Gerlach magnets: measure $z$, then $x$, then $z$ again. The second $z$ measurement came out random, even though the first one had just "settled" it. The $x$ measurement had scrambled $z$.
+
+A natural reaction is that our magnets are too crude: better apparatus would measure $x$ gently enough to leave $z$ alone. Then you could know both components at once, and the spin would just be an ordinary arrow.
+
+<Predict id="u4l3-both-sharp">
+  <Q>Is there any spin-½ state for which **both** $\sigma_z$ and $\sigma_x$ have definite (zero-spread) values?</Q>
+  <Opt>Yes, with clever enough preparation</Opt>
+  <Opt correct>No, never, whatever the apparatus</Opt>
+  <Opt>Only at very low temperatures</Opt>
+  <Reveal>
+**No.** A zero-spread value of $\sigma_z$ means the state is an eigenvector of $\sigma_z$: the north or south pole. A zero-spread $\sigma_x$ means it sits at $\pm x$ on the equator. No point is in both places. Better magnets don't help, because this is a statement about **states**, not apparatus. This lesson shows how to see such conflicts coming from the matrices alone, using the **commutator**.
+  </Reveal>
+</Predict>
+
+---
+
+## The commutator
+
+For numbers, $ab = ba$. For matrices, order matters. The **commutator** measures by how much:
+
+$$
+[\hat A, \hat B] \;=\; \hat A\hat B - \hat B\hat A .
+$$
+
+If $[\hat A,\hat B] = 0$, the observables **commute**. Explore some pairs:
+
+<CommutatorLab />
+
+<Try>
+- $\sigma_x$ with $\sigma_y$: the commutator is $2i\sigma_z$. Try the other pairs: $[\sigma_y,\sigma_z] = 2i\sigma_x$ and $[\sigma_z,\sigma_x] = 2i\sigma_y$.
+- The diagonal "energy" $\mathcal E$ with $\sigma_z$: zero. Both are diagonal in the same basis.
+- $\mathcal E$ with $\sigma_x$: not zero.
+- Anything with $I$: always zero. Asking "is the particle there at all?" is compatible with every question.
+</Try>
+
+The three Pauli commutators fit into one formula worth memorising:
+
+$$
+[\sigma_x,\sigma_y] = 2i\sigma_z, \quad [\sigma_y,\sigma_z] = 2i\sigma_x, \quad [\sigma_z,\sigma_x] = 2i\sigma_y \qquad \big(\text{compactly: } [\sigma_j,\sigma_k] = 2i\,\varepsilon_{jkl}\,\sigma_l\big).
+$$
+
+Here $\varepsilon_{jkl}$ is $+1$ for cyclic orders $(x,y,z)$, $-1$ for anticyclic orders, and $0$ if an index repeats.
+
+<Quiz id="u4l3-commute-which">
+  <Q>Which pairs commute? (Select all that apply.)</Q>
+  <Opt correct>$\sigma_z$ and $|0\rangle\langle 0|$</Opt>
+  <Opt>$\sigma_x$ and $\sigma_z$</Opt>
+  <Opt correct>$\sigma_z\otimes I$ and $I\otimes\sigma_x$ (operators on different qubits)</Opt>
+  <Opt>$\sigma_y$ and the Hadamard $H = (\sigma_x + \sigma_z)/\sqrt2$</Opt>
+  <Explain>$|0\rangle\langle 0| = (I + \sigma_z)/2$ obviously commutes with $\sigma_z$. Operators acting on *different* qubits always commute: $(A\otimes I)(I\otimes B) = A\otimes B = (I\otimes B)(A\otimes I)$. $[\sigma_y, H] = ([\sigma_y,\sigma_x] + [\sigma_y,\sigma_z])/\sqrt2 = (-2i\sigma_z + 2i\sigma_x)/\sqrt2 \ne 0$.</Explain>
+</Quiz>
+
+---
+
+## Compatible vs incompatible observables
+
+Why should the commutator decide whether two quantities can both be sharp? Here's the core of the argument.
+
+Suppose $|a\rangle$ is an eigenvector of $\hat A$ with a non-degenerate eigenvalue $a$, and $[\hat A,\hat B] = 0$. Then
+
+$$
+\hat A\big(\hat B|a\rangle\big) = \hat B\hat A|a\rangle = a\,\big(\hat B|a\rangle\big).
+$$
+
+So $\hat B|a\rangle$ is *also* an eigenvector of $\hat A$ with eigenvalue $a$. Since that eigenspace is one-dimensional, $\hat B|a\rangle$ must be a multiple of $|a\rangle$, which means $|a\rangle$ is an eigenvector of $\hat B$ too. Every eigenvector of $\hat A$ is an eigenvector of $\hat B$.
+
+<KeyIdea>
+**Commuting Hermitian operators share a complete set of eigenvectors.** (This holds even with degeneracies, where you choose the basis cleverly.) In those shared eigenstates both observables are sharp: they are **compatible**. You can measure them in either order, or together, without disturbing each other.
+
+If they *don't* commute, there is no complete shared eigenbasis. Some states, and for Pauli pairs *every* state, force at least one of them to have spread. They are **incompatible**.
+</KeyIdea>
+
+<CSCorner>
+Commutation is the quantum version of **"these two operations can be reordered."** Compilers exploit it the same way they reorder independent instructions. Commuting gates can be swapped or run in parallel, and quantum compilers do exactly that. In **quantum error correction** (World 11), the stabilizer measurements are designed to commute with each other. That's why you can measure dozens of parity checks without them interfering. The analogy breaks in one way: a classical computer can always *read* two registers without disturbing either. In quantum mechanics even *reading* is an operation, and reads can fail to commute.
+</CSCorner>
+
+---
+
+## The Robertson uncertainty relation
+
+How much spread do incompatible observables force? In 1929 Howard Percy Robertson proved a general bound. For **any** two observables and **any** state,
+
+$$
+\Delta A\;\Delta B \;\ge\; \tfrac12\,\big|\langle[\hat A,\hat B]\rangle\big| .
+$$
+
+<DeepDive title="Derivation (Cauchy–Schwarz in four lines)">
+Define the shifted operators $\hat a = \hat A - \langle A\rangle$ and $\hat b = \hat B - \langle B\rangle$, and the vectors $|f\rangle = \hat a|\psi\rangle$, $|g\rangle = \hat b|\psi\rangle$. Then $(\Delta A)^2 = \langle f|f\rangle$ and $(\Delta B)^2 = \langle g|g\rangle$.
+
+**Cauchy–Schwarz:** $\langle f|f\rangle\langle g|g\rangle \ge |\langle f|g\rangle|^2 \ge (\operatorname{Im}\langle f|g\rangle)^2$.
+
+Now $\langle f|g\rangle = \langle\psi|\hat a\hat b|\psi\rangle$, and its imaginary part is $\frac{1}{2i}\big(\langle\hat a\hat b\rangle - \langle\hat b\hat a\rangle\big) = \frac{1}{2i}\langle[\hat A,\hat B]\rangle$. The shifts cancel in the commutator.
+
+So $(\Delta A)^2(\Delta B)^2 \ge \frac14|\langle[\hat A,\hat B]\rangle|^2$. Take square roots. ∎
+
+Schrödinger (1930) kept the real part too, which gives a slightly stronger bound involving the covariance.
+</DeepDive>
+
+For spins, plug in $[\sigma_x,\sigma_y] = 2i\sigma_z$:
+
+$$
+\Delta\sigma_x\,\Delta\sigma_y \;\ge\; |\langle\sigma_z\rangle| .
+$$
+
+Notice the bound depends on the **state**. Explore it on the sphere. The coloured arrows are the three spin averages (the Bloch vector's components), and each bar is a spread $\Delta\sigma_i = \sqrt{1 - \langle\sigma_i\rangle^2}$.
+
+<UncertaintyExplorer challengeId="u4l3-balance" />
+
+<Try>
+- Put the state at the north pole. $\Delta\sigma_z = 0$, but $\Delta\sigma_x = \Delta\sigma_y = 1$, so the product equals the bound exactly (it's **saturated**).
+- Move it to $+x$. Now the $(\sigma_x, \sigma_y)$ bound is $|\langle\sigma_z\rangle| = 0$, so Robertson says nothing, even though $\Delta\sigma_y = 1$.
+- Watch the readout $(\Delta\sigma_x)^2 + (\Delta\sigma_y)^2 + (\Delta\sigma_z)^2$. It is **always 2**, wherever you drag.
+- Then solve the challenge.
+</Try>
+
+That last observation is the cleanest way to say **spin components can't all be sharp**. For a pure state $|\vec r| = 1$, so
+
+$$
+\sum_i (\Delta\sigma_i)^2 = \sum_i \big(1 - \langle\sigma_i\rangle^2\big) = 3 - |\vec r|^2 = 2 .
+$$
+
+At most one spread can be zero, and only if the other two are both maximal. Spin isn't a little arrow with three definite components. You can make **one** component sharp at the cost of the other two.
+
+<NumQuiz id="u4l3-bound-value" answer={0.5} tol={0.01}>
+  <Q>A spin has Bloch angle $\theta = 60°$ (any $\phi$). What is the Robertson lower bound on $\Delta\sigma_x\,\Delta\sigma_y$?</Q>
+  <Hint>The bound is $|\langle\sigma_z\rangle| = |\cos\theta|$.</Hint>
+  <Explain>$|\cos 60°| = 0.5$. The actual product depends on $\phi$. For $\phi = 0$ it's $\sqrt{1 - 0.75}\cdot 1 = 0.5$, exactly on the bound: states in the $xz$ or $yz$ planes saturate it.</Explain>
+</NumQuiz>
+
+---
+
+## Heisenberg's version, and what it really means
+
+The most famous uncertainty relation involves position and momentum. Their commutator is a constant (you'll see why in World 5):
+
+$$
+[\hat x, \hat p] = i\hbar \quad\Longrightarrow\quad \Delta x\,\Delta p \;\ge\; \frac{\hbar}{2} .
+$$
+
+Because the commutator is a number rather than an operator, this bound is the same for **every** state. No wavefunction can be both narrow in position and narrow in momentum. World 5 shows this as **Fourier duality**: a narrow pulse needs a wide band of frequencies.
+
+<Warning>
+**Uncertainty is not about clumsy measurements.** Heisenberg's original 1927 argument imagined a "gamma-ray microscope" whose photon kicks the electron. It's a vivid picture, but it's misleading. Robertson's inequality is about the spreads that are **built into the state itself**, measured on many separately prepared copies. Each copy is measured once, for only one of the two quantities. No disturbance is involved at all. (Measurement-disturbance trade-offs do exist, but they're a separate, subtler family of results.)
+</Warning>
+
+<Quiz id="u4l3-meaning">
+  <Q>An experimenter prepares many identical spins in $|+\rangle$, measures $\sigma_x$ on half of them and $\sigma_y$ on the other half. What does she find?</Q>
+  <Opt>Both spreads are 1, because the uncertainty principle forbids any sharp value</Opt>
+  <Opt correct>$\sigma_x$ always gives $+1$, while $\sigma_y$ is a 50/50 coin flip</Opt>
+  <Opt>Both are perfectly sharp, since the bound $|\langle\sigma_z\rangle|$ is zero</Opt>
+  <Opt>She can't measure them because they don't commute</Opt>
+  <Explain>$|+\rangle$ is a $\sigma_x$ eigenstate, so $\Delta\sigma_x = 0$, and it lies on the equator, so $\Delta\sigma_y = 1$. The Robertson bound $|\langle\sigma_z\rangle| = 0$ is satisfied trivially. A zero bound doesn't mean both can be sharp. The sum rule $\sum(\Delta\sigma_i)^2 = 2$ still forces the spread somewhere.</Explain>
+</Quiz>
+
+<History>
+**Heisenberg** submitted his uncertainty paper in March 1927 with the microscope argument. Within months **Earle Kennard** proved the sharp form $\Delta x\,\Delta p \ge \hbar/2$ using standard deviations. **H. P. Robertson** generalised it to any pair of observables in a one-page *Physical Review* note in 1929, and **Schrödinger** strengthened it in 1930. Bohr and Einstein spent years arguing over thought experiments that tried to beat it. Einstein never found one that worked.
+</History>
+
+---
+
+## Summary
+
+- **Commutator** $[\hat A,\hat B] = \hat A\hat B - \hat B\hat A$. For spins, $[\sigma_j,\sigma_k] = 2i\varepsilon_{jkl}\sigma_l$.
+- **Commuting observables are compatible:** they share eigenvectors and can be sharp together. Non-commuting ones are **incompatible**.
+- **Robertson:** $\Delta A\,\Delta B \ge \frac12|\langle[\hat A,\hat B]\rangle|$. For spins, $\Delta\sigma_x\Delta\sigma_y \ge |\langle\sigma_z\rangle|$. The bound depends on the state.
+- For pure spin states $\sum_i(\Delta\sigma_i)^2 = 2$: at most one component can be sharp.
+- $[\hat x,\hat p] = i\hbar$ gives $\Delta x\Delta p \ge \hbar/2$ for every state.
+- Uncertainty is a property of **states**, not of clumsy apparatus.

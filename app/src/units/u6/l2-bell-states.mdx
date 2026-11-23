@@ -1,0 +1,168 @@
+import { EntanglementTester } from './widgets/EntanglementTester';
+import { c } from '../../engine/complex';
+
+Here is a two-qubit state that will occupy us for the rest of this world:
+
+$$
+|\Phi^+\rangle = \frac{1}{\sqrt2}\big(|00\rangle + |11\rangle\big).
+$$
+
+Measure both qubits and you get $00$ half the time and $11$ half the time, never $01$ or $10$. The two qubits always agree. Last lesson you learned to build two-qubit states by combining single-qubit states with $\otimes$. So try it: **which state of $q_0$, combined with which state of $q_1$, gives $|\Phi^+\rangle$?**
+
+<Predict id="u6l2-factor">
+  <Q>Can you find single-qubit states $|\alpha\rangle$, $|\beta\rangle$ with $|\alpha\rangle\otimes|\beta\rangle = \tfrac{1}{\sqrt2}(|00\rangle+|11\rangle)$?</Q>
+  <Opt>Yes: $|+\rangle \otimes |+\rangle$</Opt>
+  <Opt>Yes, but only with complex amplitudes</Opt>
+  <Opt correct>No, no such pair exists</Opt>
+  <Explain>Suppose $(\alpha_0\beta_0,\ \alpha_0\beta_1,\ \alpha_1\beta_0,\ \alpha_1\beta_1) = \tfrac{1}{\sqrt2}(1, 0, 0, 1)$. Multiply the outer entries: $(\alpha_0\beta_0)(\alpha_1\beta_1) = \tfrac12$. Multiply the inner entries: $(\alpha_0\beta_1)(\alpha_1\beta_0) = 0$. But these are the *same four numbers* multiplied in a different order, so they must be equal. $\tfrac12 \neq 0$, a contradiction.</Explain>
+  <Reveal>
+**$|\Phi^+\rangle$ has no description as "this qubit is in state X, that qubit is in state Y".** The pair has a perfectly definite state, but neither qubit has a state of its own. That's what **entanglement** means.
+
+$|+\rangle|+\rangle$, by contrast, is $\tfrac12(|00\rangle+|01\rangle+|10\rangle+|11\rangle)$. It gives all four outcomes, with no correlation at all.
+  </Reveal>
+</Predict>
+
+---
+
+## A one-line entanglement test
+
+The trick in that proof works for any state. Write the amplitudes of $a|00\rangle + b|01\rangle + c|10\rangle + d|11\rangle$ as a 2×2 matrix, with rows for $q_0$ and columns for $q_1$:
+
+$$
+M = \begin{pmatrix} a & b \\ c & d \end{pmatrix}.
+$$
+
+A product state has $M = \begin{pmatrix}\alpha_0\beta_0 & \alpha_0\beta_1\\ \alpha_1\beta_0 & \alpha_1\beta_1\end{pmatrix} = \vec\alpha\,\vec\beta^{\,T}$, an outer product. That means $M$ has **rank 1**, and a 2×2 matrix has rank 1 exactly when its determinant vanishes.
+
+<Definition term="entangled (pure two-qubit state)">
+$a|00\rangle + b|01\rangle + c|10\rangle + d|11\rangle$ is a **product state** if and only if
+
+$$
+ad - bc = 0 .
+$$
+
+Otherwise it is **entangled**. The quantity $\mathcal{C} = 2\,|ad - bc|$, called the **concurrence**, runs from 0 (product) to 1 (maximally entangled).
+</Definition>
+
+Drag the four amplitudes around and watch the verdict. When the state is a product, the tester shows you the two factors.
+
+<EntanglementTester />
+
+<Try>
+- Click $|+\rangle|+\rangle$ and drag the $d$ arrow so it points left ($d<0$). The state flips from product to **maximally** entangled.
+- Start from $|00\rangle$ and slowly grow $d$. The concurrence rises smoothly from 0. Entanglement comes in degrees.
+- Watch the two mini Bloch spheres. For a product state each arrow is full length. As entanglement grows, **the arrows shrink**, and at $\mathcal C = 1$ they vanish to a dot.
+</Try>
+
+<Quiz id="u6l2-test">
+  <Q>Is $\tfrac12\big(|00\rangle + |01\rangle + |10\rangle - |11\rangle\big)$ entangled?</Q>
+  <Opt>No, all four amplitudes have the same magnitude, so it's $|+\rangle|+\rangle$ with a phase</Opt>
+  <Opt correct>Yes, maximally: $ad - bc = -\tfrac12$, so $\mathcal C = 1$</Opt>
+  <Opt>Yes, but only weakly: $\mathcal C = \tfrac14$</Opt>
+  <Explain>$ad - bc = \tfrac12\cdot(-\tfrac12) - \tfrac12\cdot\tfrac12 = -\tfrac12$, so $\mathcal C = 2\cdot\tfrac12 = 1$. A single minus sign in the right place turns a product state into a maximally entangled one. This state is what a controlled-$Z$ gate makes from $|+\rangle|+\rangle$.</Explain>
+</Quiz>
+
+---
+
+## Making entanglement: H then CNOT
+
+Single-qubit gates can never create entanglement, because $(U\otimes V)(|\alpha\rangle\otimes|\beta\rangle)$ is still a product. You need a gate where one qubit's state affects what happens to the other. The workhorse is the **controlled-NOT**:
+
+<Definition term="CNOT (controlled-NOT)">
+**Flip the target if the control is 1.** On basis states, with control $q_0$ and target $q_1$:
+
+$$
+|00\rangle\mapsto|00\rangle,\quad |01\rangle\mapsto|01\rangle,\quad |10\rangle\mapsto|11\rangle,\quad |11\rangle\mapsto|10\rangle .
+$$
+
+Like every gate, it acts **linearly** on superpositions: each term gets transformed and the amplitudes come along unchanged.
+</Definition>
+
+Linearity is the whole trick. Put the control in superposition with $H$, then apply CNOT:
+
+$$
+|00\rangle \xrightarrow{\;H\otimes I\;} \tfrac{1}{\sqrt2}\big(|00\rangle + |10\rangle\big) \xrightarrow{\;\text{CNOT}\;} \tfrac{1}{\sqrt2}\big(|00\rangle + |11\rangle\big) = |\Phi^+\rangle .
+$$
+
+The $|00\rangle$ branch leaves the target alone, and the $|10\rangle$ branch flips it. Neither branch is entangled on its own. The entanglement comes from the *superposition of the two branches*.
+
+**Your turn.** Build $|\Phi^+\rangle$. Pick **CNOT**, then click the control wire first and the target wire second, in the same column. Watch the mini Bloch spheres turn pink.
+
+<CircuitLab n={2} gates={['H', 'X', 'CNOT']} goal={{ kind: 'state', amps: [c(Math.SQRT1_2), c(0), c(0), c(Math.SQRT1_2)], label: 'prepare |Φ⁺⟩ = (|00⟩ + |11⟩)/√2' }} challengeId="u6l2-make-phi" maxGates={4} title="Challenge: make a Bell pair" />
+
+---
+
+## The four Bell states
+
+$|\Phi^+\rangle$ has three siblings. Together they form the **Bell basis**, an orthonormal basis of $\mathbb C^4$ made entirely of maximally entangled states:
+
+| name | state | measuring both in $Z$ gives |
+|---|---|---|
+| $\lvert\Phi^+\rangle$ | $\tfrac{1}{\sqrt2}(\lvert 00\rangle + \lvert 11\rangle)$ | always equal |
+| $\lvert\Phi^-\rangle$ | $\tfrac{1}{\sqrt2}(\lvert 00\rangle - \lvert 11\rangle)$ | always equal |
+| $\lvert\Psi^+\rangle$ | $\tfrac{1}{\sqrt2}(\lvert 01\rangle + \lvert 10\rangle)$ | always opposite |
+| $\lvert\Psi^-\rangle$ | $\tfrac{1}{\sqrt2}(\lvert 01\rangle - \lvert 10\rangle)$ | always opposite |
+
+The same H + CNOT circuit makes all four. You just change the input: $|00\rangle\to|\Phi^+\rangle$, $|01\rangle\to|\Psi^+\rangle$, $|10\rangle\to|\Phi^-\rangle$, $|11\rangle\to|\Psi^-\rangle$. $|\Phi^-\rangle$ and $|\Phi^+\rangle$ give *identical* statistics in the $Z$ basis, and only their relative phase tells them apart. You'll see in World 8 that this hidden phase can carry a classical bit.
+
+**Challenge:** build the **singlet** $|\Psi^-\rangle$. (Hint: prepare the right input first.)
+
+<CircuitLab n={2} gates={['H', 'X', 'Z', 'CNOT']} goal={{ kind: 'state', amps: [c(0), c(Math.SQRT1_2), c(-Math.SQRT1_2), c(0)], label: 'prepare |Ψ⁻⟩ = (|01⟩ − |10⟩)/√2' }} challengeId="u6l2-make-psim" maxGates={5} title="Challenge: make the singlet" />
+
+<Quiz id="u6l2-bell-orth">
+  <Q>What is $\langle \Phi^+ | \Phi^- \rangle$?</Q>
+  <Opt correct>0</Opt>
+  <Opt>$\tfrac12$</Opt>
+  <Opt>1</Opt>
+  <Opt>$-1$</Opt>
+  <Explain>$\tfrac12(\langle 00| + \langle 11|)(|00\rangle - |11\rangle) = \tfrac12(1 - 1) = 0$. The four Bell states are mutually orthogonal, so a suitable measurement (CNOT, then H, then measure both) can tell them apart perfectly. That *Bell measurement* is the engine of teleportation.</Explain>
+</Quiz>
+
+---
+
+## Where did the qubits' states go?
+
+Look again at the mini Bloch spheres for $|\Phi^+\rangle$. Both arrows have **zero length**: each qubit sits at the *centre* of its sphere. That's not a display bug.
+
+Ask what you'd see if you only had access to $q_0$. Measuring it in $Z$ gives 0 or 1 with 50% each. Rotate first and measure in $X$, and you still get 50/50. Measure along *any* axis and it's 50/50. A qubit that is completely random along every axis has Bloch vector $\vec 0$. Its description is the **maximally mixed state**, the quantum version of a fair coin. (World 10 formalises this with density matrices: $\rho = \tfrac12 I$.)
+
+<KeyIdea>
+**In a maximally entangled state, the whole is perfectly definite but each part is perfectly random.** All the information is stored in the *correlations* between the qubits, and none of it in either qubit alone. For partially entangled states the arrows shrink part-way. Arrow length measures how much of a state a qubit has *of its own*.
+</KeyIdea>
+
+<NumQuiz id="u6l2-length" answer={0.7071} tol={0.01}>
+  <Q>The pair is in $\cos(\pi/8)|00\rangle + \sin(\pi/8)|11\rangle$. How long is $q_0$'s Bloch vector?</Q>
+  <Hint>Only the $z$ component survives, since there are no coherences for $q_0$ alone. $z = P(q_0 = 0) - P(q_0 = 1)$.</Hint>
+  <Explain>$z = \cos^2(\pi/8) - \sin^2(\pi/8) = \cos(\pi/4) \approx 0.707$. The concurrence is $2\cos(\pi/8)\sin(\pi/8) = \sin(\pi/4) \approx 0.707$ as well. Check: $0.707^2 + 0.707^2 = 1$, matching the rule "length² + concurrence² = 1" from the tester.</Explain>
+</NumQuiz>
+
+<DeepDive title="Computing a reduced state (the partial trace)">
+For $|\psi\rangle = \sum_{ij} M_{ij}|i\rangle|j\rangle$, the state of $q_0$ alone is the 2×2 matrix $\rho_A = M M^\dagger$. Its diagonal holds the probabilities $P(q_0 = i)$, and its off-diagonal holds the coherence that sets the $x,y$ Bloch components. For $|\Phi^+\rangle$, $M = \tfrac{1}{\sqrt2} I$, so $\rho_A = \tfrac12 I$: no preferred direction at all. Similarly, $\rho_B = (M^\dagger M)^T$. This operation is called the **partial trace**. It is what the Circuit Lab's mini Bloch spheres compute.
+</DeepDive>
+
+<CSCorner>
+The test "$ad - bc = 0$" is really a statement about the rank of $M$, and the full story is the **singular value decomposition**. Write $M = U\Sigma V^\dagger$ and you get the **Schmidt decomposition**
+
+$$
+|\psi\rangle = \lambda_1 |u_1\rangle|v_1\rangle + \lambda_2|u_2\rangle|v_2\rangle,\quad \lambda_1^2+\lambda_2^2 = 1,
+$$
+
+with $\mathcal C = 2\lambda_1\lambda_2 = 2|\det M|$. One nonzero singular value means a product state. Two equal singular values mean maximal entanglement. For many qubits the same idea, applied to cuts of the system, gives **matrix product states** and tensor networks, the best classical tools for simulating weakly entangled quantum systems. The less entanglement a state has, the more compressible it is.
+</CSCorner>
+
+<History>
+Schrödinger introduced the word "entanglement" in English in a 1935 paper and immediately called it "not *one* but rather *the* characteristic trait of quantum mechanics, the one that enforces its entire departure from classical lines of thought." Einstein, as you'll see, thought it pointed to something missing from the theory. It took about 30 years, and John Bell, to turn that disagreement into an experiment.
+</History>
+
+<Warning>
+"Entangled just means correlated." **Not quite.** Two sealed envelopes holding the same random card are correlated, but that's ordinary classical correlation. The state is "both cards are the ace" or "both are the king", and we just don't know which. $|\Phi^+\rangle$ is different. Its qubits agree in the $Z$ basis, and they *also* agree in the $X$ basis, and in many other bases. Lesson 3 shows that no pre-agreed card trick reproduces all of that, and Bell's theorem (Lesson 5) makes the claim airtight.
+</Warning>
+
+---
+
+## Summary
+
+- A pure two-qubit state is a product iff the amplitude matrix has rank 1: **$ad - bc = 0$**. Otherwise it's **entangled**. Concurrence $2|ad-bc|$ measures how much.
+- **CNOT** flips the target when the control is 1 and acts linearly on superpositions. **H then CNOT** turns $|00\rangle$ into $|\Phi^+\rangle = \tfrac{1}{\sqrt2}(|00\rangle+|11\rangle)$.
+- The four **Bell states** $\Phi^\pm, \Psi^\pm$ form an orthonormal basis of maximally entangled states. They come from H + CNOT on the inputs 00, 10, 01, 11.
+- In a maximally entangled state each qubit alone is **maximally mixed**: Bloch vector $\vec 0$, random along every axis. The information sits entirely in the correlations.

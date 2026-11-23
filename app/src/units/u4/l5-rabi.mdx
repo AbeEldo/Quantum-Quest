@@ -1,0 +1,180 @@
+import { LarmorDemo } from './widgets/LarmorDemo';
+import { RabiLab } from './widgets/RabiLab';
+
+How do you actually *do* a gate on a real qubit? There's no tiny hand reaching in to rotate a Bloch vector. In IBM's and Google's superconducting chips, in trapped-ion machines, and in the MRI scanner at your local hospital, the answer is the same: **you shine a carefully timed burst of oscillating electromagnetic field on it, tuned to the qubit's own frequency.**
+
+This lesson puts together everything in World 4 (Hamiltonians, unitary evolution, the Bloch sphere) to explain how that works. It starts with a compass needle that refuses to point north.
+
+<Predict id="u4l5-precess">
+  <Q>A spin's magnetic moment points along $+x$, in a magnetic field along $+z$. Ignoring friction and radiation, what does the Bloch vector do?</Q>
+  <Opt>Swings to align with the field, like a compass needle</Opt>
+  <Opt>Oscillates back and forth through the $z$ axis, like a pendulum</Opt>
+  <Opt correct>Circles around the field direction at a fixed angle, like a gyroscope</Opt>
+  <Opt>Nothing: the field and the spin are perpendicular</Opt>
+  <Reveal>
+It **precesses**. The tilt from the field stays fixed while the vector sweeps around it, like a spinning top whose axis circles under gravity. A real spin does eventually relax toward alignment, but over a much longer time ($T_1$, which we'll meet in World 10). On the timescales that matter for control, precession is everything.
+  </Reveal>
+</Predict>
+
+---
+
+## Larmor precession
+
+A spin in a magnetic field $\vec B = B\hat z$ has energy $-\vec\mu\cdot\vec B$, where the magnetic moment $\vec\mu$ is proportional to the spin. Collect the constants into one frequency $\omega_0$, the **Larmor frequency**, and the Hamiltonian is
+
+$$
+\hat H = \frac{\hbar\omega_0}{2}\,\sigma_z .
+$$
+
+(Which of $|0\rangle$, $|1\rangle$ is the lower-energy state is a sign convention. Flipping it only reverses the direction of precession.)
+
+Last lesson told us exactly what this does: the two energy eigenstates $|0\rangle$, $|1\rangle$ pick up phases at different rates, so the relative phase winds around and **the Bloch vector rotates about $z$ at angular frequency $\omega_0$**. More generally, a field along any unit vector $\hat b$ gives $\hat H = \frac{\hbar\omega_0}{2}\hat b\cdot\vec\sigma$, and
+
+$$
+U(t) = e^{-i\omega_0 t\,\hat b\cdot\vec\sigma/2} = \text{rotation of the Bloch sphere by angle } \omega_0 t \text{ about } \hat b .
+$$
+
+This is the bridge between Hamiltonians and gates. **A Hamiltonian $\frac{\hbar\omega}{2}\hat n\cdot\vec\sigma$ switched on for time $t$ is a rotation by $\omega t$ about $\hat n$.** You met these rotations in World 3 as $R_x$, $R_y$, $R_z$. Now you know where they come from.
+
+<LarmorDemo />
+
+<Try>
+- Tilt the field. The state circles the orange line, and the readout $\langle\hat b\cdot\vec\sigma\rangle$ stays perfectly constant. That's **energy conservation**: $\hat H$ commutes with itself, so its expectation value never changes.
+- Drag the state onto the field axis. It stops moving. Energy eigenstates are stationary.
+</Try>
+
+The numbers are worth knowing. For an electron, $\omega_0/2\pi \approx 28$ GHz per tesla. For a proton, $\omega_0/2\pi \approx 42.58$ MHz per tesla, which is why a 3 T hospital MRI scanner operates near 128 MHz, in the FM radio band.
+
+<Quiz id="u4l5-conserved">
+  <Q>A spin precesses in a field along $\hat z$. Which quantity stays constant?</Q>
+  <Opt>$\langle\sigma_x\rangle$</Opt>
+  <Opt>$\langle\sigma_y\rangle$</Opt>
+  <Opt correct>$\langle\sigma_z\rangle$, and therefore $P(|0\rangle)$</Opt>
+  <Opt>None. Everything oscillates</Opt>
+  <Explain>Rotation about $z$ leaves the $z$ component fixed. Algebraically, $\sigma_z$ commutes with $\hat H \propto \sigma_z$, and any observable that commutes with the Hamiltonian is conserved. A field along $z$ therefore can't change $P(|0\rangle)$. To flip a qubit you need something more.</Explain>
+</Quiz>
+
+---
+
+## Resonance: the rotating-frame trick
+
+So a static field along $z$ can never flip $|0\rangle$ to $|1\rangle$. What if we add a **small** field along $x$? If it's static, the axis tilts only a tiny bit off $z$, and the spin keeps circling close to the pole. Still no flip.
+
+Here's the trick, discovered by Isidor Rabi's group in the 1930s: **make the small field oscillate at the precession frequency.** Push a child's swing in time with its motion and even tiny pushes add up. Same here.
+
+The cleanest way to see it is to **ride along**. Picture standing on a merry-go-round that turns at the drive frequency $\omega$ about $z$.
+
+- In that rotating frame, the big $z$ field almost vanishes. Only the mismatch survives, the **detuning** $\Delta = \omega_0 - \omega$.
+- The oscillating drive, which co-rotates with you, looks like a **static** field in the equatorial plane. Its direction is set by the drive's **phase** $\varphi$.
+
+The rotating-frame Hamiltonian is then
+
+$$
+\hat H_{\text{rot}} = \frac{\hbar\Delta}{2}\,\sigma_z + \frac{\hbar\Omega}{2}\big(\cos\varphi\,\sigma_x + \sin\varphi\,\sigma_y\big).
+$$
+
+Here $\Omega$, the **Rabi frequency**, is proportional to the drive amplitude. This is just another constant Hamiltonian of the form $\frac{\hbar}{2}\vec\Omega\cdot\vec\sigma$. So in the rotating frame, **the spin simply rotates about the axis $(\Omega\cos\varphi,\ \Omega\sin\varphi,\ \Delta)$ at rate $\Omega_{\text{eff}} = \sqrt{\Omega^2 + \Delta^2}$.**
+
+<DeepDive title="Where the rotating frame comes from (and the rotating-wave approximation)">
+Start from the lab Hamiltonian with a linearly polarised drive, $\hat H = \frac{\hbar\omega_0}{2}\sigma_z + \hbar\Omega\cos(\omega t + \varphi)\,\sigma_x$. Change variables to $|\tilde\psi\rangle = e^{i\omega t\sigma_z/2}|\psi\rangle$. Differentiating gives a new Schrödinger equation with
+
+$$
+\tilde H = e^{i\omega t\sigma_z/2}\hat H e^{-i\omega t\sigma_z/2} - \frac{\hbar\omega}{2}\sigma_z .
+$$
+
+The first piece of $\hat H$ becomes $\frac{\hbar\omega_0}{2}\sigma_z$ and the subtraction leaves $\frac{\hbar(\omega_0-\omega)}{2}\sigma_z = \frac{\hbar\Delta}{2}\sigma_z$. In the drive term, $\sigma_x$ gets rotated into $\cos\omega t\,\sigma_x - \sin\omega t\,\sigma_y$. Multiply by $\cos(\omega t + \varphi)$ and use product-to-sum identities. You get a **static** part $\frac{\hbar\Omega}{2}(\cos\varphi\,\sigma_x + \sin\varphi\,\sigma_y)$, plus terms oscillating at $2\omega$.
+
+The **rotating-wave approximation (RWA)** drops the $2\omega$ terms. They average out because they swing back and forth thousands of times during one slow Rabi rotation. That's an excellent approximation whenever $\Omega \ll \omega$, as in essentially every qubit. The small leftover effect is the Bloch–Siegert shift.
+</DeepDive>
+
+---
+
+## Rabi flopping, live
+
+Here's the rotating-frame dynamics running in real time. The orange line is the effective field axis.
+
+<RabiLab />
+
+<Try>
+- **On resonance** ($\Delta = 0$), press **▶ drive**. The state swings from $|0\rangle$ through the equator to $|1\rangle$ and back. That's **Rabi flopping**: $P(1)$ oscillates fully between 0 and 1.
+- Reset, then press **π pulse**. It stops exactly at $|1\rangle$. A rotation by $\pi$ is the $X$ gate. **π/2 pulse** stops on the equator, creating an equal superposition.
+- Change the **drive phase** $\varphi$ to $\pi/2$. The orange axis turns to $y$, so the same pulse now rotates about $y$.
+- Add **detuning**. The axis tilts up out of the equator, the circle no longer reaches the south pole, and the flopping gets *faster* and *weaker*. The chevron below shows the whole landscape.
+- Switch to the **lab frame**. Same physics, but now you see the qubit's fast native precession, with the slow Rabi rotation as a gradual spiral from pole to pole. That spiral is what really happens. The rotating frame is just the view that makes it simple.
+</Try>
+
+Solving for the probability of finding $|1\rangle$ after time $t$, starting from $|0\rangle$, gives the **Rabi formula**:
+
+$$
+P_1(t) = \frac{\Omega^2}{\Omega^2 + \Delta^2}\,\sin^2\!\Big(\frac{\sqrt{\Omega^2+\Delta^2}\;t}{2}\Big).
+$$
+
+On resonance this is $\sin^2(\Omega t/2)$, a full flop every $2\pi/\Omega$. Off resonance, the amplitude $\Omega^2/(\Omega^2+\Delta^2)$ is a Lorentzian in $\Delta$ with width about $\Omega$. That's how experimentalists **find** a qubit's frequency: sweep the drive frequency and look for the peak.
+
+<NumQuiz id="u4l5-detuned-max" answer={0.5} tol={0.01}>
+  <Q>You drive a qubit with detuning equal to the Rabi frequency, $\Delta = \Omega$. What is the maximum probability of reaching $|1\rangle$?</Q>
+  <Hint>Use the prefactor of the Rabi formula.</Hint>
+  <Explain>$\Omega^2/(\Omega^2 + \Omega^2) = 1/2$. The rotation axis is tilted $45°$ up from the equator, so the orbit from the north pole only reaches the equator.</Explain>
+</NumQuiz>
+
+<NumQuiz id="u4l5-pi-time" answer={20} tol={0.5}>
+  <Q>A superconducting qubit is driven on resonance with Rabi frequency $\Omega/2\pi = 25$ MHz. How long is a π pulse, in nanoseconds?</Q>
+  <Hint>A π pulse needs $\Omega t = \pi$, so $t = \pi/\Omega = 1/(2\cdot 25\text{ MHz})$.</Hint>
+  <Explain>$t = 1/(50\times10^6\ \text{s}^{-1}) = 20$ ns. That's typical: single-qubit gates on transmons take roughly 20–50 ns, while the qubit itself oscillates at about 5 GHz, hundreds of times faster.</Explain>
+</NumQuiz>
+
+---
+
+## Pulses are gates
+
+Now you can read a quantum circuit the way the hardware does:
+
+| Gate | Pulse (on resonance) |
+|---|---|
+| $X$ | π pulse, phase $\varphi = 0$ |
+| $Y$ | π pulse, phase $\varphi = \pi/2$ |
+| $\sqrt X$ (SX) | π/2 pulse, phase $0$ |
+| $R_z(\theta)$ | no pulse at all: shift the phase of all *later* pulses by $\theta$ (a "virtual Z") |
+| $H$ | e.g. $R_y(\pi/2)$ then $X$, or one π pulse with $\Delta = \Omega$ |
+
+IBM's superconducting processors, for example, natively implement $\sqrt X$ pulses, virtual $R_z$, and a two-qubit gate. Every circuit you write gets compiled into that vocabulary.
+
+Different hardware, same physics:
+
+- **Superconducting transmons:** qubit frequencies typically 4–7 GHz, driven by shaped microwave pulses through on-chip lines. You'll see where those levels come from in World 5.
+- **Trapped ions:** two hyperfine levels of an ion such as $^{171}$Yb$^+$ (about 12.6 GHz apart), driven by microwaves or by pairs of laser beams (Raman transitions). Gates take microseconds.
+- **MRI:** billions of billions of proton spins tipped by radio-frequency π/2 pulses. As they precess back, they induce the signal that becomes the image.
+
+<Warning>
+**A "π pulse" is a 180° rotation of the Bloch vector, but only half a turn in Hilbert space.** Remember the half-angles: $R_x(\pi) = -i\sigma_x$. Go all the way around with a **2π pulse** and the Bloch vector returns home, but the state picks up a factor of $-1$. It takes a **4π** rotation to get the identity back. That sign is invisible for a single isolated spin, but it shows up in interference. Neutron interferometry experiments in 1975 (Rauch *et al.*, Werner *et al.*) saw exactly this spinor sign change.
+</Warning>
+
+### Challenge: reach $|{+i}\rangle$
+
+Using only the drive controls, put the qubit on the green target at $+y$ and leave it there. The π and π/2 buttons stop precisely.
+
+<RabiLab title="Challenge — steer to |+i⟩" chevron={false} target={[0, 1, 0]} challengeId="u4l5-plus-i" />
+
+<Quiz id="u4l5-which-phase">
+  <Q>On resonance, which single pulse takes $|0\rangle$ straight to $|{+i}\rangle$?</Q>
+  <Opt>π/2 pulse with $\varphi = 0$ (about $+x$)</Opt>
+  <Opt>π/2 pulse with $\varphi = \pi/2$ (about $+y$)</Opt>
+  <Opt correct>π/2 pulse with $\varphi = \pi$ (about $-x$)</Opt>
+  <Opt>π pulse with $\varphi = \pi/2$</Opt>
+  <Explain>Rotating about $+x$ by $+\pi/2$ swings $+z$ to $-y$ (right-hand rule). Reversing the axis to $-x$ swings it to $+y$ instead. A drive phase of $\pi$ just flips the sign of the field. (A $3\pi/2$ pulse about $+x$ also works, but it takes three times as long.)</Explain>
+</Quiz>
+
+<History>
+In January 1938, **Isidor Rabi**'s group at Columbia passed a beam of lithium chloride molecules through a magnetic field with an added oscillating field. When the oscillation hit the nuclear spins' Larmor frequency, the spins flipped and the beam signal dropped. That was the first magnetic resonance measurement of nuclear moments, and it earned Rabi the 1944 Nobel Prize. **Felix Bloch** and **Edward Purcell** extended magnetic resonance to ordinary liquids and solids in 1946 (Nobel 1952). The pulse techniques developed for NMR, such as spin echoes, composite pulses and Ramsey fringes, are exactly the ones quantum computers use today.
+</History>
+
+---
+
+## Summary
+
+- A Hamiltonian $\frac{\hbar\omega}{2}\hat n\cdot\vec\sigma$ applied for time $t$ **rotates the Bloch vector by $\omega t$ about $\hat n$**. A field along $z$ causes **Larmor precession**, and $\langle\hat H\rangle$ is conserved.
+- A static $z$ field can't flip a spin. A transverse drive **at resonance** can.
+- **Rotating frame:** $\hat H_{\text{rot}} = \frac{\hbar\Delta}{2}\sigma_z + \frac{\hbar\Omega}{2}(\cos\varphi\,\sigma_x + \sin\varphi\,\sigma_y)$, a rotation about $(\Omega\cos\varphi, \Omega\sin\varphi, \Delta)$ at rate $\sqrt{\Omega^2+\Delta^2}$.
+- **Rabi formula:** $P_1 = \frac{\Omega^2}{\Omega^2+\Delta^2}\sin^2\big(\tfrac{\sqrt{\Omega^2+\Delta^2}\,t}{2}\big)$. Detuning makes flopping faster but incomplete.
+- **π pulse** = $X$ gate, **π/2 pulse** = equal superposition. The drive phase picks the axis, and $Z$ rotations are done virtually.
+- Transmons, trapped ions and MRI scanners all run on the same rotating-frame physics.

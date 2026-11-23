@@ -1,0 +1,183 @@
+import { TensorGrid } from './widgets/TensorGrid';
+
+One qubit is described by two complex numbers, $\alpha|0\rangle + \beta|1\rangle$. Now put a second qubit next to it. How do you describe the pair?
+
+The obvious guess is "two numbers for the first, two for the second, four in total". The real answer is different in a way that matters enormously. It's the reason quantum computers might be powerful, the reason they are hard to simulate, and the origin of **entanglement**. The mathematical tool is the **tensor product**.
+
+<Predict id="u0l5-three-qubits">
+  <Q>Three qubits together. How many complex amplitudes does it take to describe their joint state in general?</Q>
+  <Opt>3</Opt>
+  <Opt>6 (two per qubit)</Opt>
+  <Opt correct>8</Opt>
+  <Opt>9</Opt>
+  <Reveal>
+**Eight**: one amplitude for each of the $2^3 = 8$ classical configurations $000, 001, 010, \dots, 111$.
+
+$$
+|\Psi\rangle = c_{000}|000\rangle + c_{001}|001\rangle + c_{010}|010\rangle + \cdots + c_{111}|111\rangle .
+$$
+
+This shouldn't feel totally alien. A *probability distribution* over three classical bits also needs $8$ numbers (well, 7 free ones), one per configuration, because the bits can be correlated. "Two numbers per qubit" only works in the special case where the qubits are independent. The rest of the lesson makes that precise.
+  </Reveal>
+</Predict>
+
+---
+
+## Joint states: one amplitude per configuration
+
+For two qubits, the basis states are the four classical configurations, written as $|00\rangle, |01\rangle, |10\rangle, |11\rangle$ (first symbol for qubit A, second for qubit B). A general two-qubit state is
+
+$$
+|\Psi\rangle = c_{00}|00\rangle + c_{01}|01\rangle + c_{10}|10\rangle + c_{11}|11\rangle, \qquad \sum_{ij}|c_{ij}|^2 = 1,
+$$
+
+a unit vector in $\mathbb{C}^4$. In general, $n$ qubits live in $\mathbb{C}^{2^n}$, with one amplitude $c_x$ for every $n$-bit string $x$.
+
+<CSCorner>
+Compare a **joint probability distribution** $p(x, y)$ over two random bits: a table of $4$ non-negative numbers summing to 1. If the bits are independent it factors as $p(x,y) = p_A(x)\,p_B(y)$, and then 2 + 2 numbers suffice. In general it doesn't factor; correlations need the whole table. A two-qubit state is the same kind of table, but filled with complex amplitudes. The quantum analogue of "independent" is called a **product state**, and the quantum analogue of "correlated" includes something classical tables can't do, called **entanglement**.
+</CSCorner>
+
+<NumQuiz id="u0l5-ten" answer={1024} tol={0.5}>
+  <Q>How many complex amplitudes describe a general state of 10 qubits?</Q>
+  <Explain>$2^{10} = 1024$, one per 10-bit string. Ten classical bits hold one of those 1024 strings at a time; ten qubits need an amplitude for every one of them.</Explain>
+</NumQuiz>
+
+---
+
+## The tensor product of two vectors
+
+Suppose qubit A is in state $|a\rangle = a_0|0\rangle + a_1|1\rangle$ and, *independently*, qubit B is in $|b\rangle = b_0|0\rangle + b_1|1\rangle$. The joint state should assign to configuration $ij$ the amplitude "A is $i$" times "B is $j$", just like independent probabilities multiply. That's the **tensor product** (in coordinates, the **Kronecker product**):
+
+$$
+|a\rangle\otimes|b\rangle = \begin{pmatrix}a_0\\a_1\end{pmatrix}\otimes\begin{pmatrix}b_0\\b_1\end{pmatrix} = \begin{pmatrix}a_0\begin{pmatrix}b_0\\b_1\end{pmatrix}\\[6pt] a_1\begin{pmatrix}b_0\\b_1\end{pmatrix}\end{pmatrix} = \begin{pmatrix}a_0b_0\\a_0b_1\\a_1b_0\\a_1b_1\end{pmatrix}.
+$$
+
+The recipe: **each entry of the first vector gets a scaled copy of the whole second vector.** Since each entry is a product of two complex numbers, its length is the product of lengths and its phase is the sum of phases. Build some product states:
+
+<TensorGrid tab="build" tabs={['build']} />
+
+<Try>
+- Set A to $|+\rangle$ ($\theta = \pi/2$, $\varphi = 0$) and B to $|0\rangle$ ($\theta = 0$). The product is $\tfrac{1}{\sqrt2}(|00\rangle + |10\rangle)$: B is definitely 0, A is 50/50.
+- Change only qubit B's phase $\varphi$. Watch which entries of the product rotate: only the $|{\cdot}1\rangle$ ones, each by the same angle.
+- The total probability is always 1. Tensor products of normalized vectors are normalized.
+</Try>
+
+Notation: $|a\rangle\otimes|b\rangle$ is often shortened to $|a\rangle|b\rangle$ or $|ab\rangle$, so $|0\rangle\otimes|1\rangle = |01\rangle$. Useful rules:
+
+- **Bilinear:** $(\alpha|a\rangle + \beta|a'\rangle)\otimes|b\rangle = \alpha|a\rangle|b\rangle + \beta|a'\rangle|b\rangle$, and likewise in the second slot. You can expand tensor products like ordinary products, as long as you **never swap the order** of the factors.
+- **Inner products multiply:** $\big(\langle a'|\otimes\langle b'|\big)\big(|a\rangle\otimes|b\rangle\big) = \langle a'|a\rangle\,\langle b'|b\rangle$.
+
+<Quiz id="u0l5-plus-plus">
+  <Q>Expand $|{+}\rangle\otimes|{-}\rangle$ where $|\pm\rangle = \tfrac{1}{\sqrt2}(|0\rangle\pm|1\rangle)$.</Q>
+  <Opt>$\tfrac12(|00\rangle + |01\rangle + |10\rangle + |11\rangle)$</Opt>
+  <Opt correct>$\tfrac12(|00\rangle - |01\rangle + |10\rangle - |11\rangle)$</Opt>
+  <Opt>$\tfrac12(|00\rangle + |01\rangle - |10\rangle - |11\rangle)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}(|00\rangle - |11\rangle)$</Opt>
+  <Explain>Multiply out: $\tfrac12(|0\rangle+|1\rangle)(|0\rangle-|1\rangle) = \tfrac12(|00\rangle - |01\rangle + |10\rangle - |11\rangle)$. The minus signs sit on every term where the *second* qubit is 1. Option 3 would be $|{-}\rangle|{+}\rangle$: order matters.</Explain>
+</Quiz>
+
+---
+
+## States that refuse to factor
+
+Here's the punchline. Every product state $|a\rangle\otimes|b\rangle$ is a two-qubit state. But is every two-qubit state a product?
+
+Lay the four amplitudes of a product state out as a $2\times2$ table, rows for qubit A and columns for qubit B. The entry in row $i$, column $j$ is $a_i b_j$, so the table is the **outer product** of the two vectors:
+
+$$
+\begin{pmatrix}c_{00} & c_{01}\\ c_{10} & c_{11}\end{pmatrix} = \begin{pmatrix}a_0b_0 & a_0b_1\\ a_1b_0 & a_1b_1\end{pmatrix} = \begin{pmatrix}a_0\\a_1\end{pmatrix}\begin{pmatrix}b_0 & b_1\end{pmatrix}.
+$$
+
+An outer product has **rank 1**: every row is a multiple of every other row. For a $2\times2$ table that means its determinant vanishes, $c_{00}c_{11} - c_{01}c_{10} = 0$. So a two-qubit state is a product state **if and only if** $c_{00}c_{11} = c_{01}c_{10}$.
+
+Now take the state
+
+$$
+|\Phi^+\rangle = \tfrac{1}{\sqrt2}\big(|00\rangle + |11\rangle\big): \qquad c_{00}c_{11} - c_{01}c_{10} = \tfrac12 - 0 \neq 0 .
+$$
+
+It is a perfectly good unit vector in $\mathbb{C}^4$, but it **cannot be written as (a state of A) ⊗ (a state of B)**, no matter what you choose. Don't take that on trust: try it.
+
+<TensorGrid tab="factor" tabs={['factor']} />
+
+<Try>
+- With the target **Bell Φ⁺**, move all four sliders and try to push the overlap above 50%. You can't. Press "reveal" to confirm 50% is the best possible.
+- Try **|+⟩|0⟩** and **uniform**: both factor, and you can reach 100%.
+- **one minus sign** looks innocent: just one sign flipped from the uniform state. Check its determinant. That single phase makes it entangled.
+</Try>
+
+States that are not product states are called **entangled**. Neither qubit of $|\Phi^+\rangle$ has a state of its own; only the pair does. World 6 is devoted to how strange, and how useful, that is.
+
+<Warning>
+"$\tfrac{1}{\sqrt2}(|00\rangle + |11\rangle)$ just means the qubits are either both 0 or both 1, and we don't know which." That describes a classical **mixture**, a coin flip between $|00\rangle$ and $|11\rangle$, and it behaves differently in experiments: measure both qubits in the $\{|+\rangle,|-\rangle\}$ basis and the entangled state still gives perfectly correlated results, while the mixture gives random, uncorrelated ones. Superposition is not ignorance. You'll be able to verify this yourself in World 6.
+</Warning>
+
+<Quiz id="u0l5-which-product">
+  <Q>Which of these two-qubit states is a **product** state?</Q>
+  <Opt>$\tfrac{1}{\sqrt2}(|01\rangle + |10\rangle)$</Opt>
+  <Opt correct>$\tfrac{1}{2}(|00\rangle - |01\rangle - |10\rangle + |11\rangle)$</Opt>
+  <Opt>$\tfrac{1}{2}(|00\rangle + |01\rangle + |10\rangle - |11\rangle)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt3}(|00\rangle + |01\rangle + |11\rangle)$</Opt>
+  <Explain>Check $c_{00}c_{11} - c_{01}c_{10}$. Option 2: $\tfrac14 - \tfrac14 = 0$, so it factors; indeed it's $|{-}\rangle\otimes|{-}\rangle$. Option 1: $0 - \tfrac12$; option 3: $-\tfrac14 - \tfrac14$; option 4: $\tfrac13 - 0$. All non-zero, all entangled.</Explain>
+</Quiz>
+
+---
+
+## Tensor products of operators
+
+If a matrix $A$ acts on qubit A and $B$ acts on qubit B, the combined operation on the pair is $A\otimes B$, and it acts factor by factor:
+
+$$
+(A\otimes B)\big(|a\rangle\otimes|b\rangle\big) = A|a\rangle\otimes B|b\rangle .
+$$
+
+Its matrix is again a Kronecker product: **each entry of $A$ gets a scaled copy of the whole matrix $B$.** For example, flipping only the first qubit is $X\otimes I$:
+
+$$
+X\otimes I = \begin{pmatrix}0\cdot I & 1\cdot I\\ 1\cdot I & 0\cdot I\end{pmatrix} = \begin{pmatrix}0&0&1&0\\0&0&0&1\\1&0&0&0\\0&1&0&0\end{pmatrix}.
+$$
+
+Doing nothing to a qubit means tensoring with the identity $I$. In a quantum circuit with $n$ wires, a single-qubit gate on wire $k$ is really the $2^n\times 2^n$ matrix $I\otimes\cdots\otimes U\otimes\cdots\otimes I$.
+
+<Quiz id="u0l5-xi">
+  <Q>What does $X\otimes I$ do to the state $|01\rangle$?</Q>
+  <Opt>$|00\rangle$</Opt>
+  <Opt correct>$|11\rangle$</Opt>
+  <Opt>$|10\rangle$</Opt>
+  <Opt>$|01\rangle$</Opt>
+  <Explain>$(X\otimes I)(|0\rangle\otimes|1\rangle) = X|0\rangle\otimes I|1\rangle = |1\rangle\otimes|1\rangle = |11\rangle$. Equivalently, the matrix above maps basis vector 2 ($|01\rangle$) to basis vector 4 ($|11\rangle$).</Explain>
+</Quiz>
+
+---
+
+## The exponential wall
+
+Each added qubit **doubles** the number of amplitudes: $\mathbb{C}^2\otimes\mathbb{C}^2\otimes\cdots\otimes\mathbb{C}^2 = \mathbb{C}^{2^n}$. Dimensions *multiply* under the tensor product, while under the ordinary "side by side" combination of classical systems they would add. Feel how fast that gets out of hand:
+
+<TensorGrid tab="wall" tabs={['wall']} />
+
+<History>
+In 1981, at a conference on the physics of computation at MIT, Richard Feynman pointed out exactly this problem: simulating a quantum system of $n$ particles on a classical computer seems to require resources exponential in $n$. His proposed fix, published in 1982 as "Simulating Physics with Computers", was to build computers out of quantum parts. That talk is often cited as the birth of quantum computing.
+</History>
+
+<CSCorner>
+Be careful about what the exponential state space buys you. An $n$-qubit state *needs* $2^n$ numbers to describe, but when you **measure** it you get just $n$ bits out, one outcome. (Holevo's theorem makes this precise: $n$ qubits can't be used to transmit more than $n$ classical bits.) The power of a quantum computer doesn't come from "storing $2^n$ answers". It comes from being able to make those $2^n$ amplitudes **interfere** in useful patterns before you look. The exponential wall is first of all a statement about how hard quantum systems are to *simulate*.
+</CSCorner>
+
+<NumQuiz id="u0l5-memory" answer={16} tol={0.01}>
+  <Q>A state-vector simulator stores each amplitude as two 64-bit floats (16 bytes). How much memory does a 30-qubit state need, in GiB ($1\ \text{GiB} = 2^{30}$ bytes)?</Q>
+  <Hint>$2^{30}$ amplitudes × 16 bytes.</Hint>
+  <Explain>$2^{30}\times16 = 16 \times 2^{30}$ bytes $= 16$ GiB. Every extra qubit doubles it: 31 qubits need 32 GiB, 40 qubits need 16 TiB, 50 qubits need 16 PiB.</Explain>
+</NumQuiz>
+
+---
+
+## Summary
+
+- The joint state of $n$ qubits has one amplitude per $n$-bit string: it is a vector in $\mathbb{C}^{2^n}$.
+- **Tensor (Kronecker) product:** each entry of the first vector multiplies a copy of the whole second vector: $(a_0,a_1)\otimes(b_0,b_1) = (a_0b_0, a_0b_1, a_1b_0, a_1b_1)$. It is bilinear but **not** commutative.
+- A two-qubit state is a **product state** iff its $2\times2$ amplitude table has rank 1, i.e. $c_{00}c_{11} = c_{01}c_{10}$. States that don't factor, like $\tfrac{1}{\sqrt2}(|00\rangle + |11\rangle)$, are **entangled**.
+- Operators combine the same way: $(A\otimes B)(|a\rangle\otimes|b\rangle) = A|a\rangle\otimes B|b\rangle$; a gate on one wire is $I\otimes\cdots\otimes U\otimes\cdots\otimes I$.
+- Dimensions multiply, so $n$ qubits need $2^n$ amplitudes. That makes quantum systems hard to simulate classically. Measurement still yields only $n$ bits.
+
+<Watch title="Quantum Computation and Quantum Information, §2.1.7 (Tensor products)" by="Nielsen & Chuang" url="https://en.wikipedia.org/wiki/Quantum_Computation_and_Quantum_Information" kind="book" note="the standard reference for this material" />

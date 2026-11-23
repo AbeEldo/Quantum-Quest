@@ -1,0 +1,155 @@
+import { ClonerLab } from './widgets/ClonerLab';
+
+Copying is the most basic operation in computing. `cp`, `git clone`, `memcpy`, backups and caches all depend on it, and it's so cheap we never think about it.
+
+Imagine a **quantum photocopier**: put in any qubit $|\psi\rangle$ plus a blank qubit, and get two copies of $|\psi\rangle$ out. It would be enormously powerful.
+
+- **Perfect state reading.** One measurement of a qubit only tells you one bit. With a copier you'd make a million copies, measure some along $x$, some along $y$ and some along $z$, and pin down $\theta$ and $\phi$ to many decimal places, all from a single original.
+- **Faster-than-light messaging.** Bob's half of a Bell pair becomes $|0\rangle/|1\rangle$ if Alice measures in $Z$, or $|+\rangle/|-\rangle$ if she measures in $X$. If Bob could copy his qubit a thousand times and measure the copies in $Z$, all-equal results would mean "Z" and a random mix would mean "X". Lesson 3's no-signalling theorem would be dead.
+
+<Predict id="u6l4-copier">
+  <Q>Can some quantum circuit (a unitary $U$, plus a blank qubit in $|0\rangle$) achieve $U|\psi\rangle|0\rangle = |\psi\rangle|\psi\rangle$ for **every** state $|\psi\rangle$?</Q>
+  <Opt>Yes, a CNOT does it</Opt>
+  <Opt>Yes, but it needs many ancilla qubits and a clever circuit</Opt>
+  <Opt correct>No, no unitary can do it, however large</Opt>
+  <Opt>Only for states on the equator of the Bloch sphere</Opt>
+  <Explain>This is the **no-cloning theorem** (1982). The proof takes two lines, and it follows from nothing more than the linearity of quantum mechanics.</Explain>
+  <Reveal>
+Quantum information **can't be copied**. In this lesson you'll watch a copier fail, prove why every copier must fail, and see how this one restriction protects relativity, makes quantum cryptography possible, and shapes quantum error correction and teleportation.
+  </Reveal>
+</Predict>
+
+---
+
+## A copier that works, sometimes
+
+Start with the obvious candidate. CNOT flips the target if the control is 1, so with a blank target $|0\rangle$:
+
+$$
+\text{CNOT}\,|0\rangle|0\rangle = |0\rangle|0\rangle, \qquad \text{CNOT}\,|1\rangle|0\rangle = |1\rangle|1\rangle .
+$$
+
+It copies **basis states** perfectly. It's the quantum version of `b = a` for a classical bit. Now feed it a superposition, $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$. By linearity,
+
+$$
+\text{CNOT}\,(\alpha|0\rangle + \beta|1\rangle)|0\rangle = \alpha|00\rangle + \beta|11\rangle ,
+$$
+
+but a real copy would be
+
+$$
+|\psi\rangle|\psi\rangle = \alpha^2|00\rangle + \alpha\beta|01\rangle + \alpha\beta|10\rangle + \beta^2|11\rangle .
+$$
+
+They match only when $\alpha\beta = 0$. For $|+\rangle$ the "copier" produces the Bell state $|\Phi^+\rangle$, which is **entangled**, and that's about as different from $|+\rangle|+\rangle$ as a state can be. Explore all inputs:
+
+<ClonerLab />
+
+<Try>
+- Drag the input to the north or south pole. Fidelity 1, a perfect copy.
+- Move it to the equator. The copy fidelity drops to $\tfrac12$, the "copy" qubit's arrow shrinks to a dot (pink = entangled), and the original's state is gone too.
+- Look at the fidelity map. With the CNOT copier it's bright only along the top and bottom edges, the poles. Switch to the **H-sandwiched copier**. Now $|+\rangle$ and $|-\rangle$ copy perfectly, and $|0\rangle$ fails. **Every copier copies one orthogonal pair and wrecks everything else.**
+</Try>
+
+<Quiz id="u6l4-cnot-plus">
+  <Q>You feed $|-\rangle = \tfrac{1}{\sqrt2}(|0\rangle - |1\rangle)$ into the CNOT copier (blank target $|0\rangle$). What comes out?</Q>
+  <Opt>$|-\rangle|-\rangle$</Opt>
+  <Opt>$|-\rangle|0\rangle$, nothing happens</Opt>
+  <Opt correct>$|\Phi^-\rangle = \tfrac{1}{\sqrt2}(|00\rangle - |11\rangle)$</Opt>
+  <Opt>$|1\rangle|1\rangle$</Opt>
+  <Explain>By linearity: $\tfrac{1}{\sqrt2}(\text{CNOT}|00\rangle - \text{CNOT}|10\rangle) = \tfrac{1}{\sqrt2}(|00\rangle - |11\rangle) = |\Phi^-\rangle$. You get an entangled Bell state, not two copies. Neither output qubit holds $|-\rangle$, and each one alone is maximally mixed.</Explain>
+</Quiz>
+
+---
+
+## The proof: copying would break inner products
+
+Maybe a cleverer circuit would work. It won't, and the proof uses only one fact: **unitaries preserve inner products**. If $|a'\rangle = U|a\rangle$ and $|b'\rangle = U|b\rangle$, then $\langle a'|b'\rangle = \langle a|U^\dagger U|b\rangle = \langle a|b\rangle$. Unitaries are rigid rotations: they never change the angle between two states.
+
+Suppose a universal copier $U$ existed. Then for any two states $|\psi\rangle$ and $|\phi\rangle$:
+
+$$
+U|\psi\rangle|0\rangle = |\psi\rangle|\psi\rangle, \qquad U|\phi\rangle|0\rangle = |\phi\rangle|\phi\rangle .
+$$
+
+Take the inner product of the inputs and of the outputs. They must be equal:
+
+$$
+\underbrace{\langle\psi|\phi\rangle\,\langle 0|0\rangle}_{\text{before}} = \underbrace{\langle\psi|\phi\rangle\,\langle\psi|\phi\rangle}_{\text{after}}
+\quad\Longrightarrow\quad x = x^2 \quad\text{where } x = \langle\psi|\phi\rangle .
+$$
+
+So $\langle\psi|\phi\rangle$ is $0$ or $1$. **A single device can only copy states that are identical or orthogonal.** Any two non-orthogonal, non-identical states, like $|0\rangle$ and $|+\rangle$, defeat it.
+
+<KeyIdea>
+**No-cloning theorem:** no physical process can take an *unknown* quantum state $|\psi\rangle$ and output two copies $|\psi\rangle|\psi\rangle$. You can copy members of one orthogonal set (classical information), but never two states that overlap.
+</KeyIdea>
+
+<DeepDive title="Second proof: linearity, and why extra ancillas don't help">
+Suppose $U|0\rangle|0\rangle|E\rangle = |0\rangle|0\rangle|E_0\rangle$ and $U|1\rangle|0\rangle|E\rangle = |1\rangle|1\rangle|E_1\rangle$, where we allow any number of extra "machine" qubits $|E\rangle$ that may end in whatever state they like. By linearity, the input $|+\rangle$ gives
+
+$$
+U|+\rangle|0\rangle|E\rangle = \tfrac{1}{\sqrt2}\big(|00\rangle|E_0\rangle + |11\rangle|E_1\rangle\big).
+$$
+
+That's not $|+\rangle|+\rangle|E_+\rangle$ for any $|E_+\rangle$, because the right side has no $|01\rangle$ or $|10\rangle$ terms, and $|++\rangle$ does. Adding machine qubits, measurements followed by post-processing, or general quantum channels changes nothing. The inner-product argument works for any of them, so no-cloning holds for every physical process.
+</DeepDive>
+
+<Quiz id="u6l4-which-copyable">
+  <Q>A device must perfectly copy every state in a given set. For which set is that possible? (Select all that apply.)</Q>
+  <Opt correct>$\{|0\rangle, |1\rangle\}$</Opt>
+  <Opt correct>$\{|+i\rangle, |-i\rangle\}$</Opt>
+  <Opt>$\{|0\rangle, |+\rangle\}$</Opt>
+  <Opt>All states on the equator of the Bloch sphere</Opt>
+  <Explain>Only sets of **mutually orthogonal** states can be cloned. $|\pm i\rangle$ are antipodal on the sphere, hence orthogonal, and a copier for them is CNOT sandwiched between suitable basis changes. $|0\rangle$ and $|+\rangle$ have overlap $1/\sqrt2$, neither 0 nor 1. The equator holds infinitely many pairwise non-orthogonal states.</Explain>
+</Quiz>
+
+---
+
+## What *is* allowed
+
+No-cloning is precise, so it's worth being precise about what it *doesn't* forbid.
+
+- **Copying a known state.** If you know $\theta$ and $\phi$, just prepare a fresh copy. You're copying the *description*, not the qubit.
+- **Copying classical information.** Bits written in one orthogonal basis copy fine. That's why classical computers built from quantum atoms work at all.
+- **Moving a state.** A SWAP gate moves $|\psi\rangle$ from one qubit to another, and the source ends up in $|0\rangle$. Teleportation (World 8) moves a state across a distance, and it *destroys the original* in the process. Quantum information can be moved but not duplicated.
+- **Imperfect copies.** You can make two *approximate* copies. The best universal $1\to2$ cloner, found by **Bužek and Hillery (1996)**, gives each copy fidelity $\tfrac56 \approx 0.833$ with the original, for every input state. The CNOT copier only manages $\tfrac23$ on average, and only $\tfrac12$ on the equator.
+
+<NumQuiz id="u6l4-single-fid" answer={0.5} tol={0.01}>
+  <Q>Feed $|+\rangle$ into the CNOT copier. Each output qubit alone is maximally mixed. What is its fidelity $\langle +|\rho|+\rangle$ with the original state $|+\rangle$?</Q>
+  <Hint>A maximally mixed qubit gives 50/50 for *any* measurement, including "are you $|+\rangle$?".</Hint>
+  <Explain>$\rho = \tfrac12 I$, so $\langle +|\rho|+\rangle = \tfrac12$. In Bloch terms, $F = \tfrac12(1 + \vec r_\psi\cdot\vec r_\rho) = \tfrac12(1 + 0) = \tfrac12$. You could get that by guessing. The widget's "single-copy fidelity" readout shows the same number.</Explain>
+</NumQuiz>
+
+<Warning>
+"No-cloning means quantum states are fragile or secret." **Not exactly.** A qubit isn't hidden from you, and you can measure it any time you like. What you can't do is learn *everything* about one unknown copy, because measuring disturbs it and you can't make spares to measure separately. The restriction is on extracting complete information from a single instance. That restriction is what quantum cryptography uses.
+</Warning>
+
+---
+
+## Consequences everywhere
+
+**It protects relativity.** The faster-than-light scheme at the top of this lesson needed exactly one impossible ingredient, a copier. No-cloning and no-signalling are two faces of the same structure.
+
+**It makes quantum key distribution secure.** In BB84 (World 8), an eavesdropper would love to copy each photon, forward the original, and measure her copy later once the bases are announced. No-cloning forbids it. Any attempt to learn about the photons disturbs them, and that disturbance shows up as errors Alice and Bob can detect.
+
+**It makes error correction harder, but not impossible.** Classical error correction starts by copying: send 000 instead of 0. Quantum codes can't copy $|\psi\rangle$, but they can **entangle**. They encode $\alpha|0\rangle+\beta|1\rangle \mapsto \alpha|000\rangle+\beta|111\rangle$ using two CNOTs. That's exactly the "failed copier" from this lesson, put to work. World 11 picks up the story.
+
+**It forces teleportation to be destructive.** When a state arrives at Bob's end, Alice's original has necessarily been scrambled. Otherwise there would be two copies.
+
+<CSCorner>
+In classical systems copying is free, and whole architectures are built on that: caches, replication, snapshots, `fork()`. Quantum information follows a **linear (affine) type discipline** instead. A qubit value can be moved or consumed, but not duplicated. Rust's ownership model, where a non-`Copy` value can be moved but not implicitly duplicated, is a good analogy. Quantum programming languages like Q# and Silq enforce this: you can't write `let b = a;` for a qubit and keep using both. Where the analogy breaks is that a quantum program can still *entangle* `a` with a fresh qubit (CNOT), which looks like a copy in the computational basis but isn't one in any other.
+</CSCorner>
+
+<History>
+In 1982 the physicist **Nick Herbert** proposed "FLASH", a scheme for faster-than-light communication using entangled photons and an idealised laser amplifier that would duplicate incoming photons. Working out precisely why it must fail produced the no-cloning theorem, published that same year by **William Wootters and Wojciech Zurek** ("A single quantum cannot be cloned", *Nature*) and independently by **Dennis Dieks**. (James Park had essentially proved it in 1970, but nobody noticed.) A flawed paper that led to a fundamental theorem was a good outcome.
+</History>
+
+---
+
+## Summary
+
+- CNOT copies $|0\rangle$ and $|1\rangle$. On a superposition it **entangles** instead: $(\alpha|0\rangle+\beta|1\rangle)|0\rangle \mapsto \alpha|00\rangle + \beta|11\rangle \ne |\psi\rangle|\psi\rangle$.
+- **No-cloning:** unitaries preserve inner products, and copying would force $\langle\psi|\phi\rangle = \langle\psi|\phi\rangle^2$. So only identical or orthogonal states can be copied by one device.
+- Allowed: re-preparing known states, copying classical (orthogonal) information, moving states (SWAP, teleportation), and approximate cloning (best universal fidelity $\tfrac56$).
+- Consequences: no FTL signalling, security of quantum cryptography, error correction by entangling rather than copying, and teleportation that destroys the original.

@@ -1,0 +1,174 @@
+import { PolarizerChain } from './widgets/PolarizerChain';
+
+Take two pairs of polarized sunglasses. Hold one lens in front of the other and rotate it. At one angle the light gets through; turn it a quarter turn and the pair goes **black**.
+
+Now slide a third lens *between* the two crossed ones, tilted halfway. You've added another filter, and filters only ever remove light. So it should stay black.
+
+It doesn't. **Light comes back.**
+
+That's the **three-polarizer paradox**, and you can reproduce it with three pieces of plastic on a kitchen table. By the end of this lesson it won't be a paradox. It will be your first hands-on **qubit**.
+
+---
+
+## Polarization and Malus's law
+
+Light is a transverse electromagnetic wave: the electric field oscillates *perpendicular* to the direction of travel. The direction in which it oscillates is the light's **polarization**. Sunlight and lamplight are **unpolarized**: a jumble of all directions that changes randomly from moment to moment.
+
+A **polarizer** (for example the long-chain-molecule plastic in sunglasses) has a **transmission axis**. Think of the electric field as an arrow. The polarizer splits the arrow into a component along its axis, which passes, and a component across it, which is absorbed.
+
+If light polarized at angle $\theta$ to the axis has field amplitude $E_0$, the transmitted amplitude is $E_0\cos\theta$, and since intensity $\propto$ amplitude², the transmitted intensity is
+
+$$
+I = I_0\cos^2\theta \qquad \text{(Malus's law)}.
+$$
+
+For unpolarized light, averaging $\cos^2\theta$ over all angles gives exactly $\tfrac12$: a polarizer passes **half** of unpolarized light, and what comes out is polarized along its axis.
+
+<ParamPlot title="Malus's law: fraction transmitted vs. angle" params={[{ name: 't', label: 'angle θ', min: 0, max: Math.PI, value: Math.PI / 6, pi: true }]} series={(p) => [{ f: (x) => Math.cos(x) ** 2, color: '#fcd34d', label: 'cos²θ' }]} xRange={[0, Math.PI]} yRange={[0, 1.05]} xLabel="θ (rad)" yLabel="I / I₀" vlines={(p) => [{ x: p.t, color: '#58c4dd', label: 'θ' }]} readout={(p) => 'Transmitted: ' + (100 * Math.cos(p.t) ** 2).toFixed(1) + '%'} height={220} />
+
+<History>
+In **1808** Étienne-Louis **Malus**, looking through a calcite crystal at sunset light reflected from the windows of the Luxembourg Palace in Paris, noticed that the two images the crystal produces changed brightness as he turned it. Reflected light was polarized! He published the $\cos^2$ law the following year. Cheap polarizing sheets came much later: Edwin Land's "Polaroid" plastic sheets, invented around 1929.
+</History>
+
+<NumQuiz id="u2l3-malus-60" answer={0.25} tol={0.005}>
+  <Q>Vertically polarized laser light hits a polarizer whose axis is $60°$ from vertical. What fraction of the intensity gets through?</Q>
+  <Explain>$\cos^2 60° = (1/2)^2 = 0.25$. A quarter of the light passes, polarized along the new axis.</Explain>
+</NumQuiz>
+
+---
+
+## One photon at a time
+
+Malus's law is about *intensity*: smooth fractions like 25%. But you know from World 1 that light comes in **photons**, and you can't get a quarter of a photon. Photon counters always click with full-sized clicks.
+
+So what does a single photon, polarized at $60°$ to the axis, do at the polarizer? There's only one consistent answer:
+
+<KeyIdea>
+A photon either **passes** (with probability $\cos^2\theta$) or is **absorbed** (with probability $\sin^2\theta$). If it passes, it comes out **polarized along the polarizer's axis**, whatever it was before.
+</KeyIdea>
+
+Malus's smooth $\cos^2\theta$ law is just the *average* of many all-or-nothing events. This is the Born rule again, and it's random in the same deep sense as the dots on the double-slit screen: two identically prepared photons can have different fates.
+
+Watch it happen. Each photon carries a little tick showing its polarization. Start with the **Malus** preset, a polarized laser and one polarizer at 30°:
+
+<PolarizerChain initial={[30]} source="H" title="Photons meet polarizers" />
+
+<Try>
+- Compare "measured fraction" with "predicted" as the counts grow. They converge, but slowly: the statistical error after $n$ photons is about $1/\sqrt n$.
+- Notice that every photon that gets through has its tick **realigned** to the polarizer axis.
+- Add a second polarizer and set the two at the *same* angle. Every photon that passes the first also passes the second. The first polarizer **prepared** a state; the second **measured** it and got the same answer with certainty.
+</Try>
+
+<Quiz id="u2l3-photon-after">
+  <Q>A photon polarized at $0°$ (horizontal) meets a polarizer at $30°$ and passes. What is its polarization now, and what is the chance it then passes a polarizer at $0°$?</Q>
+  <Opt>Still $0°$; it passes the $0°$ polarizer with certainty</Opt>
+  <Opt correct>Now $30°$; it passes the $0°$ polarizer with probability $\cos^2 30° = 75\%$</Opt>
+  <Opt>Now $15°$, halfway between</Opt>
+  <Opt>It is now unpolarized; probability $50\%$</Opt>
+  <Explain>Passing a polarizer *resets* the polarization to the axis. It has no memory of having been horizontal. That's why the second polarizer only passes it with $\cos^2(30°-0°) = 0.75$.</Explain>
+</Quiz>
+
+---
+
+## The three-polarizer paradox
+
+Now the paradox from the start of the lesson.
+
+<Predict id="u2l3-three-polarizers">
+  <Q>Unpolarized light goes through a $0°$ polarizer and then a $90°$ polarizer, so nothing comes out. You insert a third polarizer at $45°$ **between** them. What fraction of the original light now reaches the detector?</Q>
+  <Opt>$0$: adding a filter can't add light</Opt>
+  <Opt>$1/4$</Opt>
+  <Opt correct>$1/8$</Opt>
+  <Opt>$1/2$</Opt>
+  <Reveal>
+Press the **Three-polarizer paradox** preset (and also try **Crossed pair**):
+
+<PolarizerChain initial={[0, 90]} title="The three-polarizer paradox" />
+
+The chain goes: unpolarized → $0°$ passes $\tfrac12$ → $45°$ passes $\cos^2 45° = \tfrac12$ of those → $90°$ passes $\cos^2 45° = \tfrac12$ of *those*. Total: $\tfrac12\cdot\tfrac12\cdot\tfrac12 = \tfrac18$.
+  </Reveal>
+</Predict>
+
+Why isn't this a contradiction? Because a polarizer is **not a sieve sorting photons by a pre-existing label**. If each photon carried a fixed hidden tag "I am a $0°$ photon", inserting the $45°$ polarizer could never help it pass $90°$. Instead the middle polarizer *changes* the state: photons that pass it come out at $45°$. They have forgotten they were ever at $0°$, and a $45°$ photon has a fair chance of passing $90°$.
+
+<Warning>
+"Measurement just reveals a property the photon already had." The three-polarizer experiment is the simplest counterexample. Measuring along $45°$ doesn't read out a pre-existing answer and leave the photon alone; it **prepares** a new state. In the quantum world, which questions you ask, and in what order, changes the answers you get.
+</Warning>
+
+Can you do even better than $1/8$ with more polarizers? Here's a challenge. The first and last polarizers are locked at $0°$ and $90°$.
+
+<PolarizerChain initial={[0, 45, 90]} challengeId="u2l3-staircase" goal={0.4} title="Challenge: sneak light through crossed polarizers" />
+
+<DeepDive title="The limit of many polarizers">
+Put the first polarizer at $0°$ and then $N$ more, each turned $90°/N$ from the previous one, so the last is at $90°$. The fraction of light leaving the first polarizer that survives is
+
+$$
+T_N = \cos^{2N}\!\left(\frac{\pi}{2N}\right) \approx 1 - \frac{\pi^2}{4N} \to 1 .
+$$
+
+With many tiny steps you can rotate the polarization by $90°$ while losing almost nothing. Each step is a measurement that is *almost* certain to say "yes", and each yes drags the state along a little. This trick, controlling a system by measuring it often, is called the **quantum Zeno effect**, and it's the engine of the bomb tester in Lesson 5.
+</DeepDive>
+
+---
+
+## Polarization is a qubit
+
+Let's write all of this in the language from World 0. A photon's polarization lives in a **two-dimensional** complex vector space. Choose the basis
+
+$$
+|H\rangle = \begin{pmatrix}1\\0\end{pmatrix}\ (\text{horizontal}), \qquad |V\rangle = \begin{pmatrix}0\\1\end{pmatrix}\ (\text{vertical}).
+$$
+
+Linear polarization at angle $\theta$ is the unit vector
+
+$$
+|\theta\rangle = \cos\theta\,|H\rangle + \sin\theta\,|V\rangle .
+$$
+
+A polarizer at angle $\alpha$ performs a **measurement** with two outcomes: "pass", which leaves the photon in $|\alpha\rangle$, and "absorbed", the orthogonal state $|\alpha + 90°\rangle$. The probability of passing is
+
+$$
+P(\text{pass}) = |\langle\alpha|\theta\rangle|^2 = (\cos\alpha\cos\theta + \sin\alpha\sin\theta)^2 = \cos^2(\theta - \alpha).
+$$
+
+**Malus's law is the Born rule.** Two bases come up constantly:
+
+| Basis | States | Polarizer |
+|---|---|---|
+| rectilinear | $\lvert H\rangle$, $\lvert V\rangle$ | $0°$ / $90°$ |
+| diagonal | $\lvert D\rangle = \tfrac{1}{\sqrt2}(\lvert H\rangle + \lvert V\rangle)$, $\lvert A\rangle = \tfrac{1}{\sqrt2}(\lvert H\rangle - \lvert V\rangle)$ | $45°$ / $135°$ |
+
+(Complex amplitudes are physical too: $\tfrac{1}{\sqrt2}(|H\rangle \pm i|V\rangle)$ are the two **circular** polarizations, where the field arrow rotates as the wave travels.)
+
+<Quiz id="u2l3-d-through-h">
+  <Q>A photon in state $|D\rangle$ hits a horizontal polarizer. What is the probability it passes, and what is its state afterwards?</Q>
+  <Opt>1, and it stays $|D\rangle$</Opt>
+  <Opt correct>$1/2$, and it becomes $|H\rangle$</Opt>
+  <Opt>$1/\sqrt2$, and it becomes $|H\rangle$</Opt>
+  <Opt why="Probabilities are squared amplitudes.">$1/\sqrt2$, and it stays $|D\rangle$</Opt>
+  <Explain>$\langle H|D\rangle = 1/\sqrt2$, so $P = |1/\sqrt2|^2 = 1/2$. After passing, the photon is polarized along the axis: $|H\rangle$.</Explain>
+</Quiz>
+
+<Note title="One oddity to remember">
+$|H\rangle$ and $|V\rangle$ are **orthogonal** (a perfect "no" for each other) although they are only $90°$ apart in physical space. $|H\rangle$ and $|D\rangle$ are $45°$ apart and overlap with probability $\tfrac12$. In World 3 you'll meet electron spin, where orthogonal states point in **opposite** directions ($180°$ apart). The two pictures are related by a factor of 2 in the angles. Keep this in mind; it explains the Bloch sphere's mysterious half-angles.
+</Note>
+
+<CSCorner>
+A polarizer at angle $\alpha$ is a **projective measurement** in the basis $\{|\alpha\rangle, |\alpha+90°\rangle\}$, and sending light through a sequence of polarizers is a sequence of measurements, each one **collapsing** the state. Photon polarization is a genuine, widely used qubit: the BB84 quantum key distribution protocol (World 8) encodes bits in exactly the $H/V$ and $D/A$ bases above, because measuring in the "wrong" basis gives random results and disturbs the state. That makes an eavesdropper detectable.
+</CSCorner>
+
+<NumQuiz id="u2l3-h-d-v" answer={0.25} tol={0.005}>
+  <Q>A photon prepared in $|H\rangle$ passes through a diagonal ($45°$) polarizer and then a vertical polarizer. What is the probability it makes it through both?</Q>
+  <Hint>Multiply the pass probabilities step by step, remembering that each pass resets the state to the polarizer axis.</Hint>
+  <Explain>$P = |\langle D|H\rangle|^2 \cdot |\langle V|D\rangle|^2 = \tfrac12\cdot\tfrac12 = \tfrac14$. Without the middle polarizer it would be $|\langle V|H\rangle|^2 = 0$. (Starting from *unpolarized* light you'd get the extra factor of $\tfrac12$, giving the $\tfrac18$ from before.)</Explain>
+</NumQuiz>
+
+---
+
+## Summary
+
+- **Malus's law:** polarized light at angle $\theta$ to a polarizer's axis is transmitted with intensity fraction $\cos^2\theta$; unpolarized light, $\tfrac12$.
+- For **single photons**, $\cos^2\theta$ is a **probability**: each photon passes whole or not at all, and if it passes, it leaves polarized along the axis.
+- **Three-polarizer paradox:** $0° \to 45° \to 90°$ passes $\tfrac18$ of unpolarized light, because measurements **change** the state rather than reading out hidden labels. Many small steps pass almost everything (the Zeno effect).
+- Polarization is a **qubit**: $|\theta\rangle = \cos\theta|H\rangle + \sin\theta|V\rangle$, and Malus's law $= |\langle\alpha|\theta\rangle|^2$, the Born rule.
+- Key bases: $\{|H\rangle, |V\rangle\}$ and $\{|D\rangle, |A\rangle\}$.

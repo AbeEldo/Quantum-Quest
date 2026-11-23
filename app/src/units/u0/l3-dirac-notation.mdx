@@ -1,0 +1,202 @@
+import { KetExplorer, BasisComponents } from './widgets/KetExplorer';
+
+You already know linear algebra over the real numbers: vectors, dot products, lengths, orthonormal bases. Quantum mechanics uses all of it, with one change: **the numbers in the vectors are complex**. A qubit, for example, is described by a vector in $\mathbb{C}^2$, a column of two complex numbers.
+
+Almost everything carries over unchanged. But one thing breaks immediately, and fixing it explains a piece of notation you will see on every page of every quantum text from here on.
+
+<Predict id="u0l3-zero-length">
+  <Q>Take the complex vector $v = (1,\ i)$. Compute its "length squared" the familiar way, with the ordinary dot product $v \cdot v = v_1 v_1 + v_2 v_2$. What do you get?</Q>
+  <Opt>2</Opt>
+  <Opt correct>0</Opt>
+  <Opt>$1 + i$</Opt>
+  <Opt>$\sqrt 2$</Opt>
+  <Reveal>
+$v\cdot v = 1\cdot 1 + i \cdot i = 1 + (-1) = 0$. A vector that is obviously not zero would have **length zero**. Worse, for other vectors the dot product gives complex "lengths", like $(1, 1+i)\cdot(1, 1+i) = 1 + 2i$.
+
+The fix is the one you learned last lesson: the squared length of a complex number is $z\bar z$, not $z^2$. So the inner product of complex vectors must **conjugate one of the two vectors**. Then $(1, i)$ has squared length $1\cdot 1 + \bar i\, i = 1 + 1 = 2$, as it should.
+  </Reveal>
+</Predict>
+
+---
+
+## Kets: vectors in $\mathbb{C}^n$
+
+A vector in $\mathbb{C}^n$ is a column of $n$ complex numbers. Physicists write it as a **ket**, $|\psi\rangle$ (pronounced "ket psi"). The symbol inside is just a name. It can be a Greek letter, a number, a word, or a little arrow; the angle bracket says "this is a column vector".
+
+The standard basis vectors of $\mathbb{C}^2$ get the names that will become the two states of a qubit:
+
+$$
+|0\rangle = \begin{pmatrix}1\\0\end{pmatrix},\qquad |1\rangle = \begin{pmatrix}0\\1\end{pmatrix},\qquad |\psi\rangle = \alpha|0\rangle + \beta|1\rangle = \begin{pmatrix}\alpha\\ \beta\end{pmatrix}, \quad \alpha,\beta\in\mathbb{C}.
+$$
+
+(Careful: $|0\rangle$ is *not* the zero vector! It is a unit vector named "0". The zero vector is written plainly as $0$.)
+
+Addition and scalar multiplication work as usual, except that scalars are complex now. Multiplying a component by $i$ **rotates** it by 90° rather than stretching it. That is why we draw each component as a little arrow on a clock, as in the last two lessons: a vector in $\mathbb{C}^2$ is a pair of arrows.
+
+<Quiz id="u0l3-ket-zero">
+  <Q>Which of these is the zero vector of $\mathbb{C}^2$?</Q>
+  <Opt why="|0⟩ is the unit vector (1, 0). It has length 1.">$|0\rangle$</Opt>
+  <Opt correct>$|0\rangle - |0\rangle$</Opt>
+  <Opt why="This is (1, -1): not zero.">$|0\rangle - |1\rangle$</Opt>
+  <Opt why="i|0⟩ = (i, 0) has length 1.">$i|0\rangle$</Opt>
+  <Explain>Only $|0\rangle - |0\rangle = (0,0)$ is the zero vector. The label "0" inside a ket is just a name for the first basis vector, a convention borrowed from bits.</Explain>
+</Quiz>
+
+---
+
+## The inner product
+
+<Definition term="inner product on ℂⁿ">
+For $|\phi\rangle = (\phi_1,\dots,\phi_n)$ and $|\psi\rangle = (\psi_1,\dots,\psi_n)$,
+$$
+\langle \phi|\psi\rangle = \sum_{k=1}^{n} \bar\phi_k\,\psi_k = \bar\phi_1\psi_1 + \bar\phi_2\psi_2 + \cdots + \bar\phi_n\psi_n .
+$$
+The squared length (squared **norm**) of a vector is $\langle\psi|\psi\rangle = \sum_k |\psi_k|^2$, which is real and $\ge 0$, and zero only for the zero vector.
+</Definition>
+
+Since every term is a product of complex numbers, each is an arrow: you **rotate and scale**, then **add the arrows tip to tail**. The inner product is a little phasor sum, just like the interference sums of the last lesson. Explore it below. Each component of each ket is a draggable clock.
+
+<KetExplorer />
+
+<Try>
+- Set $|\psi\rangle$ to **(1, i)** and flip on **forget the conjugate**. $\langle\psi|\psi\rangle$ becomes $0$. Switch the conjugate back on: $2$. Press **normalize** to scale it to length 1.
+- Set $|\psi\rangle = |{+}\rangle$ and $|\phi\rangle = |{-}\rangle$. The two product arrows point in opposite directions and **cancel**: the vectors are **orthogonal**, $\langle\phi|\psi\rangle = 0$.
+- Rotate one component of $|\psi\rangle$ (change its phase only). The lengths of the vectors don't change, but $\langle\phi|\psi\rangle$ does. Relative phase is *geometry* in $\mathbb{C}^n$.
+</Try>
+
+The inner product has three key properties:
+
+1. **Conjugate symmetry:** $\langle\phi|\psi\rangle = \overline{\langle\psi|\phi\rangle}$. Swapping the order conjugates the answer, so $\langle\psi|\psi\rangle$ is always real.
+2. **Linear in the right slot:** $\langle\phi|\,(a|\psi_1\rangle + b|\psi_2\rangle) = a\langle\phi|\psi_1\rangle + b\langle\phi|\psi_2\rangle$.
+3. **Conjugate-linear in the left slot:** pulling a scalar out of the left vector conjugates it: if $|\chi\rangle = c|\phi\rangle$, then $\langle\chi|\psi\rangle = \bar c\,\langle\phi|\psi\rangle$.
+
+<Warning>
+Physicists conjugate the **left** (first) vector. Many mathematics textbooks conjugate the **right** (second) one instead. Both conventions describe the same geometry; the physics one is used throughout this course and in every quantum computing text. If a formula from a math book seems to have its conjugates in the wrong place, this is probably why.
+</Warning>
+
+<Quiz id="u0l3-compute">
+  <Q>Let $|\phi\rangle = \tfrac{1}{\sqrt2}(1,\ i)$ and $|\psi\rangle = (0,\ 1)$. What is $\langle\phi|\psi\rangle$?</Q>
+  <Opt>$\tfrac{i}{\sqrt2}$</Opt>
+  <Opt correct>$-\tfrac{i}{\sqrt2}$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}$</Opt>
+  <Opt>$0$</Opt>
+  <Hint>Conjugate the components of $|\phi\rangle$ first: $\bar i = -i$.</Hint>
+  <Explain>$\langle\phi|\psi\rangle = \overline{\tfrac{1}{\sqrt2}}\cdot 0 + \overline{\tfrac{i}{\sqrt2}}\cdot 1 = -\tfrac{i}{\sqrt2}$. Its squared magnitude is $\tfrac12$. (And $\langle\psi|\phi\rangle = +\tfrac{i}{\sqrt2}$, the conjugate.)</Explain>
+</Quiz>
+
+---
+
+## Bras: the other half of the bracket
+
+Here is Dirac's beautiful idea. Split the inner product $\langle\phi|\psi\rangle$ into two halves: a **ket** $|\psi\rangle$ (a column) and a **bra** $\langle\phi|$ (a row). Together they form a **bra-ket**, a "bracket".
+
+The bra is the **conjugate transpose** of the ket, written with a dagger $\dagger$:
+
+$$
+|\phi\rangle = \begin{pmatrix}\phi_1\\ \phi_2\end{pmatrix} \quad\Longrightarrow\quad \langle\phi| = |\phi\rangle^\dagger = \begin{pmatrix}\bar\phi_1 & \bar\phi_2\end{pmatrix}.
+$$
+
+Then the inner product is literally a matrix product, a row times a column:
+
+$$
+\langle\phi|\psi\rangle = \begin{pmatrix}\bar\phi_1 & \bar\phi_2\end{pmatrix}\begin{pmatrix}\psi_1\\ \psi_2\end{pmatrix} = \bar\phi_1\psi_1 + \bar\phi_2\psi_2 .
+$$
+
+The conjugate is built into the bra, so you never have to remember it separately. Conjugate-linearity becomes a simple rule:
+
+$$
+|\chi\rangle = a|0\rangle + b|1\rangle \quad\Longrightarrow\quad \langle\chi| = \bar a\,\langle 0| + \bar b\,\langle 1| .
+$$
+
+<History>
+Paul Dirac introduced bra-ket notation in a three-page paper, "A new notation for quantum mechanics" (1939), and adopted it in the 1947 third edition of his textbook *The Principles of Quantum Mechanics*. The name is a pun: a $\langle$bra$|$ and a $|$ket$\rangle$ make a $\langle$bra$|$ket$\rangle$, a bracket. It caught on because the notation does so much of the algebra for you, as you'll see when we write operators as $|a\rangle\langle b|$ next lesson.
+</History>
+
+<Quiz id="u0l3-bra">
+  <Q>What is the bra corresponding to $|\chi\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle - i\,|1\rangle\big)$?</Q>
+  <Opt>$\tfrac{1}{\sqrt2}\big(\langle 0| - i\,\langle 1|\big)$</Opt>
+  <Opt correct>$\tfrac{1}{\sqrt2}\big(\langle 0| + i\,\langle 1|\big)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}\big(|0\rangle + i\,|1\rangle\big)$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}\big(-\langle 0| + i\,\langle 1|\big)$</Opt>
+  <Explain>Conjugate every coefficient and turn kets into bras: $\overline{-i} = +i$. Writing the answer with kets (option 3) would be a different *vector*, not the bra.</Explain>
+</Quiz>
+
+---
+
+## Orthonormal bases and components
+
+A basis $\{|b_1\rangle, \dots, |b_n\rangle\}$ is **orthonormal** if
+
+$$
+\langle b_j|b_k\rangle = \delta_{jk} = \begin{cases}1 & j = k\\ 0 & j\neq k\end{cases}
+$$
+
+Just as over $\mathbb{R}$, the **components** of a vector in an orthonormal basis are inner products: take the inner product of $|\psi\rangle = \sum_k c_k|b_k\rangle$ with $\langle b_j|$ and every term but one dies, leaving
+
+$$
+c_j = \langle b_j|\psi\rangle, \qquad\text{so}\qquad |\psi\rangle = \sum_k |b_k\rangle\langle b_k|\psi\rangle .
+$$
+
+The basis you'll meet most after $\{|0\rangle, |1\rangle\}$ is
+
+$$
+|{+}\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle + |1\rangle\big),\qquad |{-}\rangle = \tfrac{1}{\sqrt2}\big(|0\rangle - |1\rangle\big).
+$$
+
+Check it's orthonormal: $\langle +|-\rangle = \tfrac12(1 - 1) = 0$ and $\langle+|+\rangle = \tfrac12(1+1) = 1$. Now explore how one state looks in different bases.
+
+<BasisComponents />
+
+<Try>
+- Choose $\theta = 0$ (the state $|0\rangle$) and the $\{|{+}\rangle, |{-}\rangle\}$ basis. Both components are $1/\sqrt2$.
+- Whatever state and basis you choose, $|c_0|^2 + |c_1|^2 = 1$. The length of a vector doesn't depend on which orthonormal basis you use to measure it (Pythagoras/Parseval in $\mathbb{C}^n$).
+- In the $\{|{+i}\rangle, |{-i}\rangle\}$ basis, vary only $\varphi$. The probabilities change, even though in the $\{|0\rangle,|1\rangle\}$ basis they wouldn't.
+</Try>
+
+Those squared component sizes, which always sum to 1 for a normalized state, are no accident. In World 3 you will meet the **Born rule**: when a quantum system in state $|\psi\rangle$ is measured in an orthonormal basis $\{|b_k\rangle\}$, outcome $k$ occurs with probability $|\langle b_k|\psi\rangle|^2$. The inner product is how quantum mechanics computes probabilities.
+
+<NumQuiz id="u0l3-born" answer={0.5} tol={0.01}>
+  <Q>A normalized state is $|\psi\rangle = \tfrac{1}{\sqrt2}(|0\rangle + i|1\rangle)$. Compute $|\langle +|\psi\rangle|^2$.</Q>
+  <Hint>$\langle + | = \tfrac{1}{\sqrt2}(\langle 0| + \langle 1|)$. So $\langle+|\psi\rangle = \tfrac12(1 + i)$.</Hint>
+  <Explain>$\langle+|\psi\rangle = \tfrac12(1+i)$, and $|1+i|^2 = 2$, so $|\langle+|\psi\rangle|^2 = \tfrac{2}{4} = \tfrac12$.</Explain>
+</NumQuiz>
+
+---
+
+## The geometry of overlaps
+
+For unit vectors over $\mathbb{R}$, $u\cdot v = \cos\theta$ measures the angle between them. Over $\mathbb{C}$, $\langle\phi|\psi\rangle$ is a complex number, but its **magnitude** still measures how much the two vectors overlap. The Cauchy–Schwarz inequality
+
+$$
+|\langle\phi|\psi\rangle| \le \|\phi\|\,\|\psi\|
+$$
+
+guarantees that for normalized states, $|\langle\phi|\psi\rangle|^2$ lies between 0 (orthogonal, perfectly distinguishable) and 1 (the same state).
+
+One more consequence. Multiply a state by a **global phase**, $|\psi\rangle \to e^{i\gamma}|\psi\rangle$. Every overlap picks up the same factor, $\langle\phi|e^{i\gamma}\psi\rangle = e^{i\gamma}\langle\phi|\psi\rangle$, and the magnitude is unchanged. So $|\psi\rangle$ and $e^{i\gamma}|\psi\rangle$ give identical probabilities for every possible measurement. They are physically **the same state**. Relative phases *between components* do matter, as you saw in the widget.
+
+<CSCorner>
+A classic NumPy bug: `np.dot(phi, psi)` does **not** conjugate anything, so it computes the broken "dot product" from the opening question. Use `np.vdot(phi, psi)`, which conjugates its first argument and therefore computes $\langle\phi|\psi\rangle$ in exactly the physics convention, or write `phi.conj() @ psi`. In matrix terms, the bra is `phi.conj().T`, the conjugate transpose (`.H` in some libraries, $\dagger$ on paper).
+</CSCorner>
+
+<Quiz id="u0l3-global">
+  <Q>Which pair of vectors describes the **same** physical state?</Q>
+  <Opt>$|0\rangle + |1\rangle$ and $|0\rangle - |1\rangle$ (both normalized)</Opt>
+  <Opt correct>$\tfrac{1}{\sqrt2}(|0\rangle + i|1\rangle)$ and $\tfrac{1}{\sqrt2}(i|0\rangle - |1\rangle)$</Opt>
+  <Opt>$|0\rangle$ and $|1\rangle$</Opt>
+  <Opt>$\tfrac{1}{\sqrt2}(|0\rangle + i|1\rangle)$ and $\tfrac{1}{\sqrt2}(|0\rangle - i|1\rangle)$</Opt>
+  <Explain>$\tfrac{1}{\sqrt2}(i|0\rangle - |1\rangle) = i\cdot\tfrac{1}{\sqrt2}(|0\rangle + i|1\rangle)$: the same vector times the global phase $i$. In the other pairs, the *relative* phase between components differs (or the vectors are orthogonal), and some measurement can tell them apart.</Explain>
+</Quiz>
+
+---
+
+## Summary
+
+- Quantum states are vectors in $\mathbb{C}^n$, written as **kets** $|\psi\rangle$. $|0\rangle, |1\rangle$ are basis vectors, not zero.
+- The inner product **conjugates the left vector**: $\langle\phi|\psi\rangle = \sum_k\bar\phi_k\psi_k$. Without the conjugate, lengths would come out zero or complex.
+- $\langle\phi|\psi\rangle = \overline{\langle\psi|\phi\rangle}$; linear on the right, conjugate-linear on the left.
+- A **bra** $\langle\phi| = |\phi\rangle^\dagger$ is the conjugate-transpose row vector; a bra-ket is a row times a column.
+- In an orthonormal basis, components are inner products, $c_k = \langle b_k|\psi\rangle$, and $\sum_k|c_k|^2 = \langle\psi|\psi\rangle$.
+- $|\langle\phi|\psi\rangle|^2 \in [0,1]$ for normalized states: it will be a measurement probability. Global phases never change it.
+
+<Watch title="Quantum computing for the very curious" by="Andy Matuschak & Michael Nielsen" url="https://quantum.country/qcvc" kind="interactive" note="kets, bras and the inner product, with built-in spaced repetition" />

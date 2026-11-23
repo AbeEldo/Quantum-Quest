@@ -1,0 +1,170 @@
+import { RippleTank } from './widgets/RippleTank';
+
+By the end of the 19th century, physicists were confident they understood light. It was a **wave**: a ripple in the electromagnetic field, travelling at $3\times10^8$ m/s. That picture had beaten Newton's rival "particles of light" in a series of decisive experiments, and Maxwell's equations explained it all with breathtaking economy.
+
+This world is the story of how that confidence collapsed. To feel the shock properly, you first need to know exactly what the wave picture predicts, and why everyone believed it. So we start in the bathtub.
+
+<Predict id="u1l1-pebbles">
+  <Q>Drop two pebbles into a still pond, a short distance apart. Their circular ripples spread out and overlap. What do you see in the region where they cross?</Q>
+  <Opt>The ripples bounce off each other</Opt>
+  <Opt>They merge into one bigger, smooth ripple</Opt>
+  <Opt correct>A fixed pattern of rays where the water stays almost calm, separated by rays of extra-big waves</Opt>
+  <Opt>Nothing special: each ripple carries on as if the other weren't there, and the surface looks random</Opt>
+  <Reveal>
+Each ripple does carry on as if the other weren't there; that's the **superposition principle**: the displacement of the water is simply the *sum* of the two ripples. But sums can cancel. Where a crest from one pebble always meets a trough from the other, the water stays calm. Those calm lines, called **nodal lines**, fan out from between the sources in a fixed pattern. Between them, crests meet crests and the waves are extra large.
+
+This is the phasor addition from World 0, now happening at every point of the pond at once. You'll see it in the ripple tank in a moment.
+  </Reveal>
+</Predict>
+
+---
+
+## What a wave is
+
+A wave is a pattern that travels while the medium itself only wiggles in place. A steady wave travelling along $x$ looks like
+
+$$
+y(x,t) = A\cos(kx - \omega t + \varphi),
+$$
+
+with these parts:
+
+- **amplitude** $A$: how big the wiggle is;
+- **wavelength** $\lambda = 2\pi/k$: the distance from crest to crest;
+- **frequency** $f = \omega/2\pi$: how many crests pass per second (unit: hertz, Hz). The **period** is $T = 1/f$;
+- **phase** $\varphi$: where in its cycle the wave starts.
+
+In one period, a crest moves forward one wavelength, so the wave speed is
+
+$$
+v = f\lambda .
+$$
+
+Some numbers worth carrying around:
+
+| Wave | Speed | Example |
+|---|---|---|
+| Sound in air | 343 m/s | concert A, 440 Hz: $\lambda = 343/440 \approx 0.78$ m |
+| Water ripples | ~0.2–0.3 m/s | $\lambda \sim 1$–$2$ cm in a ripple tank |
+| Light (vacuum) | $c = 299\,792\,458$ m/s | green light, $\lambda = 550$ nm: $f \approx 5.45\times10^{14}$ Hz |
+
+Visible light spans wavelengths from about **380 nm (violet) to 750 nm (red)**. Beyond violet is ultraviolet (UV); beyond red, infrared (IR). Remember that ordering. It is about to matter a great deal.
+
+<NumQuiz id="u1l1-red-freq" answer={4.28} tol={0.05}>
+  <Q>What is the frequency of red light with wavelength 700 nm? Give your answer in units of $10^{14}$ Hz.</Q>
+  <Hint>$f = c/\lambda = (3.00\times10^8\ \text{m/s})/(700\times10^{-9}\ \text{m})$.</Hint>
+  <Explain>$f = 2.998\times10^8 / 7.00\times10^{-7} \approx 4.28\times10^{14}$ Hz. About 428 trillion oscillations per second, far too fast for any 19th-century instrument to follow directly. All evidence about light's wave nature had to come indirectly, from interference.</Explain>
+</NumQuiz>
+
+---
+
+## Superposition in a ripple tank
+
+When two waves overlap, the displacement at each point is the sum of the two displacements. For waves of the same frequency, that's the phasor sum from World 0: each source contributes a little rotating arrow at each point, and its angle depends on how far the wave has travelled.
+
+Below is a simulated ripple tank (40 cm across). Each yellow dot is a source bobbing up and down. The field at every pixel is computed as a sum of phasors $\frac{1}{\sqrt r}e^{i(kr - \omega t)}$, one per source.
+
+<RippleTank />
+
+<Try>
+- In **Instantaneous wave** mode, look for the calm, grey rays fanning out from between the two sources. Those are the nodal lines.
+- Switch to **Time-averaged intensity**. Now you see what an eye or a camera would record: bright bands where the waves reinforce and dark bands where they cancel. The yellow curve on the right is the intensity along a "screen" at the far wall.
+- Increase the **separation**. The bands crowd closer together. Increase the **wavelength**: they spread apart.
+- Switch to **Phase as colour**. The colour shows the phase of the combined wave (the direction of its phasor), and the brightness its amplitude. Notice the colour **jumps** across each nodal line: on either side, the wave is half a cycle out of step.
+- Set **sources** to 5 or 6 (with the separation small). The bright bands become thin and sharp: a **diffraction grating**, the tool that splits light into its colours in a spectrometer. You'll need one in lesson 4.
+</Try>
+
+<KeyIdea>
+**Intensity goes as amplitude squared.** The energy carried by a wave is proportional to $A^2$, not $A$. Two equal waves meeting in step have twice the amplitude and **four** times the intensity; out of step, zero. Averaged over the whole pattern, energy is conserved: the bright bands get exactly what the dark bands lose.
+</KeyIdea>
+
+<Quiz id="u1l1-separation">
+  <Q>In a two-source pattern, you double the separation $d$ between the sources (same wavelength). What happens to the angular spacing between bright bands?</Q>
+  <Opt>It doubles</Opt>
+  <Opt correct>It roughly halves</Opt>
+  <Opt>It stays the same</Opt>
+  <Opt>The bands disappear</Opt>
+  <Explain>Bright bands occur where the path difference $d\sin\theta$ equals a whole number of wavelengths. Doubling $d$ means the path difference grows twice as fast with angle, so you reach the next $m$ at about half the angle. Bands are spaced by $\Delta(\sin\theta) = \lambda/d$.</Explain>
+</Quiz>
+
+---
+
+## The geometry of fringes
+
+Look at a distant point at angle $\theta$ from the centre line. The wave from the far source travels an extra distance $d\sin\theta$ to get there. From World 0: whole wavelengths of path difference give constructive interference, and half-odd wavelengths destructive. So the bright directions satisfy
+
+$$
+d\sin\theta = m\lambda, \qquad m = 0, \pm1, \pm2, \dots
+$$
+
+On a screen at distance $L$ (much bigger than $d$), small angles give $\sin\theta\approx\tan\theta = y/L$, and the bright fringes sit at heights
+
+$$
+y_m = \frac{m\lambda L}{d}, \qquad \text{spacing } \Delta y = \frac{\lambda L}{d}.
+$$
+
+This formula is a **ruler for wavelengths**. Measure the fringe spacing $\Delta y$, the slit separation $d$ and the distance $L$, and you can compute a wavelength far too small to see directly.
+
+<NumQuiz id="u1l1-young" answer={2.5} tol={0.05}>
+  <Q>Light of wavelength 500 nm passes through two slits 0.20 mm apart. On a screen 1.0 m away, what is the spacing between bright fringes, in millimetres?</Q>
+  <Hint>$\Delta y = \lambda L/d$. Keep units consistent: $500\times10^{-9}$ m, $0.20\times10^{-3}$ m.</Hint>
+  <Explain>$\Delta y = (5.0\times10^{-7})(1.0)/(2.0\times10^{-4}) = 2.5\times10^{-3}$ m $= 2.5$ mm. Easily visible: a sub-micron wavelength magnified into millimetre stripes by geometry.</Explain>
+</NumQuiz>
+
+---
+
+## How light became a wave
+
+<History>
+In the 1700s most physicists followed Isaac Newton, who thought light was a stream of tiny particles ("corpuscles"). Christiaan Huygens had argued for waves, but Newton's authority won.
+
+Then, between 1801 and 1803, **Thomas Young** split a thin beam of sunlight using the edge of a card and saw coloured interference fringes, exactly the pattern you just made in the ripple tank, with fringe spacings that let him estimate the wavelengths of the colours (around half a micron). His famous two-slit version appears in his 1807 *Lectures*. In 1818 **Augustin-Jean Fresnel** submitted a full wave theory of diffraction to the French Academy. Siméon Poisson, a judge, objected that it predicted an absurdity: a bright spot at the centre of the shadow of a disc. **François Arago** looked, and found the spot.
+
+In 1865 **James Clerk Maxwell** showed that electric and magnetic fields obey a wave equation with speed $1/\sqrt{\mu_0\varepsilon_0}$, numerically equal to the measured speed of light. Light was an electromagnetic wave. In 1887 **Heinrich Hertz** generated and detected such waves (radio) in his laboratory.
+</History>
+
+By 1900 the wave theory looked unassailable. And it made a very specific claim about **energy**: a light wave carries energy proportional to the square of its field amplitude, spread continuously over the wavefront. A brighter light means a bigger amplitude. Frequency (colour) has nothing to do with how much energy arrives; you can deliver as much energy as you like at any colour by turning up the brightness.
+
+Hold onto that claim. In the next three lessons it fails three different experiments.
+
+<Warning>
+"Doubling the amplitude doubles the brightness." No: brightness (intensity, power per area) goes as amplitude **squared**, so doubling the amplitude gives four times the intensity. This square law is the same one that makes probabilities in quantum mechanics the *square* of amplitudes, and it's why interference can create dark spots: amplitudes can cancel, but squares are never negative.
+</Warning>
+
+<Quiz id="u1l1-energy-claim">
+  <Q>According to classical wave theory, if you dim a beam of ultraviolet light until its intensity equals that of a dim red beam, how do the energies they deliver per second compare?</Q>
+  <Opt>The UV beam delivers more, because UV has higher frequency</Opt>
+  <Opt correct>They are equal: classically, delivered power depends on intensity, not frequency</Opt>
+  <Opt>The red beam delivers more, because it has longer wavelength</Opt>
+  <Opt>It depends on the material they hit</Opt>
+  <Explain>In the classical picture, intensity (power per area) is the whole story; colour plays no role in how much energy arrives. That's correct as far as it goes. What classical physics *can't* explain is why, as you'll see in lesson 3, the UV can knock electrons out of a metal while red light of any brightness cannot.</Explain>
+</Quiz>
+
+---
+
+## Three cracks in the picture
+
+Around 1900, three experimental puzzles refused to fit:
+
+1. **Blackbody radiation.** Hot objects glow with a characteristic spectrum. Classical physics predicted they should radiate *infinite* energy at short wavelengths: the "ultraviolet catastrophe". (Lesson 2.)
+2. **The photoelectric effect.** Light knocks electrons out of metals, but whether it can do so depends on its **colour**, not its brightness. (Lesson 3.)
+3. **Atomic spectra.** Glowing gases emit light only at a few sharp wavelengths, like a barcode. Classical atoms should glow at all wavelengths, and should not even be stable. (Lesson 4.)
+
+Each crack was eventually explained by the same strange idea: energy in light and matter comes in **discrete lumps**, quanta. And in a final twist (lesson 5), it turns out that particles like electrons also *interfere like waves*.
+
+<CSCorner>
+The ripple-tank simulation is pure linear algebra. Because the wave equation is **linear**, the total field is a sum of the fields from each source, and for a single frequency each source's field is a complex phasor. So the whole picture is "compute $\sum_s e^{ikr_s}/\sqrt{r_s}$ at every pixel once, then multiply by $e^{-i\omega t}$ each frame". That's embarrassingly parallel (one independent calculation per pixel), the kind of workload GPUs were built for. Quantum mechanics is linear in exactly the same way, which is what makes superposition and interference possible there too.
+</CSCorner>
+
+---
+
+## Summary
+
+- A wave $A\cos(kx-\omega t+\varphi)$ has amplitude, wavelength $\lambda$, frequency $f$, phase, and speed $v = f\lambda$. Visible light: 380–750 nm, with $f\sim5\times10^{14}$ Hz.
+- **Superposition:** overlapping waves add. For one frequency, that means adding phasors at each point.
+- **Intensity ∝ amplitude².** Interference redistributes energy into bright and dark fringes.
+- Two sources: bright where $d\sin\theta = m\lambda$; on a distant screen, fringe spacing $\Delta y = \lambda L/d$.
+- Young (1801–1807), Fresnel and Arago (1818), Maxwell (1865) and Hertz (1887) made light an electromagnetic wave whose energy depends on intensity, not colour.
+- Three experiments (blackbody radiation, the photoelectric effect and atomic spectra) were about to break that picture.
+
+<Watch title="The Original Double Slit Experiment" by="Veritasium" url="https://www.youtube.com/watch?v=Iuv6hY6zsd0" note="recreating Young's experiment with sunlight" />

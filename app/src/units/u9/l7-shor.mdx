@@ -1,0 +1,156 @@
+import { PeriodFinder } from './widgets/PeriodFinder';
+
+Multiplying two 1024-bit primes takes a laptop microseconds. Going backwards, factoring their 2048-bit product, is believed to be out of reach for every classical computer on Earth. The record for a hard RSA-style number is **RSA-250** (829 bits), factored in 2020 with roughly 2,700 CPU core-years of computation. Each additional ~10 digits makes it dramatically harder. The security of RSA, the backbone of internet key exchange and signatures for decades, rests on this asymmetry.
+
+In 1994 Peter Shor showed that a quantum computer could factor an $n$-bit number in time **polynomial** in $n$. Discrete logarithms (Diffie–Hellman and elliptic-curve cryptography) fall to the same idea.
+
+<Predict id="u9l7-hook">
+  <Q>What's the largest number that has been factored by actually running Shor's algorithm on quantum hardware?</Q>
+  <Opt>A 2048-bit RSA modulus, in a classified lab</Opt>
+  <Opt>A number with about 50 digits</Opt>
+  <Opt correct>21, and even that used circuits simplified with knowledge of the answer</Opt>
+  <Opt>Nothing yet; it has only been simulated</Opt>
+  <Explain>Demonstrations of Shor's algorithm have stayed at toy sizes, 15 (first in 2001) and 21 (2012), and those experiments used "compiled" circuits that bake in shortcuts only available if you already know the factors. Factoring cryptographic numbers will need large **fault-tolerant** machines. This lesson covers how the algorithm works and what it would take.</Explain>
+</Predict>
+
+---
+
+## Step 1: factoring reduces to order finding
+
+Shor's algorithm is mostly classical number theory with one quantum subroutine. Let $N$ be odd and composite (and not a prime power; both cases are easy to detect and handle classically).
+
+1. Pick a random $a$ with $1 < a < N$. If $\gcd(a, N) > 1$, you've found a factor by luck (Euclid's algorithm is fast).
+2. Otherwise, find the **order** $r$ of $a$ modulo $N$: the smallest $r > 0$ with $a^r \equiv 1 \pmod N$. **This is the quantum step.**
+3. If $r$ is even, then $a^r - 1 = (a^{r/2} - 1)(a^{r/2} + 1) \equiv 0 \pmod N$. So $N$ divides the product. If additionally $a^{r/2} \not\equiv -1$, then $N$ divides neither factor (it can't divide $a^{r/2}-1$, or $r$ wouldn't be minimal), so $N$ must share a nontrivial factor with each:
+$$
+p = \gcd(a^{r/2} - 1,\ N), \qquad q = \gcd(a^{r/2} + 1,\ N).
+$$
+4. For a random $a$, the probability that $r$ is even *and* $a^{r/2}\not\equiv -1$ is at least ½ (Nielsen & Chuang, Thm 5.3). If you're unlucky, pick another $a$.
+
+**Worked example: $N = 15$, $a = 7$.**
+
+| $x$ | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|---|
+| $7^x \bmod 15$ | 1 | 7 | 4 | 13 | 1 | 7 | 4 |
+
+The sequence repeats with period $r = 4$, which is even. $7^{2} = 49 \equiv 4 \pmod{15}$, and $4 \not\equiv -1$. So
+$$
+\gcd(7^2 - 1, 15) = \gcd(48, 15) = 3, \qquad \gcd(7^2 + 1, 15) = \gcd(50, 15) = 5 .
+$$
+$15 = 3\times 5$. ✓
+
+<NumQuiz id="u9l7-order21" answer={6} tol={0}>
+  <Q>What is the order of $a = 2$ modulo $N = 21$?</Q>
+  <Hint>List $2^x \bmod 21$: $2, 4, 8, 16, \dots$ until you get back to 1.</Hint>
+  <Explain>$2, 4, 8, 16, 32 \equiv 11, 22\equiv 1$. So $r = 6$. It's even, and $2^3 = 8 \not\equiv -1$, so $\gcd(7, 21) = 7$ and $\gcd(9, 21) = 3$ give $21 = 3\times 7$.</Explain>
+</NumQuiz>
+
+<Quiz id="u9l7-bad-a">
+  <Q>For $N = 21$, the base $a = 5$ has order $r = 6$, and $5^3 \bmod 21 = 20$. What happens?</Q>
+  <Opt>We get $\gcd(124, 21) = 1$ and $\gcd(126, 21) = 21$: trivial factors, so this $a$ fails and we pick another</Opt>
+  <Opt>We get the factors 3 and 7</Opt>
+  <Opt>The order is odd, so it fails</Opt>
+  <Opt>We must increase the number of qubits</Opt>
+  <Explain>$20 \equiv -1 \pmod{21}$, the bad case. Then $a^{r/2}+1 \equiv 0$, so one gcd is $N$ itself and the other is 1. Nothing learned; pick a different $a$. At least half of all bases avoid this trap.</Explain>
+</Quiz>
+
+---
+
+## Step 2: order finding is period finding
+
+Order finding is hard classically because the period $r$ can be as large as $N$, exponential in the bit length. But $f(x) = a^x \bmod N$ is a **periodic function**, $f(x + r) = f(x)$, and finding hidden periods is exactly what the Fourier transform is good at.
+
+The quantum subroutine:
+
+1. Counting register of $t$ qubits (with $Q = 2^t \ge N^2$), work register of $\lceil\log_2 N\rceil$ qubits set to $|1\rangle$. Hadamard the counting register.
+2. Compute $|x\rangle|1\rangle \mapsto |x\rangle|a^x \bmod N\rangle$ in superposition. This is **modular exponentiation**, built from controlled multiplications by $a^{2^k} \bmod N$ (precomputed classically by repeated squaring). That's phase estimation's "efficient controlled-$U^{2^k}$".
+3. (Conceptually) measure the work register. You see some value $f(x_0)$, and the counting register collapses to the **comb** $|x_0\rangle + |x_0 + r\rangle + |x_0 + 2r\rangle + \cdots$, with a random offset.
+4. Apply $\mathrm{QFT}^{-1}$ and measure. The peaks sit near multiples of $Q/r$, whatever the offset.
+
+The phase-estimation view says the same thing. $U_a|w\rangle = |aw \bmod N\rangle$ has eigenvalues $e^{2\pi i k/r}$, and $|1\rangle$ is a uniform superposition of its eigenvectors. Phase estimation returns $y/Q \approx k/r$ for a uniformly random $k$.
+
+The widget below runs this circuit **gate by gate** on the state-vector simulator: for $N = 15$ that's $8 + 4 = 12$ qubits, and for $N = 35$ it's 17.
+
+<PeriodFinder initialN={15} initialA={7} />
+
+<Try>
+- With $N = 15$, $a = 7$: four perfectly sharp peaks at $y = 0, 64, 128, 192$, since $Q/r = 256/4 = 64$ exactly. Turn on **reveal r**.
+- Switch to $N = 21$, $a = 2$ ($r = 6$). Now $512/6 \approx 85.3$ isn't an integer, so the peaks blur over neighbouring $y$ values. Measure a few times.
+- Try a base that fails: $N = 21$, $a = 4$ has odd order 3, and $a = 5$ hits the $-1$ trap.
+</Try>
+
+---
+
+## Step 3: continued fractions turn a peak into $r$
+
+A measurement gives $y$ with
+$$
+\left|\frac{y}{Q} - \frac{k}{r}\right| \le \frac{1}{2Q} \le \frac{1}{2N^2} < \frac{1}{2r^2}
+$$
+for some unknown $k$. A classical theorem (Legendre's) says any fraction $k/r$ that close to $y/Q$ **must appear among the convergents** of the continued-fraction expansion of $y/Q$. That's why we took $Q \ge N^2$. So expand $y/Q$, list the convergents $p/q$ with $q < N$, and test each denominator: is $a^q \equiv 1 \pmod N$?
+
+**Worked example: $N = 21$, $a = 2$, $Q = 512$, measured $y = 427$.**
+$$
+\frac{427}{512} = 0 + \cfrac{1}{1 + \cfrac{1}{5 + \cfrac{1}{42 + \cfrac{1}{2}}}} = [0;\,1, 5, 42, 2].
+$$
+The convergents are $\tfrac01, \tfrac11, \tfrac56, \tfrac{211}{253}, \dots$. The last denominator below 21 is $6$, and $2^6 = 64 \equiv 1 \pmod{21}$ ✓. So $r = 6$, and $\gcd(2^3 \pm 1, 21)$ gives $7$ and $3$.
+
+Click a peak in the widget (or press measure), then click the convergents to test them.
+
+<Note title="When it doesn't work the first time">
+If the random $k$ shares a factor with $r$ (say $k = 2$, $r = 6$), the convergent is $k/r$ in lowest terms, $1/3$, and its denominator is only a divisor of $r$. Testing small multiples of the denominator, or taking the LCM of the denominators from two runs, fixes this. With $y = 0$ you learn nothing. Overall a constant number of runs suffices on average.
+</Note>
+
+<Quiz id="u9l7-cf">
+  <Q>$N = 15$, $a = 7$, $Q = 256$. You measure $y = 192$. What does post-processing give?</Q>
+  <Opt>$r = 192$</Opt>
+  <Opt correct>$192/256 = 3/4$, so the denominator $4$ is the candidate period, and $7^4 \equiv 1 \pmod{15}$ confirms $r = 4$</Opt>
+  <Opt>$r = 3$, from the numerator</Opt>
+  <Opt>Nothing; only $y = 64$ is useful</Opt>
+  <Explain>$192/256$ reduces to $3/4$ (here $k = 3$), so the denominator is $r = 4$. The $y = 64$ peak gives $1/4$ and also works. Only $y = 128 = 2/4 = 1/2$ is unlucky: it gives the divisor $2$ of $r$, and $7^2 = 4 \not\equiv 1$ shows it isn't the full period.</Explain>
+</Quiz>
+
+---
+
+## What would it take to break RSA-2048?
+
+The expensive part is the modular exponentiation: $O(n^3)$ gates with schoolbook arithmetic (less with faster multiplication) on roughly $2n$ to $3n$ **logical** qubits. Logical qubits are error-corrected (World 11); each one is built from hundreds to thousands of physical qubits. The headline estimates, all for RSA-2048 with physical error rates around $10^{-3}$:
+
+| estimate | physical qubits | runtime | notes |
+|---|---|---|---|
+| Gidney & Ekerå (2019) | ~20 million | ~8 hours | surface code; the long-standing benchmark |
+| Gidney (2025) | under 1 million | under a week | approximate arithmetic, yoked surface codes, magic-state cultivation |
+| Pinnacle architecture, Iceberg Quantum (2026 preprint) | ~100,000 | ~1 month | quantum LDPC codes; not yet peer-reviewed, assumes fast long-range connectivity |
+
+For scale: the largest superconducting chips in 2024–2026 have on the order of 100 to 1,000+ physical qubits (Google's Willow has 105; IBM's Condor has 1,121), and logical-qubit demonstrations involve a handful to dozens of logical qubits. Peer-reviewed estimates fell about 20-fold between 2019 and 2025, preprints claim more, and hardware keeps growing. Nobody can give a reliable date, but the trend is why cryptographers aren't waiting.
+
+<Warning title='"Harvest now, decrypt later"'>
+An adversary can record encrypted traffic **today** and decrypt it once a large quantum computer exists. Data that must stay secret for 10+ years is already at risk. That's why NIST standardized post-quantum algorithms in 2024 (ML-KEM, ML-DSA and SLH-DSA, based on lattices and hash functions), and its transition plan (NIST IR 8547) deprecates RSA and elliptic-curve public-key cryptography after 2030 and disallows it after 2035. Symmetric crypto (AES) and hash functions are only mildly affected (Grover gives a square root, not a break).
+</Warning>
+
+---
+
+## The experimental record, and its caveats
+
+<History>
+- **2001, IBM Almaden and Stanford (Vandersypen et al., *Nature*)**: factored 15 using 7 nuclear spins in a liquid-state NMR molecule. A landmark of control, but NMR works with huge ensembles of molecules in highly mixed states that can't be scaled up, and the circuit was simplified using knowledge of the answer.
+- **2012 (Martín-López et al.)**: factored 21 with photons and "qubit recycling", again with a compiled, answer-aware circuit.
+- **2013, Smolin, Smith & Vargo, *Oversimplifying quantum factoring***: showed that such compiled circuits can be shrunk until "factoring" any $N$ needs as little as a coin flip, so they demonstrate quantum control rather than factoring.
+- **2016 (Monz et al., *Science*, trapped ions)**: factored 15 with an implementation designed to avoid answer-specific shortcuts.
+
+Every Shor demonstration so far fits on a napkin. Headlines about factoring larger numbers "with a quantum computer" have used other methods (annealing or variational heuristics) with no proven scaling, and they are not Shor's algorithm.
+</History>
+
+<CSCorner>
+Complexity-wise, factoring is in $\mathsf{NP}\cap\mathsf{coNP}$ (certificates exist for both "has a factor below $k$" and its negation) and in $\mathsf{BQP}$. It is **not believed NP-complete**: an NP-complete problem in coNP would imply NP = coNP. Its classical status is open. The best known algorithm, the general number field sieve, runs in $\exp\!\big(O(n^{1/3}(\log n)^{2/3})\big)$, but nobody has proved factoring isn't in P. So Shor's algorithm is an exponential speedup over the best **known** classical algorithm, not a proven separation.
+</CSCorner>
+
+---
+
+## Summary
+
+- **Factoring → order finding:** pick $a$; if the order $r$ is even and $a^{r/2}\not\equiv -1$, then $\gcd(a^{r/2}\pm1, N)$ are factors. A random $a$ works with probability at least ½.
+- Example: $N = 15$, $a = 7$ gives $r = 4$, then $7^2 = 49 \equiv 4$, and $\gcd(3, 15) = 3$, $\gcd(5, 15) = 5$.
+- **Order finding is period finding** of $a^x \bmod N$: superpose, modular-exponentiate (efficient controlled-$U^{2^k}$), apply $\mathrm{QFT}^{-1}$, and measure $y \approx kQ/r$.
+- **Continued fractions** of $y/Q$ (with $Q \ge N^2$) recover $k/r$ and hence $r$.
+- RSA-2048 estimates have dropped from ~20 million (2019) to under 1 million (2025) physical qubits, with preprints going lower. Demonstrations remain at 15 and 21. Migration to **post-quantum cryptography** is under way.

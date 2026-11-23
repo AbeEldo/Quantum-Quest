@@ -1,0 +1,149 @@
+import { PhaseEstimationExplorer } from './widgets/PhaseEstimationExplorer';
+
+Here's a puzzle. A unitary $U$ has an eigenvector $|u\rangle$:
+$$
+U|u\rangle = e^{2\pi i\varphi}\,|u\rangle, \qquad \varphi\in[0,1).
+$$
+You have $|u\rangle$ and a circuit for $U$, and you want the number $\varphi$. It might be an energy level of a molecule, or, as we'll see, the period hiding inside a factoring problem.
+
+But applying $U$ to $|u\rangle$ just multiplies the whole state by $e^{2\pi i\varphi}$. That's a **global phase**, and global phases are physically undetectable (World 3). No measurement on $U|u\rangle$ can ever reveal $\varphi$.
+
+<Predict id="u9l6-hook">
+  <Q>How can a quantum circuit possibly measure a global phase?</Q>
+  <Opt>It can't: global phases are unobservable, period</Opt>
+  <Opt correct>Apply $U$ only *conditionally*, controlled by a qubit in superposition, so the phase becomes *relative* (kickback)</Opt>
+  <Opt>Measure $|u\rangle$ many times and average</Opt>
+  <Opt>Apply $U$ a huge number of times until the phase accumulates</Opt>
+  <Explain>A phase that multiplies *only one branch* of a superposition is a relative phase, and relative phases are measurable. This is phase kickback from World 7, used as a measuring instrument. Repeated application helps too, but only in the controlled form, $U^{2^k}$, as you'll see.</Explain>
+</Predict>
+
+---
+
+## One qubit, one digit
+
+Put a control qubit in $|+\rangle$, apply controlled-$U$ onto $|u\rangle$, and the eigenvalue kicks back onto the control:
+$$
+\frac{|0\rangle + |1\rangle}{\sqrt2}|u\rangle \ \xrightarrow{\ c\text{-}U\ }\ \frac{|0\rangle + e^{2\pi i\varphi}|1\rangle}{\sqrt2}|u\rangle .
+$$
+The target is unchanged. The control now sits on the equator of its Bloch sphere, at longitude $2\pi\varphi$. A final Hadamard gives
+$$
+P(0) = \cos^2(\pi\varphi), \qquad P(1) = \sin^2(\pi\varphi).
+$$
+
+<ParamPlot
+  title="One-qubit phase estimation: P(0) = cos²(πφ)"
+  params={[{ name: 'phi', label: 'φ', min: 0, max: 1, value: 0.3 }]}
+  series={(p) => [{ f: (x) => Math.cos(Math.PI * x) ** 2, color: '#58c4dd', label: 'P(0)' }, { f: (x) => Math.sin(Math.PI * x) ** 2, color: '#fc6255', label: 'P(1)', dashed: true }]}
+  vlines={(p) => [{ x: p.phi, color: '#fcd34d', label: 'φ' }]}
+  xRange={[0, 1]}
+  yRange={[0, 1]}
+  xLabel="φ"
+  height={200}
+/>
+
+If $\varphi$ is exactly $0$ or $\tfrac12$ (in binary, $0.0$ or $0.1$), one shot tells you which. Otherwise one qubit gives you a biased coin. You could estimate $\varphi$ by flipping that coin many times, but precision $\epsilon$ would take about $1/\epsilon^2$ repetitions. We can do exponentially better.
+
+<Quiz id="u9l6-one-qubit">
+  <Q>With $\varphi = 1/4$, the control ends (before the final $H$) in $\frac{1}{\sqrt2}(|0\rangle + i|1\rangle) = |{+i}\rangle$. What's $P(0)$ after the Hadamard?</Q>
+  <Opt>0</Opt>
+  <Opt correct>½</Opt>
+  <Opt>1</Opt>
+  <Opt>$\cos^2(\pi/4)\cdot\frac12$</Opt>
+  <Explain>$\cos^2(\pi/4) = \tfrac12$. The state $|{+i}\rangle$ is on the equator, 90° from both $|+\rangle$ and $|-\rangle$, so the $X$-basis measurement is a fair coin. One qubit can't resolve the second binary digit of $\varphi = 0.01_2$.</Explain>
+</Quiz>
+
+---
+
+## Many qubits: doubling the phase shifts the binary point
+
+The trick: apply $U$ **twice** and the kicked-back phase doubles, $e^{2\pi i\,(2\varphi)}$. Apply $U^{2^k}$ and you get $2^k\varphi$. Doubling a binary fraction shifts its point:
+$$
+\varphi = 0.\,b_1b_2b_3b_4\ldots \quad\Longrightarrow\quad 2^k\varphi \equiv 0.\,b_{k+1}b_{k+2}\ldots \pmod 1 .
+$$
+So use $t$ counting qubits, each in $|+\rangle$, and let counting qubit $j$ control $U^{2^{t-1-j}}$. Then each counting qubit carries a different "zoom level" of $\varphi$. Together, the counting register holds
+$$
+\frac{1}{\sqrt{2^t}}\sum_{y=0}^{2^t-1} e^{2\pi i\,\varphi y}\,|y\rangle .
+$$
+Look familiar? Compare with the previous lesson: if $\varphi = m/2^t$ exactly, this is precisely $\mathrm{QFT}|m\rangle$, the clocks with $x = m$. So **apply the inverse QFT** and the register becomes $|m\rangle$. Read $m$, and $\varphi = m/2^t$.
+
+<KeyIdea>
+**Phase estimation** = controlled-$U^{2^k}$ for $k = 0,\dots,t-1$ (kickback writes the clocks), then $\mathrm{QFT}^{-1}$ (read the clocks), then measure. The output $m$ gives $\varphi \approx m/2^t$ to $t$ bits.
+</KeyIdea>
+
+<PhaseEstimationExplorer />
+
+<Try>
+- Choose **5/8** with $t = 3$: the expansion is $0.101_2$ exactly, and the readout is $m = 5$ with 100% probability.
+- Choose **1/3** $= 0.0101\ldots_2$, which has no finite binary expansion. The distribution peaks at the nearest 3-bit fractions but spreads out. Increase $t$ and watch the peak sharpen and close in on $1/3$.
+- Watch the kickback clocks. The bottom qubit (controlling $U^1$) shows $\varphi$ itself; each qubit above shows the phase doubled again.
+</Try>
+
+<NumQuiz id="u9l6-read" answer={5} tol={0}>
+  <Q>$\varphi = 0.625$ and $t = 3$ counting qubits. Which integer $m$ does the measurement return (with certainty)?</Q>
+  <Explain>$0.625 = 5/8 = 0.101_2$, and $m = \varphi\cdot 2^3 = 5$. Exact $t$-bit phases are read out perfectly.</Explain>
+</NumQuiz>
+
+---
+
+## Precision, probability and cost
+
+If $\varphi$ isn't a $t$-bit fraction, write $\delta = \varphi - m/2^t$ for an estimate $m$. The inverse QFT turns the counting state into
+$$
+P(m) = \left|\frac{1}{2^t}\sum_{y=0}^{2^t-1} e^{2\pi i\,y\delta}\right|^2 = \frac{\sin^2(\pi 2^t\delta)}{4^t\sin^2(\pi\delta)} ,
+$$
+a sharply peaked "Fejér kernel" around the true phase. Two facts are worth remembering:
+
+- The **nearest** $t$-bit estimate is obtained with probability at least $4/\pi^2 \approx 40.5\%$, and one of the two nearest with probability at least $8/\pi^2 \approx 81\%$.
+- To get $n$ correct bits with probability $1 - \epsilon$, use $t = n + \lceil\log_2(2 + \tfrac{1}{2\epsilon})\rceil$ counting qubits (Nielsen & Chuang §5.2.1). Each extra qubit **doubles** the precision.
+
+<NumQuiz id="u9l6-prob" answer={0.876} tol={0.01}>
+  <Q>Set $\varphi = 0.300$ and $t = 4$ in the explorer. What's the probability of the most likely outcome?</Q>
+  <Hint>Read it off the explorer, or compute $P(m{=}5)$ with $\delta = 0.3 - 5/16 = -0.0125$.</Hint>
+  <Explain>The most likely $m$ is 5 ($5/16 = 0.3125$, closest to 0.3), with $P \approx 0.876$. The rest of the probability leaks into neighbours like $m = 4$ ($0.25$).</Explain>
+</NumQuiz>
+
+<Warning title="The hidden cost: controlled powers of U">
+Phase estimation needs controlled-$U^{2^{t-1}}$. If the only way to build $U^{2^{k}}$ is to repeat $U$ $2^k$ times, the circuit has $2^t$ applications of $U$, so precision $2^{-t}$ costs time $2^t$. That's the same "Heisenberg scaling" as an ideal interferometer, but not an exponential speedup in precision. Phase estimation gives exponential speedups only when $U^{2^k}$ can be implemented **efficiently**. Modular multiplication can, by repeated squaring: $a^{2^k} \bmod N$ is easy to precompute. That is exactly why Shor's algorithm works.
+</Warning>
+
+---
+
+## Where phase estimation shows up
+
+Phase estimation is the "measure an eigenvalue" primitive, and it's everywhere:
+
+- **Shor's algorithm** (next lesson). The unitary $U_a|w\rangle = |aw \bmod N\rangle$ has eigenvalues $e^{2\pi i k/r}$, where $r$ is the order of $a$. Estimating a phase $k/r$ reveals $r$.
+- **Quantum chemistry.** With $U = e^{-iHt}$, the phases are energies. Prepare a state close to the ground state of a molecule's Hamiltonian, run phase estimation, and read out the ground-state energy. This is a leading candidate for genuinely useful quantum advantage.
+- **Quantum counting.** The Grover iteration $G$ is a rotation by $2\theta$ in a plane, with eigenvalues $e^{\pm 2i\theta}$. Phase estimation on $G$ gives $\theta$, and hence the number of marked items $M$ ($\sin^2\theta = M/N$).
+- **HHL** for linear systems uses it to invert eigenvalues.
+
+<Note title="What if the input isn't an eigenvector?">
+Write the input as $\sum_j c_j|u_j\rangle$ in the eigenbasis of $U$. Phase estimation then outputs (an estimate of) $\varphi_j$ with probability $|c_j|^2$, and leaves the target collapsed onto $|u_j\rangle$. So for chemistry you need a starting state with **decent overlap** with the true ground state. Finding one is the hard part. In general, preparing ground states of local Hamiltonians is QMA-hard, the quantum analogue of NP-hard.
+</Note>
+
+<Quiz id="u9l6-overlap">
+  <Q>You run phase estimation on a state that is $\sqrt{0.7}|u_0\rangle + \sqrt{0.3}|u_1\rangle$ (two eigenvectors with distinct phases $\varphi_0, \varphi_1$). What happens?</Q>
+  <Opt>You get the average phase $0.7\varphi_0 + 0.3\varphi_1$</Opt>
+  <Opt correct>About 70% of runs return $\approx\varphi_0$ and 30% return $\approx\varphi_1$, each time collapsing the target onto the matching eigenvector</Opt>
+  <Opt>The algorithm fails because the input must be an exact eigenvector</Opt>
+  <Opt>You get both phases at once in a single run</Opt>
+  <Explain>By linearity, each eigen-component runs its own phase estimation, and the counting register ends up entangled with the target. Measuring picks one branch with Born-rule probability. It's a projective measurement of $U$'s eigenbasis, with the eigenphase as the readout.</Explain>
+</Quiz>
+
+<History>
+Alexei Kitaev introduced phase estimation in 1995 in *Quantum measurements and the Abelian Stabilizer Problem*, which gave an alternative route to Shor's results and a general framework for abelian hidden-subgroup problems. In 1998, Cleve, Ekert, Macchiavello and Mosca showed that Shor's and Kitaev's approaches are the same algorithm in different clothes: kickback plus an (inverse) Fourier transform.
+</History>
+
+<CSCorner>
+Phase estimation is the quantum analogue of **reading a counter with exponentially many digits by looking at each digit at a different clock speed**. It's also why quantum algorithms keep returning to the same few primitives: kickback (a phase oracle), Fourier transforms (interference that converts phase into position), and amplitude amplification. Most "new" algorithms are clever compositions of these three.
+</CSCorner>
+
+---
+
+## Summary
+
+- An eigenvalue $e^{2\pi i\varphi}$ is a global phase, so it can only be observed via **controlled-$U$ and kickback**.
+- With $t$ counting qubits controlling $U^{2^{t-1}},\dots,U^2, U$, each qubit gets the phase $\varphi$ doubled again, which shifts its binary point. The register becomes $\frac{1}{\sqrt{2^t}}\sum_y e^{2\pi i\varphi y}|y\rangle$.
+- The **inverse QFT** converts that into $|m\rangle$ with $m/2^t \approx \varphi$. It's exact when $\varphi$ has a $t$-bit expansion, and otherwise the nearest estimate has probability $\ge 4/\pi^2$.
+- Each extra counting qubit doubles the precision, but you need **efficient** controlled-$U^{2^k}$ for a real speedup.
+- Uses: Shor (order finding), chemistry (energies via $e^{-iHt}$), quantum counting, HHL.
